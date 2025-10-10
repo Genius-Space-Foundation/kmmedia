@@ -1,48 +1,89 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
-import { CourseStatus } from "@prisma/client";
-import { z } from "zod";
+import { withAdminAuth } from "@/lib/middleware/auth";
 
-const bulkCourseActionSchema = z.object({
-  action: z.enum(["approve", "reject", "publish", "unpublish"]),
-  courseIds: z.array(z.string()).min(1, "At least one course ID is required"),
-  comments: z.string().optional(),
-});
-
-// Bulk course actions (Admin only)
-async function bulkCourseActions(req: AuthenticatedRequest) {
+async function bulkHandler(request: NextRequest) {
   try {
-    const body = await req.json();
-    const { action, courseIds, comments } = bulkCourseActionSchema.parse(body);
+    const body = await request.json();
+    const { courseIds, action, comments } = body;
 
-    let updateData: any = {};
-    let statusFilter: any = {};
+    if (!courseIds || !Array.isArray(courseIds) || courseIds.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "Course IDs are required" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !action ||
+      !["APPROVE", "REJECT", "PUBLISH", "UNPUBLISH"].includes(action)
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Valid action is required" },
+        { status: 400 }
+      );
+    }
+
+    let result;
 
     switch (action) {
-      case "approve":
-        updateData = {
-          status: CourseStatus.APPROVED,
-          approvalComments: comments,
-          approvedAt: new Date(),
-        };
-        statusFilter = { status: "PENDING_APPROVAL" };
+      case "APPROVE":
+        result = await prisma.course.updateMany({
+          where: { id: { in: courseIds } },
+          data: {
+            status: "APPROVED",
+            ...(comments && { approvalComments: comments }),
+            updatedAt: new Date(),
+          },
+        });
         break;
-      case "reject":
-        updateData = {
-          status: CourseStatus.REJECTED,
-          approvalComments: comments,
-        };
-        statusFilter = { status: "PENDING_APPROVAL" };
+
+      case "REJECT":
+        result = await prisma.course.updateMany({
+          where: { id: { in: courseIds } },
+          data: {
+            status: "REJECTED",
+            ...(comments && { approvalComments: comments }),
+            updatedAt: new Date(),
+          },
+        });
         break;
-      case "publish":
-        updateData = { status: CourseStatus.PUBLISHED };
-        statusFilter = { status: "APPROVED" };
+
+      case "PUBLISH":
+        // Only publish approved courses
+        result = await prisma.course.updateMany({
+          where: {
+            id: { in: courseIds },
+            status: "APPROVED",
+          },
+          data: {
+            status: "PUBLISHED",
+            updatedAt: new Date(),
+          },
+        });
+
+        if (result.count === 0) {
+          return NextResponse.json(
+            {
+              success: false,
+              message:
+                "No courses were published. Courses must be approved first.",
+            },
+            { status: 400 }
+          );
+        }
         break;
-      case "unpublish":
-        updateData = { status: CourseStatus.APPROVED };
-        statusFilter = { status: "PUBLISHED" };
+
+      case "UNPUBLISH":
+        result = await prisma.course.updateMany({
+          where: { id: { in: courseIds } },
+          data: {
+            status: "APPROVED",
+            updatedAt: new Date(),
+          },
+        });
         break;
+
       default:
         return NextResponse.json(
           { success: false, message: "Invalid action" },
@@ -50,73 +91,21 @@ async function bulkCourseActions(req: AuthenticatedRequest) {
         );
     }
 
-    // Validate that all courses are in the correct status for the action
-    const validCourses = await prisma.course.findMany({
-      where: {
-        id: { in: courseIds },
-        ...statusFilter,
-      },
-      select: { id: true },
-    });
-
-    if (validCourses.length !== courseIds.length) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: `Some courses are not in the correct status for ${action}`,
-        },
-        { status: 400 }
-      );
-    }
-
-    const result = await prisma.course.updateMany({
-      where: {
-        id: { in: courseIds },
-      },
-      data: updateData,
-    });
-
-    // Get updated courses for notification
-    const updatedCourses = await prisma.course.findMany({
-      where: { id: { in: courseIds } },
-      include: {
-        instructor: {
-          select: { email: true, name: true },
-        },
-      },
-    });
-
-    // TODO: Send notification emails to instructors
-    updatedCourses.forEach((course) => {
-      console.log(
-        `Course ${action}d: ${course.title} for instructor ${course.instructor.email}`
-      );
-    });
+    // Send notifications to instructors (TODO: Implement)
+    console.log(`Bulk ${action}: ${result.count} courses updated`);
 
     return NextResponse.json({
       success: true,
-      data: { updatedCount: result.count },
-      message: `${result.count} courses ${action}d successfully`,
+      message: `${result.count} courses ${action.toLowerCase()}d successfully`,
+      data: { count: result.count },
     });
   } catch (error) {
     console.error("Bulk course action error:", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Bulk action failed",
-      },
+      { success: false, message: "Failed to process bulk action" },
       { status: 500 }
     );
   }
 }
 
-export const POST = withAdminAuth(bulkCourseActions);
-
+export const PUT = withAdminAuth(bulkHandler);

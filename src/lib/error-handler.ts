@@ -104,3 +104,4 @@ export function logError(error: Error, context?: Record<string, any>): void {
   // In production, you would send this to your error monitoring service
   // Example: Sentry.captureException(error, { extra: context });
 }
+

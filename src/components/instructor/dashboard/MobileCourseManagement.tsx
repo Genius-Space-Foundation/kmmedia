@@ -73,7 +73,8 @@ export default function MobileCourseManagement() {
       );
       if (response.ok) {
         const data = await response.json();
-        setCourses(data);
+        // Ensure we set an array, even if the API returns unexpected data
+        setCourses(Array.isArray(data) ? data : data.data || []);
       }
     } catch (error) {
       console.error("Error fetching courses:", error);
@@ -108,14 +109,16 @@ export default function MobileCourseManagement() {
     }
   };
 
-  const filteredCourses = courses.filter((course) => {
-    const matchesSearch =
-      course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      course.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter =
-      filterStatus === "all" || course.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+  const filteredCourses = Array.isArray(courses)
+    ? courses.filter((course) => {
+        const matchesSearch =
+          course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          course.description.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesFilter =
+          filterStatus === "all" || course.status === filterStatus;
+        return matchesSearch && matchesFilter;
+      })
+    : [];
 
   if (loading) {
     return (
@@ -188,7 +191,9 @@ export default function MobileCourseManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Courses</p>
-                <p className="text-2xl font-bold">{courses.length}</p>
+                <p className="text-2xl font-bold">
+                  {Array.isArray(courses) ? courses.length : 0}
+                </p>
               </div>
               <BookOpen className="h-8 w-8 text-blue-500" />
             </div>
@@ -201,10 +206,12 @@ export default function MobileCourseManagement() {
               <div>
                 <p className="text-sm text-gray-600">Total Students</p>
                 <p className="text-2xl font-bold">
-                  {courses.reduce(
-                    (sum, course) => sum + course.studentCount,
-                    0
-                  )}
+                  {Array.isArray(courses)
+                    ? courses.reduce(
+                        (sum, course) => sum + course.studentCount,
+                        0
+                      )
+                    : 0}
                 </p>
               </div>
               <Users className="h-8 w-8 text-green-500" />

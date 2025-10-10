@@ -20,6 +20,7 @@ import {
   ArrowDownRight,
   RefreshCw,
 } from "lucide-react";
+import { safeJsonParse } from "@/lib/api-utils";
 
 interface DashboardStats {
   totalUsers: number;
@@ -78,7 +79,10 @@ export default function EnhancedDashboard() {
       });
 
       if (statsResponse.ok) {
-        const statsData = await statsResponse.json();
+        const statsData = await safeJsonParse(statsResponse, {
+          success: false,
+          data: {},
+        });
         if (statsData.success) {
           setStats(statsData.data);
         }

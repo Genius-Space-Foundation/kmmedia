@@ -178,3 +178,4 @@ export async function trackServerEvent(event: AnalyticsEvent): Promise<void> {
     console.error("Server analytics tracking failed:", error);
   }
 }
+

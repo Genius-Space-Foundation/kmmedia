@@ -65,3 +65,4 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payment_plans_status ON payment_plan
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payment_installments_payment_plan_id ON payment_installments(payment_plan_id);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payment_installments_status ON payment_installments(status);
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payment_installments_due_date ON payment_installments(due_date);
+

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 
 export async function PUT(
   request: AuthenticatedRequest,
-  { params }: { params: { notificationId: string } }
+  { params }: { params: Promise<{ notificationId: string }> }
 ) {
   try {
     if (!request.user) {
@@ -17,7 +17,7 @@ export async function PUT(
       );
     }
 
-    const notificationId = params.notificationId;
+    const { notificationId } = await params;
     const userId = request.user.userId;
 
     // Verify the notification belongs to the user

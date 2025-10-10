@@ -32,6 +32,7 @@ import StudentAssessments from "@/components/student-assessments";
 import StudentProgressTracking from "@/components/student-progress-tracking";
 import UserDropdown from "@/components/user-dropdown";
 import { makeAuthenticatedRequest, clearAuthTokens } from "@/lib/token-utils";
+import { safeJsonParse } from "@/lib/api-utils";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import ApplicationWizard from "@/components/onboarding/ApplicationWizard";
 import AchievementSystem from "@/components/gamification/AchievementSystem";
@@ -382,6 +383,8 @@ export default function StudentDashboard() {
         return;
       }
 
+      // Use the safe JSON parsing utility
+
       const [
         coursesData,
         applicationsData,
@@ -392,14 +395,23 @@ export default function StudentDashboard() {
         notificationsData,
         statsData,
       ] = await Promise.all([
-        coursesRes.json().catch(() => ({ success: false, data: [] })),
-        applicationsRes.json().catch(() => ({ success: false, data: [] })),
-        enrollmentsRes.json().catch(() => ({ success: false, data: [] })),
-        paymentsRes.json().catch(() => ({ success: false, data: [] })),
-        ticketsRes.json().catch(() => ({ success: false, data: [] })),
-        assessmentsRes.json().catch(() => ({ success: false, data: [] })),
-        notificationsRes.json().catch(() => ({ success: false, data: [] })),
-        statsRes.json().catch(() => ({ success: false, data: {} })),
+        safeJsonParse(coursesRes, { success: false, data: { courses: [] } }),
+        safeJsonParse(applicationsRes, {
+          success: false,
+          data: { applications: [] },
+        }),
+        safeJsonParse(enrollmentsRes, {
+          success: false,
+          data: { enrollments: [] },
+        }),
+        safeJsonParse(paymentsRes, { success: false, data: { payments: [] } }),
+        safeJsonParse(ticketsRes, { success: false, data: { tickets: [] } }),
+        safeJsonParse(assessmentsRes, { success: false, data: [] }),
+        safeJsonParse(notificationsRes, {
+          success: false,
+          data: { notifications: [] },
+        }),
+        safeJsonParse(statsRes, { success: false, data: {} }),
       ]);
 
       // Ensure courses is always an array

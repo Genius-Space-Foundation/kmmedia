@@ -27,6 +27,7 @@ import {
   Edit3,
 } from "lucide-react";
 import { toast } from "sonner";
+import { safeJsonParse } from "@/lib/api-utils";
 
 interface UserProfile {
   id: string;
@@ -117,12 +118,14 @@ export default function ProfileEditModal({
       });
 
       if (response.ok) {
-        const updatedUser = await response.json();
+        const updatedUser = await safeJsonParse(response, { data: null });
         onUpdate(updatedUser.data);
         toast.success("Profile updated successfully!");
         onClose();
       } else {
-        const error = await response.json();
+        const error = await safeJsonParse(response, {
+          message: "Unknown error",
+        });
         toast.error(error.message || "Failed to update profile");
       }
     } catch (error) {
@@ -316,6 +319,3 @@ export default function ProfileEditModal({
     </Dialog>
   );
 }
-
-
-

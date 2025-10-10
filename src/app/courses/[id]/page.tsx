@@ -281,28 +281,30 @@ export default function CourseDetailPage() {
                 </Link>
               </div>
 
-              {/* Auth Buttons */}
-              <div className="hidden sm:flex items-center space-x-3">
-                <Link href="/auth/login">
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-blue-50 hover:text-blue-600"
-                  >
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/auth/register">
-                  <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md">
-                    Sign Up
-                  </Button>
-                </Link>
-              </div>
+              {/* Auth Buttons and Mobile Menu */}
+              <div className="flex items-center space-x-3">
+                {/* Desktop Auth Buttons */}
+                <div className="hidden sm:flex items-center space-x-3">
+                  <Link href="/auth/login">
+                    <Button
+                      variant="ghost"
+                      className="hover:bg-blue-50 hover:text-blue-600"
+                    >
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/auth/register">
+                    <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </div>
 
                 {/* Mobile Menu Button */}
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="lg:hidden hover:bg-blue-50 p-2 ml-2"
+                  className="lg:hidden hover:bg-blue-50 p-2"
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   aria-label="Toggle mobile menu"
                 >

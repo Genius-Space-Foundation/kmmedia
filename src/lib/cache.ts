@@ -126,3 +126,4 @@ export function invalidateStatsCache(): void {
 process.on("beforeExit", () => {
   cache.destroy();
 });
+

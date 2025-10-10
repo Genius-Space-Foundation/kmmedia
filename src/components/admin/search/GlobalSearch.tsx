@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { safeJsonParse } from "@/lib/api-utils";
 
 interface SearchResult {
   id: string;
@@ -104,7 +105,10 @@ export default function GlobalSearch({ className = "" }: GlobalSearchProps) {
       const response = await fetch(
         `/api/admin/search?q=${encodeURIComponent(searchQuery)}`
       );
-      const data = await response.json();
+      const data = await safeJsonParse(response, {
+        success: false,
+        results: [],
+      });
 
       if (data.success) {
         setResults(data.results || []);
@@ -277,5 +281,3 @@ export default function GlobalSearch({ className = "" }: GlobalSearchProps) {
     </div>
   );
 }
-
-

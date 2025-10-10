@@ -1,56 +1,89 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
-import { UserStatus } from "@prisma/client";
-import { z } from "zod";
+import { withAdminAuth } from "@/lib/middleware/auth";
 
-const bulkUserActionSchema = z.object({
-  action: z.enum(["activate", "deactivate", "suspend", "delete"]),
-  userIds: z.array(z.string()).min(1, "At least one user ID is required"),
-});
-
-// Bulk user actions (Admin only)
-async function bulkUserActions(req: AuthenticatedRequest) {
+async function bulkHandler(request: NextRequest) {
   try {
-    const body = await req.json();
-    const { action, userIds } = bulkUserActionSchema.parse(body);
+    const body = await request.json();
+    const { userIds, action, comments } = body;
 
-    let updateData: any = {};
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return NextResponse.json(
+        { success: false, message: "User IDs are required" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !action ||
+      !["ACTIVATE", "SUSPEND", "DELETE", "SEND_EMAIL"].includes(action)
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Valid action is required" },
+        { status: 400 }
+      );
+    }
+
+    let result;
 
     switch (action) {
-      case "activate":
-        updateData = { status: UserStatus.ACTIVE };
-        break;
-      case "deactivate":
-        updateData = { status: UserStatus.INACTIVE };
-        break;
-      case "suspend":
-        updateData = { status: UserStatus.SUSPENDED };
-        break;
-      case "delete":
-        // Soft delete by suspending and modifying email
-        const timestamp = Date.now();
-        const users = await prisma.user.findMany({
+      case "ACTIVATE":
+        result = await prisma.user.updateMany({
           where: { id: { in: userIds } },
-          select: { id: true, email: true },
+          data: { status: "ACTIVE" },
+        });
+        break;
+
+      case "SUSPEND":
+        result = await prisma.user.updateMany({
+          where: { id: { in: userIds } },
+          data: { status: "SUSPENDED" },
+        });
+        break;
+
+      case "DELETE":
+        // Check for dependencies
+        const usersWithDependencies = await prisma.user.findMany({
+          where: { id: { in: userIds } },
+          include: {
+            _count: {
+              select: {
+                courses: true,
+                applications: true,
+                enrollments: true,
+              },
+            },
+          },
         });
 
-        await Promise.all(
-          users.map((user) =>
-            prisma.user.update({
-              where: { id: user.id },
-              data: {
-                status: UserStatus.SUSPENDED,
-                email: `deleted_${timestamp}_${user.email}`,
-              },
-            })
-          )
+        const cannotDelete = usersWithDependencies.filter(
+          (user) =>
+            user._count.courses > 0 ||
+            user._count.applications > 0 ||
+            user._count.enrollments > 0
         );
 
-        return NextResponse.json({
-          success: true,
-          message: `${userIds.length} users deleted successfully`,
+        if (cannotDelete.length > 0) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: `Cannot delete ${cannotDelete.length} users with existing data`,
+            },
+            { status: 400 }
+          );
+        }
+
+        result = await prisma.user.deleteMany({
+          where: { id: { in: userIds } },
         });
+        break;
+
+      case "SEND_EMAIL":
+        // TODO: Implement email sending
+        console.log(`Sending email to ${userIds.length} users`);
+        result = { count: userIds.length };
+        break;
+
       default:
         return NextResponse.json(
           { success: false, message: "Invalid action" },
@@ -58,37 +91,18 @@ async function bulkUserActions(req: AuthenticatedRequest) {
         );
     }
 
-    const result = await prisma.user.updateMany({
-      where: {
-        id: { in: userIds },
-      },
-      data: updateData,
-    });
-
     return NextResponse.json({
       success: true,
-      data: { updatedCount: result.count },
-      message: `${result.count} users ${action}d successfully`,
+      message: `Bulk action completed for ${result.count} users`,
+      data: { count: result.count },
     });
   } catch (error) {
     console.error("Bulk user action error:", error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
-      {
-        success: false,
-        message: error instanceof Error ? error.message : "Bulk action failed",
-      },
+      { success: false, message: "Failed to process bulk action" },
       { status: 500 }
     );
   }
 }
 
-export const POST = withAdminAuth(bulkUserActions);
-
+export const PUT = withAdminAuth(bulkHandler);

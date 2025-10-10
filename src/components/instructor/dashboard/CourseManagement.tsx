@@ -29,6 +29,9 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { makeAuthenticatedRequest } from "@/lib/token-utils";
+import { safeJsonParse } from "@/lib/api-utils";
+import { useRouter } from "next/navigation";
+import { Award, BookOpen } from "lucide-react";
 
 interface Course {
   id: string;
@@ -67,6 +70,7 @@ interface CourseTemplate {
 }
 
 export default function CourseManagement() {
+  const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [templates, setTemplates] = useState<CourseTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,7 +118,10 @@ export default function CourseManagement() {
       const response = await makeAuthenticatedRequest(
         "/api/instructor/courses"
       );
-      const data = await response.json();
+      const data = await safeJsonParse(response, {
+        success: false,
+        data: { courses: [] },
+      });
       if (data.success) {
         setCourses(data.data.courses || []);
       }
@@ -135,7 +142,10 @@ export default function CourseManagement() {
       const response = await makeAuthenticatedRequest(
         "/api/instructor/templates"
       );
-      const data = await response.json();
+      const data = await safeJsonParse(response, {
+        success: false,
+        data: { courses: [] },
+      });
       if (data.success) {
         setTemplates(data.data || []);
       }
@@ -155,7 +165,10 @@ export default function CourseManagement() {
           body: JSON.stringify(newCourse),
         }
       );
-      const data = await response.json();
+      const data = await safeJsonParse(response, {
+        success: false,
+        data: { courses: [] },
+      });
       if (data.success) {
         setCourses([data.data, ...courses]);
         setShowCreateForm(false);
@@ -187,7 +200,10 @@ export default function CourseManagement() {
           body: JSON.stringify(newTemplate),
         }
       );
-      const data = await response.json();
+      const data = await safeJsonParse(response, {
+        success: false,
+        data: { courses: [] },
+      });
       if (data.success) {
         setTemplates([data.data, ...templates]);
         setShowTemplateForm(false);
@@ -212,7 +228,10 @@ export default function CourseManagement() {
           method: "POST",
         }
       );
-      const data = await response.json();
+      const data = await safeJsonParse(response, {
+        success: false,
+        data: { courses: [] },
+      });
       if (data.success) {
         setCourses([data.data, ...courses]);
       }
@@ -230,7 +249,10 @@ export default function CourseManagement() {
             method: "DELETE",
           }
         );
-        const data = await response.json();
+        const data = await safeJsonParse(response, {
+          success: false,
+          data: { courses: [] },
+        });
         if (data.success) {
           setCourses(courses.filter((course) => course.id !== courseId));
         }
@@ -295,9 +317,17 @@ export default function CourseManagement() {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Course Management</h2>
         <div className="flex space-x-2">
+          <Button
+            onClick={() =>
+              router.push("/dashboards/instructor/course-creation")
+            }
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+          >
+            Create Course Wizard
+          </Button>
           <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
             <DialogTrigger asChild>
-              <Button>Create Course</Button>
+              <Button variant="outline">Quick Create</Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
@@ -567,7 +597,46 @@ export default function CourseManagement() {
                   </div>
 
                   <div className="flex space-x-2">
-                    <Button size="sm" variant="outline" className="flex-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        router.push(
+                          `/dashboards/instructor/lesson-management?course=${course.id}`
+                        )
+                      }
+                      className="flex-1"
+                    >
+                      <BookOpen className="w-4 h-4 mr-1" />
+                      Lessons
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        router.push(
+                          `/dashboards/instructor/assessment-builder?course=${course.id}`
+                        )
+                      }
+                      className="flex-1"
+                    >
+                      <Target className="w-4 h-4 mr-1" />
+                      Assessments
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() =>
+                        router.push(
+                          `/dashboards/instructor/gradebook?course=${course.id}`
+                        )
+                      }
+                      className="flex-1"
+                    >
+                      <Award className="w-4 h-4 mr-1" />
+                      Gradebook
+                    </Button>
+                    <Button size="sm" variant="outline">
                       Edit
                     </Button>
                     <Button
@@ -615,15 +684,16 @@ export default function CourseManagement() {
                   <div className="space-y-2">
                     <span className="text-sm font-medium">Features:</span>
                     <div className="flex flex-wrap gap-1">
-                      {template.features.map((feature, index) => (
-                        <Badge
-                          key={index}
-                          variant="secondary"
-                          className="text-xs"
-                        >
-                          {feature}
-                        </Badge>
-                      ))}
+                      {Array.isArray(template.features) &&
+                        template.features.map((feature, index) => (
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {feature}
+                          </Badge>
+                        ))}
                     </div>
                   </div>
 

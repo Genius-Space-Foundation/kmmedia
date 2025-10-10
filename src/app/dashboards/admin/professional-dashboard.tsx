@@ -37,6 +37,14 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
+import ApplicationManagement from "@/components/admin/applications/ApplicationManagement";
+import UserManagement from "@/components/admin/users/UserManagement";
+import CourseManagement from "@/components/admin/courses/CourseManagement";
+import SystemSettings from "@/components/admin/settings/SystemSettings";
+import ReportsAnalytics from "@/components/admin/reports/ReportsAnalytics";
+import ActivityLogs from "@/components/admin/logs/ActivityLogs";
+import FinancialManagement from "@/components/admin/payments/FinancialManagement";
+import DashboardOverview from "@/components/admin/dashboard/DashboardOverview";
 
 interface DashboardStats {
   totalUsers: number;
@@ -206,7 +214,13 @@ export default function ProfessionalDashboard() {
     {
       id: "reports",
       label: "Reports",
-      icon: PieChart,
+      icon: TrendingUp,
+      badge: null,
+    },
+    {
+      id: "logs",
+      label: "Activity Logs",
+      icon: Activity,
       badge: null,
     },
     {
@@ -399,6 +413,17 @@ export default function ProfessionalDashboard() {
         <main className="max-w-7xl mx-auto px-6 py-8">
           {/* Overview Tab */}
           {activeTab === "overview" && (
+            <DashboardOverview
+              stats={stats}
+              loading={loading}
+              users={users}
+              courses={courses}
+              applications={applications}
+            />
+          )}
+
+          {/* Legacy Overview Content - Removed and replaced with DashboardOverview component */}
+          {false && activeTab === "overview" && (
             <>
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -825,6 +850,36 @@ export default function ProfessionalDashboard() {
 
           {/* Users Tab */}
           {activeTab === "users" && (
+            <UserManagement
+              onRefresh={() => {
+                fetchStats();
+                fetchUsers();
+              }}
+            />
+          )}
+
+          {/* Applications Tab */}
+          {activeTab === "applications" && (
+            <ApplicationManagement
+              onRefresh={() => {
+                fetchStats();
+                fetchApplications();
+              }}
+            />
+          )}
+
+          {/* Courses Tab */}
+          {activeTab === "courses" && (
+            <CourseManagement
+              onRefresh={() => {
+                fetchStats();
+                fetchCourses();
+              }}
+            />
+          )}
+
+          {/* Legacy Users Tab - Keeping for reference */}
+          {false && activeTab === "users" && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -1196,319 +1251,16 @@ export default function ProfessionalDashboard() {
           )}
 
           {/* Payments Tab */}
-          {activeTab === "payments" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                    Payment Management
-                  </h2>
-                  <p className="text-gray-600">
-                    Track and manage all transactions
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-gray-500">Total Revenue</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    GH₵{(stats?.totalRevenue || 0).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-0 bg-white/90 backdrop-blur-xl shadow-xl">
-                  <CardHeader>
-                    <CardTitle className="text-sm">Total Revenue</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-green-600">
-                      GH₵{(stats?.totalRevenue || 0).toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-2">All time</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 bg-white/90 backdrop-blur-xl shadow-xl">
-                  <CardHeader>
-                    <CardTitle className="text-sm">Monthly Revenue</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-blue-600">
-                      GH₵{(stats?.monthlyRevenue || 0).toLocaleString()}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-2">This month</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 bg-white/90 backdrop-blur-xl shadow-xl">
-                  <CardHeader>
-                    <CardTitle className="text-sm">Pending Payments</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-orange-600">
-                      {stats?.pendingPayments || 0}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-2">
-                      Awaiting confirmation
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Recent Transactions */}
-              <Card className="border-0 bg-white/90 backdrop-blur-xl shadow-xl">
-                <CardHeader>
-                  <CardTitle>Recent Transactions</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {[
-                      {
-                        id: "1",
-                        user: "John Doe",
-                        amount: 50000,
-                        type: "COURSE_PAYMENT",
-                        status: "COMPLETED",
-                        date: new Date(),
-                      },
-                      {
-                        id: "2",
-                        user: "Jane Smith",
-                        amount: 25000,
-                        type: "APPLICATION_FEE",
-                        status: "COMPLETED",
-                        date: new Date(Date.now() - 3600000),
-                      },
-                      {
-                        id: "3",
-                        user: "Bob Wilson",
-                        amount: 75000,
-                        type: "COURSE_PAYMENT",
-                        status: "PENDING",
-                        date: new Date(Date.now() - 7200000),
-                      },
-                      {
-                        id: "4",
-                        user: "Alice Johnson",
-                        amount: 30000,
-                        type: "INSTALLMENT",
-                        status: "COMPLETED",
-                        date: new Date(Date.now() - 86400000),
-                      },
-                    ].map((payment) => (
-                      <div
-                        key={payment.id}
-                        className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-gray-50 to-green-50/30 hover:shadow-md transition-all border border-gray-100"
-                      >
-                        <div className="flex items-center space-x-4 flex-1">
-                          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                            <DollarSign className="h-6 w-6 text-white" />
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-gray-900">
-                              {payment.user}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {payment.type.replace(/_/g, " ")}
-                            </p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              {payment.date.toLocaleString()}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-4">
-                          <div className="text-right">
-                            <p className="text-lg font-bold text-green-600">
-                              GH₵{payment.amount.toLocaleString()}
-                            </p>
-                            <Badge
-                              className={
-                                payment.status === "COMPLETED"
-                                  ? "bg-green-100 text-green-700"
-                                  : payment.status === "PENDING"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-red-100 text-red-700"
-                              }
-                            >
-                              {payment.status}
-                            </Badge>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="rounded-lg"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+          {activeTab === "payments" && <FinancialManagement />}
 
           {/* Reports Tab */}
-          {activeTab === "reports" && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                    Reports & Analytics
-                  </h2>
-                  <p className="text-gray-600">
-                    Generate and view detailed reports
-                  </p>
-                </div>
-                <Button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl">
-                  <Download className="h-4 w-4 mr-2" />
-                  Generate Report
-                </Button>
-              </div>
-              {/* Report Templates */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[
-                  {
-                    title: "User Activity Report",
-                    description:
-                      "Comprehensive user engagement and activity metrics",
-                    icon: Users,
-                    color: "blue",
-                  },
-                  {
-                    title: "Revenue Report",
-                    description: "Financial performance and revenue breakdown",
-                    icon: DollarSign,
-                    color: "green",
-                  },
-                  {
-                    title: "Course Performance",
-                    description: "Course enrollment and completion statistics",
-                    icon: BookOpen,
-                    color: "purple",
-                  },
-                  {
-                    title: "Application Trends",
-                    description: "Application submission and approval rates",
-                    icon: FileText,
-                    color: "orange",
-                  },
-                  {
-                    title: "Payment Analytics",
-                    description: "Payment methods and transaction patterns",
-                    icon: DollarSign,
-                    color: "green",
-                  },
-                  {
-                    title: "Custom Report",
-                    description: "Build your own custom report",
-                    icon: BarChart3,
-                    color: "indigo",
-                  },
-                ].map((report, index) => {
-                  const ReportIcon = report.icon;
-                  return (
-                    <Card
-                      key={index}
-                      className="border-0 bg-white/90 backdrop-blur-xl shadow-lg hover:shadow-2xl transition-all group cursor-pointer"
-                    >
-                      <CardContent className="p-6">
-                        <div
-                          className={`w-14 h-14 bg-gradient-to-br from-${report.color}-500 to-${report.color}-600 rounded-2xl flex items-center justify-center shadow-lg mb-4 group-hover:scale-110 transition-transform`}
-                        >
-                          <ReportIcon className="h-7 w-7 text-white" />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                          {report.title}
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-4">
-                          {report.description}
-                        </p>
-                        <Button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl group-hover:shadow-lg transition-all">
-                          <Download className="h-4 w-4 mr-2" />
-                          Generate
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          {activeTab === "reports" && <ReportsAnalytics />}
+
+          {/* Activity Logs Tab */}
+          {activeTab === "logs" && <ActivityLogs />}
 
           {/* Settings Tab */}
-          {activeTab === "settings" && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                  Settings
-                </h2>
-                <p className="text-gray-600">
-                  Configure system settings and preferences
-                </p>
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="border-0 bg-white/90 backdrop-blur-xl shadow-xl">
-                  <CardHeader>
-                    <CardTitle>General Settings</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Site Name
-                      </label>
-                      <input
-                        type="text"
-                        defaultValue="KM Media Training Institute"
-                        className="mt-1 w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">
-                        Admin Email
-                      </label>
-                      <input
-                        type="email"
-                        defaultValue="admin@kmmedia.com"
-                        className="mt-1 w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 bg-white/90 backdrop-blur-xl shadow-xl">
-                  <CardHeader>
-                    <CardTitle>System Preferences</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">
-                        Email Notifications
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-xl"
-                      >
-                        <CheckCircle className="h-4 w-4 mr-2 text-green-600" />
-                        Enabled
-                      </Button>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">
-                        SMS Notifications
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-xl"
-                      >
-                        <XCircle className="h-4 w-4 mr-2 text-red-600" />
-                        Disabled
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
+          {activeTab === "settings" && <SystemSettings />}
         </main>
       </div>
     </div>

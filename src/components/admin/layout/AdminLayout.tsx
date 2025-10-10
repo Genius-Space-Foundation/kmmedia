@@ -10,6 +10,7 @@ import ThemeToggle from "../theme/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import { Bell, Settings, Menu, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { safeJsonParse } from "@/lib/api-utils";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -41,7 +42,7 @@ export default function AdminLayout({
           });
 
           if (response.ok) {
-            const data = await response.json();
+            const data = await safeJsonParse(response, { data: null });
             setUser(data.data);
           }
         }

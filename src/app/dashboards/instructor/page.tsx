@@ -1,11 +1,5 @@
-import InstructorDashboardNew from "./instructorDashboardNew";
-import ResponsiveWrapper from "@/components/ResponsiveWrapper";
-import MobileInstructorPage from "./mobile/page";
+import ResponsiveInstructorDashboard from "@/components/instructor/layout/ResponsiveInstructorDashboard";
 
 export default function InstructorDashboardPage() {
-  return (
-    <ResponsiveWrapper mobileComponent={MobileInstructorPage}>
-      <InstructorDashboardNew />
-    </ResponsiveWrapper>
-  );
+  return <ResponsiveInstructorDashboard />;
 }

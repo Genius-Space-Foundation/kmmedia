@@ -34,6 +34,7 @@ import AssessmentManagement from "@/components/assessment-management";
 import AnnouncementManagement from "@/components/announcement-management";
 import UserDropdown from "@/components/user-dropdown";
 import { makeAuthenticatedRequest, clearAuthTokens } from "@/lib/token-utils";
+import { safeJsonParse } from "@/lib/api-utils";
 
 interface Course {
   id: string;
@@ -274,12 +275,14 @@ export default function InstructorDashboard() {
           fetch("/api/instructor/announcements"),
         ]);
 
+      // Use the safe JSON parsing utility
+
       const [coursesData, studentsData, assessmentsData, announcementsData] =
         await Promise.all([
-          coursesRes.json().catch(() => ({ success: false, data: [] })),
-          studentsRes.json().catch(() => ({ success: false, data: [] })),
-          assessmentsRes.json().catch(() => ({ success: false, data: [] })),
-          announcementsRes.json().catch(() => ({ success: false, data: [] })),
+          safeJsonParse(coursesRes, { success: false, data: [] }),
+          safeJsonParse(studentsRes, { success: false, data: [] }),
+          safeJsonParse(assessmentsRes, { success: false, data: [] }),
+          safeJsonParse(announcementsRes, { success: false, data: [] }),
         ]);
 
       if (coursesData.success) setCourses(coursesData.data);

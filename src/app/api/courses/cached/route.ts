@@ -75,3 +75,4 @@ async function getCachedCourses(req: NextRequest) {
 }
 
 export const GET = withErrorHandler(getCachedCourses);
+

@@ -175,7 +175,7 @@ export default function StudentAnalytics() {
       const matchesStatus =
         statusFilter === "ALL" || student.status === statusFilter;
       const matchesCourse =
-        courseFilter === "ALL" || student.course.id === courseFilter;
+        courseFilter === "ALL" || student.course?.id === courseFilter;
       return matchesSearch && matchesStatus && matchesCourse;
     }
   );
@@ -188,7 +188,8 @@ export default function StudentAnalytics() {
     .filter((student) => student.status === "ACTIVE")
     .sort(
       (a, b) =>
-        b.performanceMetrics.averageScore - a.performanceMetrics.averageScore
+        (b.performanceMetrics?.averageScore || 0) -
+        (a.performanceMetrics?.averageScore || 0)
     )
     .slice(0, 5);
 
@@ -329,13 +330,13 @@ export default function StudentAnalytics() {
                       <div>
                         <p className="font-medium">{student.name}</p>
                         <p className="text-sm text-muted-foreground">
-                          {student.course.title}
+                          {student.course?.title || "No Course"}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="font-medium">
-                        {student.performanceMetrics.averageScore}%
+                        {student.performanceMetrics?.averageScore || 0}%
                       </p>
                       <p className="text-sm text-muted-foreground">
                         Average Score
@@ -471,7 +472,7 @@ export default function StudentAnalytics() {
                     <div>
                       <span className="font-medium">Course:</span>
                       <p className="text-muted-foreground">
-                        {student.course.title}
+                        {student.course?.title || "No Course"}
                       </p>
                     </div>
                     <div>
@@ -493,7 +494,7 @@ export default function StudentAnalytics() {
                     <div>
                       <span className="font-medium">Avg Score:</span>
                       <p className="text-muted-foreground">
-                        {student.performanceMetrics.averageScore}%
+                        {student.performanceMetrics?.averageScore || 0}%
                       </p>
                     </div>
                   </div>
@@ -563,7 +564,7 @@ export default function StudentAnalytics() {
                   <div className="text-sm">
                     <span className="font-medium">Course:</span>
                     <p className="text-muted-foreground">
-                      {student.course.title}
+                      {student.course?.title || "No Course"}
                     </p>
                   </div>
 

@@ -47,3 +47,4 @@ export function withSecurityHeaders(
     return addSecurityHeaders(response);
   };
 }
+
