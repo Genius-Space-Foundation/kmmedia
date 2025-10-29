@@ -28,6 +28,9 @@ const databaseConfig = {
 export const prisma =
   globalForPrisma.prisma ?? new PrismaClient(databaseConfig);
 
+// Export as db for backward compatibility
+export const db = prisma;
+
 // Handle graceful shutdown
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;

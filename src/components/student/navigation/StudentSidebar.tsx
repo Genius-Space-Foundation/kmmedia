@@ -16,6 +16,7 @@ import {
   User,
   Settings,
   CreditCard,
+  Calendar,
 } from "lucide-react";
 
 interface StudentSidebarProps {
@@ -49,6 +50,12 @@ const navigationItems = [
     id: "learning",
     label: "Learning Progress",
     icon: GraduationCap,
+    badge: null,
+  },
+  {
+    id: "deadlines",
+    label: "Deadlines",
+    icon: Calendar,
     badge: null,
   },
   // {

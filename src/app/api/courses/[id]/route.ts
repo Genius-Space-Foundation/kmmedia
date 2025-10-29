@@ -37,6 +37,7 @@ async function getCourse(
           select: {
             applications: true,
             enrollments: true,
+            assignments: true,
           },
         },
       },

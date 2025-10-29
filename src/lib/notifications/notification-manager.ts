@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
-import { sendEmail } from "./email";
+import { sendEmail, sendAssignmentEmail } from "./email";
 import { sendSMS } from "./sms";
+import { AssignmentNotificationType } from "./assignment-notification-service";
 
 export interface NotificationData {
   userId: string;
@@ -199,6 +200,19 @@ async function sendEmailNotification(
   notification: NotificationData
 ) {
   try {
+    // Check if this is an assignment notification with specific template
+    if (
+      notification.data?.type &&
+      Object.values(AssignmentNotificationType).includes(notification.data.type)
+    ) {
+      return await sendAssignmentEmail(
+        email,
+        notification.data.type,
+        notification.data
+      );
+    }
+
+    // Default email template for non-assignment notifications
     return await sendEmail({
       to: email,
       subject: notification.title,

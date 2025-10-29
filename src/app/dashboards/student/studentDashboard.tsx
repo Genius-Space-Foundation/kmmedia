@@ -42,6 +42,10 @@ import PaymentDashboard from "@/components/student/payments/PaymentDashboard";
 import StudentLayout from "@/components/student/layout/StudentLayout";
 import StudentSettings from "@/components/student/settings/StudentSettings";
 import StudentProfile from "@/components/student/profile/StudentProfile";
+import PersonalizedOverview from "@/components/student/dashboard/PersonalizedOverview";
+import CourseProgressVisualization from "@/components/student/dashboard/CourseProgressVisualization";
+import DeadlinesAndReminders from "@/components/student/dashboard/DeadlinesAndReminders";
+import AchievementProgressTracking from "@/components/student/dashboard/AchievementProgressTracking";
 
 interface Course {
   id: string;
@@ -198,6 +202,27 @@ export default function StudentDashboard() {
   const [selectedCourseForApplication, setSelectedCourseForApplication] =
     useState<Course | null>(null);
 
+  // Enhanced Dashboard States
+  const [upcomingDeadlines, setUpcomingDeadlines] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [achievements, setAchievements] = useState<any[]>([]);
+  const [learningStreak, setLearningStreak] = useState({
+    current: 0,
+    longest: 0,
+    lastActivity: "",
+  });
+  const [learningStats, setLearningStats] = useState({
+    totalHours: 0,
+    coursesCompleted: 0,
+    averageScore: 0,
+    skillsLearned: [],
+    weeklyGoal: {
+      target: 10,
+      current: 0,
+      unit: "hours" as const,
+    },
+  });
+
   // Course Catalog States
   const [courseFilter, setCourseFilter] = useState({
     category: "ALL",
@@ -249,6 +274,7 @@ export default function StudentDashboard() {
   useEffect(() => {
     fetchDashboardData();
     fetchUserProfile();
+    fetchEnhancedDashboardData();
   }, []);
 
   useEffect(() => {
@@ -285,6 +311,112 @@ export default function StudentDashboard() {
         clearAuthTokens();
         router.push("/auth/login");
       }
+    }
+  };
+
+  const fetchEnhancedDashboardData = async () => {
+    try {
+      // Mock data for enhanced dashboard features
+      // In a real implementation, these would be API calls
+
+      // Mock upcoming deadlines
+      const mockDeadlines = [
+        {
+          id: "1",
+          title: "Photography Assignment 1",
+          description: "Submit your first photography portfolio",
+          dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+          course: {
+            id: "1",
+            title: "Digital Photography Basics",
+            color: "blue",
+          },
+          type: "assignment",
+          priority: "high",
+          status: "pending",
+          estimatedTime: 120,
+          reminderSet: false,
+        },
+        {
+          id: "2",
+          title: "Video Editing Quiz",
+          description: "Complete the mid-term quiz on video editing techniques",
+          dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+          course: { id: "2", title: "Video Production", color: "green" },
+          type: "quiz",
+          priority: "medium",
+          status: "pending",
+          estimatedTime: 45,
+          reminderSet: true,
+        },
+      ];
+
+      // Mock achievements
+      const mockAchievements = [
+        {
+          id: "1",
+          title: "First Steps",
+          description: "Completed your first lesson",
+          icon: "🎯",
+          category: "learning",
+          rarity: "common",
+          earnedDate: new Date(
+            Date.now() - 7 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          points: 10,
+        },
+        {
+          id: "2",
+          title: "Week Warrior",
+          description: "Maintained a 7-day learning streak",
+          icon: "🔥",
+          category: "engagement",
+          rarity: "rare",
+          earnedDate: new Date(
+            Date.now() - 3 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          points: 50,
+        },
+        {
+          id: "3",
+          title: "Course Conqueror",
+          description: "Completed your first course",
+          icon: "🏆",
+          category: "milestone",
+          rarity: "epic",
+          earnedDate: new Date(
+            Date.now() - 1 * 24 * 60 * 60 * 1000
+          ).toISOString(),
+          points: 100,
+        },
+      ];
+
+      // Mock learning stats
+      const mockLearningStats = {
+        totalHours: 24,
+        coursesCompleted: 1,
+        averageScore: 87,
+        skillsLearned: ["Photography", "Video Editing", "Color Theory"],
+        weeklyGoal: {
+          target: 10,
+          current: 6,
+          unit: "hours" as const,
+        },
+      };
+
+      // Mock learning streak
+      const mockLearningStreak = {
+        current: 5,
+        longest: 12,
+        lastActivity: "Today",
+      };
+
+      setUpcomingDeadlines(mockDeadlines);
+      setAchievements(mockAchievements);
+      setLearningStats(mockLearningStats);
+      setLearningStreak(mockLearningStreak);
+    } catch (error) {
+      console.error("Error fetching enhanced dashboard data:", error);
     }
   };
 
@@ -803,6 +935,58 @@ export default function StudentDashboard() {
     router.push("/auth/login");
   };
 
+  // Enhanced Dashboard Handlers
+  const handleContinueCourse = (courseId: string) => {
+    console.log("Continue course:", courseId);
+    // Navigate to course content or open course modal
+    setActiveTab("learning");
+  };
+
+  const handleViewDeadlines = () => {
+    setActiveTab("deadlines");
+  };
+
+  const handleViewAchievements = () => {
+    setActiveTab("achievements");
+  };
+
+  const handleSetReminder = (deadlineId: string) => {
+    console.log("Set reminder for deadline:", deadlineId);
+    // Implement reminder setting logic
+    setUpcomingDeadlines((prev) =>
+      prev.map((deadline) =>
+        deadline.id === deadlineId
+          ? { ...deadline, reminderSet: true }
+          : deadline
+      )
+    );
+  };
+
+  const handleViewDeadline = (deadlineId: string) => {
+    console.log("View deadline:", deadlineId);
+    // Navigate to deadline details or open modal
+  };
+
+  const handleAddReminder = () => {
+    console.log("Add custom reminder");
+    // Open add reminder modal
+  };
+
+  const handleViewAchievement = (achievementId: string) => {
+    console.log("View achievement:", achievementId);
+    // Open achievement details modal
+  };
+
+  const handleSetGoal = () => {
+    console.log("Set learning goal");
+    // Open goal setting modal
+  };
+
+  const handleViewCourse = (courseId: string) => {
+    console.log("View course:", courseId);
+    // Navigate to course details
+  };
+
   // Utility Functions
   const getStatusColor = (status: string) => {
     const colors = {
@@ -981,249 +1165,17 @@ export default function StudentDashboard() {
           )}
 
           {/* Overview Tab */}
-          {activeTab === "overview" && (
-            <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Recent Applications */}
-                <Card className="bg-white border-0 shadow-xl rounded-2xl overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                          <span className="text-white text-xl">📄</span>
-                        </div>
-                        <div>
-                          <CardTitle className="text-xl font-bold text-gray-900">
-                            My Applications
-                          </CardTitle>
-                          <CardDescription className="text-gray-600">
-                            Track your course applications and their status
-                          </CardDescription>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={() => setActiveTab("courses")}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                      >
-                        Apply More
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
-                      {Array.isArray(applications) &&
-                      applications.length > 0 ? (
-                        applications.slice(0, 5).map((application) => (
-                          <div
-                            key={application.id}
-                            className="group p-4 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-100 hover:shadow-md transition-all duration-300 hover:scale-[1.02]"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-                                  {application.course.title}
-                                </h4>
-                                <p className="text-sm text-gray-600 mb-2">
-                                  Applied:{" "}
-                                  {new Date(
-                                    application.submittedAt
-                                  ).toLocaleDateString()}
-                                </p>
-                                <div className="flex items-center space-x-2">
-                                  <Badge
-                                    className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                                      application.status
-                                    )}`}
-                                  >
-                                    {application.status.replace("_", " ")}
-                                  </Badge>
-                                </div>
-                              </div>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="ml-4 border-blue-200 text-blue-700 hover:bg-blue-50 rounded-lg px-3 py-2"
-                              >
-                                View Details
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-12">
-                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span className="text-2xl">📄</span>
-                          </div>
-                          <p className="text-gray-500 font-medium mb-2">
-                            No applications yet
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            Start by applying for a course!
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Current Enrollments */}
-                <Card className="bg-white border-0 shadow-xl rounded-2xl overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-100">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-                          <span className="text-white text-xl">🎓</span>
-                        </div>
-                        <div>
-                          <CardTitle className="text-xl font-bold text-gray-900">
-                            My Courses
-                          </CardTitle>
-                          <CardDescription className="text-gray-600">
-                            Continue your learning journey
-                          </CardDescription>
-                        </div>
-                      </div>
-                      <Button
-                        onClick={() => setActiveTab("learning")}
-                        className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                      >
-                        View All
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <div className="space-y-4 max-h-96 overflow-y-auto">
-                      {Array.isArray(enrollments) && enrollments.length > 0 ? (
-                        enrollments.slice(0, 5).map((enrollment) => (
-                          <div
-                            key={enrollment.id}
-                            className="group p-4 bg-gradient-to-r from-gray-50 to-green-50 rounded-xl border border-gray-100 hover:shadow-md transition-all duration-300 hover:scale-[1.02]"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
-                                <h4 className="font-bold text-gray-900 mb-2 group-hover:text-green-600 transition-colors">
-                                  {enrollment.course.title}
-                                </h4>
-                                <div className="flex items-center space-x-3 mb-2">
-                                  <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
-                                    <div
-                                      className="bg-gradient-to-r from-green-500 to-emerald-600 h-3 rounded-full transition-all duration-500 ease-out"
-                                      style={{
-                                        width: `${enrollment.progress}%`,
-                                      }}
-                                    ></div>
-                                  </div>
-                                  <span className="text-sm font-semibold text-gray-700 min-w-[3rem]">
-                                    {enrollment.progress}%
-                                  </span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <Badge
-                                    className={`px-3 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                                      enrollment.status
-                                    )}`}
-                                  >
-                                    {enrollment.status}
-                                  </Badge>
-                                </div>
-                              </div>
-                              <Button
-                                size="sm"
-                                className="ml-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg px-4 py-2 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                              >
-                                Continue
-                              </Button>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-12">
-                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span className="text-2xl">🎓</span>
-                          </div>
-                          <p className="text-gray-500 font-medium mb-2">
-                            No active courses
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            Enroll in a course to get started!
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Quick Actions Section */}
-              <div className="mt-8">
-                <Card className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-0 shadow-xl rounded-2xl overflow-hidden">
-                  <CardHeader>
-                    <div className="text-center">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                        Quick Actions
-                      </h3>
-                      <p className="text-gray-600">
-                        Get started with these popular features
-                      </p>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Button
-                        onClick={() => setActiveTab("courses")}
-                        className="flex flex-col items-center space-y-3 p-6 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105"
-                      >
-                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
-                          <span className="text-white text-xl">🔍</span>
-                        </div>
-                        <div className="text-center">
-                          <h4 className="font-semibold text-gray-900">
-                            Browse Courses
-                          </h4>
-                          <p className="text-xs text-gray-600">
-                            Discover new learning opportunities
-                          </p>
-                        </div>
-                      </Button>
-
-                      <Button
-                        onClick={() => setActiveTab("analytics")}
-                        className="flex flex-col items-center space-y-3 p-6 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105"
-                      >
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center">
-                          <span className="text-white text-xl">📊</span>
-                        </div>
-                        <div className="text-center">
-                          <h4 className="font-semibold text-gray-900">
-                            View Analytics
-                          </h4>
-                          <p className="text-xs text-gray-600">
-                            Track your learning progress
-                          </p>
-                        </div>
-                      </Button>
-
-                      <Button
-                        onClick={() => setActiveTab("support")}
-                        className="flex flex-col items-center space-y-3 p-6 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105"
-                      >
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center">
-                          <span className="text-white text-xl">💬</span>
-                        </div>
-                        <div className="text-center">
-                          <h4 className="font-semibold text-gray-900">
-                            Get Support
-                          </h4>
-                          <p className="text-xs text-gray-600">
-                            Need help? We're here for you
-                          </p>
-                        </div>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </>
+          {activeTab === "overview" && user && (
+            <PersonalizedOverview
+              user={user}
+              enrollments={enrollments}
+              upcomingDeadlines={upcomingDeadlines}
+              recentActivity={recentActivity}
+              achievements={achievements}
+              onContinueCourse={handleContinueCourse}
+              onViewDeadlines={handleViewDeadlines}
+              onViewAchievements={handleViewAchievements}
+            />
           )}
 
           {/* Courses Tab */}
@@ -1421,22 +1373,32 @@ export default function StudentDashboard() {
 
           {/* Learning Tab */}
           {activeTab === "learning" && (
-            <StudentProgressTracking
+            <CourseProgressVisualization
               enrollments={enrollments}
-              onContinueCourse={(courseId) => {
-                // Navigate to course or open course modal
-                console.log("Continue course:", courseId);
-              }}
-              onViewCertificate={(certificateId) => {
-                // Open certificate modal or navigate to certificate page
-                console.log("View certificate:", certificateId);
-              }}
+              onContinueCourse={handleContinueCourse}
+              onViewCourse={handleViewCourse}
+            />
+          )}
+
+          {/* Deadlines Tab */}
+          {activeTab === "deadlines" && (
+            <DeadlinesAndReminders
+              deadlines={upcomingDeadlines}
+              onSetReminder={handleSetReminder}
+              onViewDeadline={handleViewDeadline}
+              onAddReminder={handleAddReminder}
             />
           )}
 
           {/* Achievements Tab */}
           {activeTab === "achievements" && user && (
-            <AchievementSystem userId={user.id} />
+            <AchievementProgressTracking
+              achievements={achievements}
+              learningStreak={learningStreak}
+              learningStats={learningStats}
+              onViewAchievement={handleViewAchievement}
+              onSetGoal={handleSetGoal}
+            />
           )}
 
           {/* Notifications Tab */}

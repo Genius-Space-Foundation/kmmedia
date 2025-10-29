@@ -11,6 +11,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { makeAuthenticatedRequest } from "@/lib/token-utils";
+import AssignmentManagementWidget from "./AssignmentManagementWidget";
+import PendingGradingNotifications from "./PendingGradingNotifications";
+import AssignmentAnalyticsSummary from "./AssignmentAnalyticsSummary";
 
 interface QuickStats {
   totalCourses: number;
@@ -205,6 +208,17 @@ export default function OverviewWidget() {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Assignment Management Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <AssignmentManagementWidget />
+        <PendingGradingNotifications />
+      </div>
+
+      {/* Assignment Analytics */}
+      <div className="grid grid-cols-1 gap-8">
+        <AssignmentAnalyticsSummary />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

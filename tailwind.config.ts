@@ -8,23 +8,32 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        inter: ["Inter", "Roboto", "Arial", "sans-serif"],
+      },
+      spacing: {
+        xs: "4px",
+        sm: "8px",
+        md: "16px",
+        lg: "24px",
+        xl: "40px",
+      },
       colors: {
-        // Brand Colors
+        // Brand Colors - New Design System
         "brand-primary": "rgb(var(--brand-primary))",
         "brand-primary-light": "rgb(var(--brand-primary-light))",
         "brand-primary-dark": "rgb(var(--brand-primary-dark))",
-
-        "brand-secondary": "rgb(var(--brand-secondary))",
-        "brand-secondary-light": "rgb(var(--brand-secondary-light))",
-        "brand-secondary-dark": "rgb(var(--brand-secondary-dark))",
 
         "brand-accent": "rgb(var(--brand-accent))",
         "brand-accent-light": "rgb(var(--brand-accent-light))",
         "brand-accent-dark": "rgb(var(--brand-accent-dark))",
 
-        "brand-tertiary": "rgb(var(--brand-tertiary))",
-        "brand-tertiary-light": "rgb(var(--brand-tertiary-light))",
-        "brand-tertiary-dark": "rgb(var(--brand-tertiary-dark))",
+        "brand-background": "rgb(var(--brand-background))",
+        "brand-surface": "rgb(var(--brand-surface))",
+        "brand-border": "rgb(var(--brand-border))",
+        "brand-text-primary": "rgb(var(--brand-text-primary))",
+        "brand-text-secondary": "rgb(var(--brand-text-secondary))",
+        "brand-text-disabled": "rgb(var(--brand-text-disabled))",
 
         // Neutral Colors
         "brand-neutral-50": "rgb(var(--brand-neutral-50))",
@@ -98,6 +107,8 @@ const config: Config = {
         glow: "glow 2s ease-in-out infinite",
         "text-glow": "textGlow 3s ease-in-out infinite",
         "gradient-shift": "gradientShift 4s ease infinite",
+        "bounce-gentle": "bounce-gentle 2s ease-in-out infinite",
+        "pulse-soft": "pulse-soft 3s ease-in-out infinite",
       },
       keyframes: {
         "fade-in": {
@@ -136,6 +147,14 @@ const config: Config = {
           "0%": { backgroundPosition: "0% 50%" },
           "50%": { backgroundPosition: "100% 50%" },
           "100%": { backgroundPosition: "0% 50%" },
+        },
+        "bounce-gentle": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        "pulse-soft": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.8" },
         },
       },
     },

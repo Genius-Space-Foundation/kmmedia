@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
-import jwt from "jsonwebtoken";
+import { verifyToken } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,15 +18,11 @@ export async function POST(request: NextRequest) {
 
     const token = authHeader.substring(7); // Remove "Bearer " prefix
 
-    // Verify JWT token
-    let payload: any;
-    try {
-      payload = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "your-secret-key"
-      ) as any;
-    } catch (jwtError) {
-      console.error("JWT verification error:", jwtError);
+    // Verify JWT token using the auth library
+    const payload = verifyToken(token, false);
+
+    if (!payload) {
+      console.error("JWT verification failed - Invalid token");
       return NextResponse.json(
         { success: false, message: "Invalid token" },
         { status: 401 }

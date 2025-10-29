@@ -134,6 +134,8 @@ export async function createUser(userData: {
   password: string;
   role: UserRole;
   phone?: string;
+  interests?: string[];
+  experience?: string;
 }) {
   const hashedPassword = await hashPassword(userData.password);
 
@@ -146,6 +148,18 @@ export async function createUser(userData: {
       phone: userData.phone,
     },
   });
+
+  // Create learning profile if interests or experience provided
+  if (userData.interests || userData.experience) {
+    await prisma.learningProfile.create({
+      data: {
+        userId: user.id,
+        interests: userData.interests || [],
+        experience: userData.experience || "",
+        onboardingCompleted: false,
+      },
+    });
+  }
 
   return user;
 }

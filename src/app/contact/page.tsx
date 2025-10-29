@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +12,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import EnhancedNavigation from "@/components/navigation/EnhancedNavigation";
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  profileImage?: string;
+}
 
 export default function ContactPage() {
+  const [user, setUser] = useState<User | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -24,7 +34,25 @@ export default function ContactPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Check for authenticated user
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await fetch("/api/auth/me");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setUser(data.user);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -105,196 +133,10 @@ export default function ContactPage() {
         ></div>
       </div>
 
+      {/* Enhanced Navigation */}
+      <EnhancedNavigation user={user} />
+
       <div className="relative max-w-full mx-auto px-2 sm:px-4 lg:px-6">
-        {/* Header */}
-        <header className="sticky top-0 z-50 backdrop-blur-xl bg-brand-surface/95 border-b border-brand-border/30 shadow-lg">
-          <div className="max-w-7xl mx-auto px-responsive">
-            <nav className="flex items-center justify-between h-16 sm:h-20">
-              {/* Logo Section - Left */}
-              <Link
-                href="/"
-                className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0"
-              >
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg overflow-hidden shadow-md">
-                  <img
-                    src="/images/logo.jpeg"
-                    alt="KM Media Training Institute Logo"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="hidden sm:block">
-                  <h1 className="text-sm sm:text-lg lg:text-xl font-bold text-brand-primary leading-tight">
-                    KM Media Training Institute
-                  </h1>
-                  <p className="text-xs text-brand-text-muted font-medium">
-                    Excellence in Media Education
-                  </p>
-                </div>
-              </Link>
-
-              {/* Navigation Links - Center */}
-              <div className="hidden lg:flex items-center space-x-2">
-                <Link href="/">
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-brand-primary/10 hover:text-brand-primary transition-all duration-300 px-4 py-2 text-sm font-medium"
-                  >
-                    Home
-                  </Button>
-                </Link>
-                <Link href="/about">
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-brand-primary/10 hover:text-brand-primary transition-all duration-300 px-4 py-2 text-sm font-medium"
-                  >
-                    About
-                  </Button>
-                </Link>
-                <Link href="/courses">
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-brand-primary/10 hover:text-brand-primary transition-all duration-300 px-4 py-2 text-sm font-medium"
-                  >
-                    Courses
-                  </Button>
-                </Link>
-                <Link href="/stories">
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-brand-secondary/10 hover:text-brand-secondary transition-all duration-300 px-4 py-2 text-sm font-medium"
-                  >
-                    Stories
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Auth Buttons - Right */}
-              <div className="flex items-center space-x-1 sm:space-x-3">
-                <Link href="/auth/login" className="hidden sm:block">
-                  <Button
-                    variant="ghost"
-                    className="btn-touch-friendly-sm hover:bg-brand-primary/10 hover:text-brand-primary transition-all duration-300 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium"
-                  >
-                    Sign In
-                  </Button>
-                </Link>
-                <Link href="/auth/register" className="hidden sm:block">
-                  <Button className="btn-brand-primary shadow-md btn-touch-friendly-sm px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium">
-                    Sign Up
-                  </Button>
-                </Link>
-
-                {/* Mobile Menu Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="lg:hidden btn-touch-friendly-sm hover:bg-brand-primary/10 p-2 ml-2"
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  aria-label="Toggle mobile menu"
-                >
-                  <svg
-                    className="w-4 h-4 sm:w-5 sm:h-5 transition-transform duration-200"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    {isMobileMenuOpen ? (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    ) : (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6h16M4 12h16M4 18h16"
-                      />
-                    )}
-                  </svg>
-                </Button>
-              </div>
-            </nav>
-          </div>
-
-          {/* Mobile Navigation Menu */}
-          <div
-            className={`lg:hidden transition-all duration-300 ease-in-out overflow-hidden ${
-              isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-            }`}
-          >
-            <div className="mt-4 pb-4 border-t border-brand-border/30">
-              <div className="flex flex-col space-y-2 pt-4">
-                <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start hover:bg-brand-primary/10 hover:text-brand-primary transition-all duration-300"
-                  >
-                    Home
-                  </Button>
-                </Link>
-                <Link href="/about" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start hover:bg-brand-primary/10 hover:text-brand-primary transition-all duration-300"
-                  >
-                    About
-                  </Button>
-                </Link>
-                <Link
-                  href="/courses"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start hover:bg-brand-primary/10 hover:text-brand-primary transition-all duration-300"
-                  >
-                    Courses
-                  </Button>
-                </Link>
-                <Link
-                  href="/stories"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start hover:bg-brand-secondary/10 hover:text-brand-secondary transition-all duration-300"
-                  >
-                    Stories
-                  </Button>
-                </Link>
-
-                {/* Mobile Auth Buttons */}
-                <div className="pt-4 border-t border-brand-border/30 mt-4">
-                  <div className="flex flex-col space-y-2">
-                    <Link
-                      href="/auth/login"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start border-brand-primary/20 hover:bg-brand-primary/5 hover:border-brand-primary/30 transition-all duration-300"
-                      >
-                        Sign In
-                      </Button>
-                    </Link>
-                    <Link
-                      href="/auth/register"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      <Button className="w-full justify-start btn-brand-primary hover:opacity-90 transition-all duration-300">
-                        Sign Up
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
         {/* Hero Section */}
         <section className="py-responsive text-center relative overflow-hidden rounded-2xl sm:rounded-3xl mx-2 sm:mx-4 my-4 sm:my-8">
           <div className="absolute inset-0">
@@ -311,7 +153,7 @@ export default function ContactPage() {
               Get In Touch
             </div>
             <h1 className="text-responsive-3xl sm:text-responsive-4xl lg:text-responsive-5xl font-bold text-white mb-4 sm:mb-6 leading-tight drop-shadow-lg">
-              We'd Love to
+              We&apos;d Love to
               <br />
               <span className="text-brand-accent">Hear From You</span>
             </h1>
@@ -339,9 +181,9 @@ export default function ContactPage() {
                 <p className="text-brand-text-secondary">
                   123 Media Avenue,
                   <br />
-                  Victoria Island, Lagos
+                  Akatsi, Volta Region
                   <br />
-                  Nigeria
+                  Ghana
                 </p>
                 <p className="text-sm text-brand-primary font-medium">
                   Open Mon-Fri: 9AM-6PM
@@ -381,9 +223,9 @@ export default function ContactPage() {
               </CardHeader>
               <CardContent className="text-center space-y-2">
                 <p className="text-brand-text-secondary">
-                  info@kmmedia.edu.ng
+                  info@kmmediatraininginstitute.com
                   <br />
-                  admissions@kmmedia.edu.ng
+                  {/* admissions@kmmediatraininginstitute.com */}
                 </p>
                 <p className="text-sm text-brand-accent font-medium">
                   Response within 24 hours
@@ -581,7 +423,7 @@ export default function ContactPage() {
                   },
                   {
                     question:
-                      "What's the difference between online and hybrid courses?",
+                      "What&apos;s the difference between online and hybrid courses?",
                     answer:
                       "Online courses are fully remote with live virtual sessions. Hybrid courses combine online learning with in-person practical sessions at our campus.",
                   },
@@ -639,7 +481,7 @@ export default function ContactPage() {
                 Find Our Campus
               </CardTitle>
               <CardDescription className="text-brand-text-secondary">
-                Located in the heart of Lagos, easily accessible by public
+                Located in the heart of Akatsi, easily accessible by public
                 transport
               </CardDescription>
             </CardHeader>
@@ -651,7 +493,7 @@ export default function ContactPage() {
                     Interactive Map
                   </p>
                   <p className="text-sm text-brand-text-muted">
-                    123 Media Avenue, Victoria Island, Lagos
+                    123 Media Avenue, Akatsi, Volta Region
                   </p>
                 </div>
               </div>

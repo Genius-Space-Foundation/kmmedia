@@ -31,7 +31,9 @@ import {
   Play,
   Download,
   Share2,
+  FileText,
 } from "lucide-react";
+import CourseAssignmentsTab from "@/components/course/CourseAssignmentsTab";
 
 interface Course {
   id: string;
@@ -61,6 +63,7 @@ interface Course {
   _count: {
     applications: number;
     enrollments: number;
+    assignments?: number;
   };
   status: string;
   createdAt: string;
@@ -75,6 +78,8 @@ export default function CourseDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -85,6 +90,21 @@ export default function CourseDetailPage() {
         // Check authentication
         const token = localStorage.getItem("accessToken");
         setIsAuthenticated(!!token);
+
+        // Get user info if authenticated
+        if (token) {
+          try {
+            const userResponse = await fetch("/api/auth/me");
+            if (userResponse.ok) {
+              const userData = await userResponse.json();
+              if (userData.success) {
+                setUser(userData.user);
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching user:", error);
+          }
+        }
 
         const response = await fetch(`/api/courses/${courseId}`);
         const data = await response.json();
@@ -150,11 +170,9 @@ export default function CourseDetailPage() {
                 >
                   Try Again
                 </Button>
-                <Link href="/courses" className="flex-1">
-                  <Button variant="outline" className="w-full">
-                    Browse Courses
-                  </Button>
-                </Link>
+                <Button asChild variant="outline" className="flex-1">
+                  <Link href="/courses">Browse Courses</Link>
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -184,16 +202,15 @@ export default function CourseDetailPage() {
                 Please check the course ID or browse our available courses.
               </p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Link href="/courses" className="flex-1">
-                  <Button className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                    Browse Courses
-                  </Button>
-                </Link>
-                <Link href="/" className="flex-1">
-                  <Button variant="outline" className="w-full">
-                    Back to Home
-                  </Button>
-                </Link>
+                <Button
+                  asChild
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                >
+                  <Link href="/courses">Browse Courses</Link>
+                </Button>
+                <Button asChild variant="outline" className="flex-1">
+                  <Link href="/">Back to Home</Link>
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -239,65 +256,60 @@ export default function CourseDetailPage() {
 
               {/* Navigation Links */}
               <div className="hidden lg:flex items-center space-x-1">
-                <Link href="/">
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                  >
-                    Home
-                  </Button>
-                </Link>
-                <Link href="/about">
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                  >
-                    About
-                  </Button>
-                </Link>
-                <Link href="/courses">
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                  >
-                    Courses
-                  </Button>
-                </Link>
-                <Link href="/stories">
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                  >
-                    Stories
-                  </Button>
-                </Link>
-                <Link href="/contact">
-                  <Button
-                    variant="ghost"
-                    className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                  >
-                    Contact
-                  </Button>
-                </Link>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                >
+                  <Link href="/">Home</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                >
+                  <Link href="/about">About</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                >
+                  <Link href="/courses">Courses</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                >
+                  <Link href="/stories">Stories</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                >
+                  <Link href="/contact">Contact</Link>
+                </Button>
               </div>
 
               {/* Auth Buttons and Mobile Menu */}
               <div className="flex items-center space-x-3">
                 {/* Desktop Auth Buttons */}
                 <div className="hidden sm:flex items-center space-x-3">
-                  <Link href="/auth/login">
-                    <Button
-                      variant="ghost"
-                      className="hover:bg-blue-50 hover:text-blue-600"
-                    >
-                      Sign In
-                    </Button>
-                  </Link>
-                  <Link href="/auth/register">
-                    <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md">
-                      Sign Up
-                    </Button>
-                  </Link>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    className="hover:bg-blue-50 hover:text-blue-600"
+                  >
+                    <Link href="/auth/login">Sign In</Link>
+                  </Button>
+                  <Button
+                    asChild
+                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md"
+                  >
+                    <Link href="/auth/register">Sign Up</Link>
+                  </Button>
                 </div>
 
                 {/* Mobile Menu Button */}
@@ -343,78 +355,90 @@ export default function CourseDetailPage() {
           >
             <div className="mt-4 pb-4 border-t border-gray-200">
               <div className="flex flex-col space-y-2 pt-4">
-                <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start hover:bg-blue-50"
-                  >
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="w-full justify-start hover:bg-blue-50"
+                >
+                  <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
                     Home
-                  </Button>
-                </Link>
-                <Link href="/about" onClick={() => setIsMobileMenuOpen(false)}>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start hover:bg-blue-50"
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="w-full justify-start hover:bg-blue-50"
+                >
+                  <Link
+                    href="/about"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     About
-                  </Button>
-                </Link>
-                <Link
-                  href="/courses"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="w-full justify-start hover:bg-blue-50"
                 >
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start hover:bg-blue-50"
+                  <Link
+                    href="/courses"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Courses
-                  </Button>
-                </Link>
-                <Link
-                  href="/stories"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="w-full justify-start hover:bg-blue-50"
                 >
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start hover:bg-blue-50"
+                  <Link
+                    href="/stories"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Stories
-                  </Button>
-                </Link>
-                <Link
-                  href="/contact"
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="w-full justify-start hover:bg-blue-50"
                 >
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start hover:bg-blue-50"
+                  <Link
+                    href="/contact"
+                    onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Contact
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
 
                 {/* Mobile Auth Buttons */}
                 <div className="pt-4 border-t border-gray-200 mt-4">
                   <div className="flex flex-col space-y-2">
-                    <Link
-                      href="/auth/login"
-                      onClick={() => setIsMobileMenuOpen(false)}
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full justify-start border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300"
                     >
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300"
+                      <Link
+                        href="/auth/login"
+                        onClick={() => setIsMobileMenuOpen(false)}
                       >
                         Sign In
-                      </Button>
-                    </Link>
-                    <Link
-                      href="/auth/register"
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      className="w-full justify-start bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white transition-all duration-300"
                     >
-                      <Button className="w-full justify-start bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white transition-all duration-300">
+                      <Link
+                        href="/auth/register"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
                         Sign Up
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -713,74 +737,6 @@ export default function CourseDetailPage() {
               </CardContent>
             </Card>
 
-            {/* Curriculum */}
-            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-xl">
-              <CardHeader>
-                <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
-                    <BookOpen className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl sm:text-2xl text-gray-900">
-                      Course Curriculum
-                    </CardTitle>
-                    <CardDescription className="text-gray-600">
-                      Detailed breakdown of course content and lessons
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {course.lessons && course.lessons.length > 0 ? (
-                    course.lessons.map((lesson, index) => (
-                      <div
-                        key={lesson.id}
-                        className="group bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
-                      >
-                        <div className="flex items-start space-x-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl flex items-center justify-center text-sm font-bold group-hover:scale-110 transition-transform">
-                            {lesson.order}
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                              {lesson.title}
-                            </h4>
-                            {lesson.description && (
-                              <p className="text-gray-600 text-sm leading-relaxed">
-                                {lesson.description}
-                              </p>
-                            )}
-                            <div className="flex items-center space-x-2 mt-3">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span className="text-xs text-gray-500 font-medium">
-                                Lesson {lesson.order}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <ArrowRight className="w-5 h-5 text-blue-600" />
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-12">
-                      <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <BookOpen className="w-8 h-8 text-gray-500" />
-                      </div>
-                      <p className="text-gray-500 text-lg font-medium">
-                        No lessons available yet.
-                      </p>
-                      <p className="text-gray-400 text-sm mt-2">
-                        Curriculum will be updated soon.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Instructor */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-xl">
               <CardHeader>
@@ -852,6 +808,191 @@ export default function CourseDetailPage() {
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Course Content Tabs */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-xl">
+              <CardHeader>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                    <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <CardTitle className="text-lg sm:text-xl lg:text-2xl text-gray-900">
+                    Course Content
+                  </CardTitle>
+                </div>
+
+                {/* Tab Navigation */}
+                <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setActiveTab("overview")}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeTab === "overview"
+                        ? "bg-white text-blue-600 shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <BookOpen className="w-4 h-4 inline mr-2" />
+                    Overview
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("curriculum")}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeTab === "curriculum"
+                        ? "bg-white text-blue-600 shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <Award className="w-4 h-4 inline mr-2" />
+                    Curriculum
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("assignments")}
+                    className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      activeTab === "assignments"
+                        ? "bg-white text-blue-600 shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    <FileText className="w-4 h-4 inline mr-2" />
+                    Assignments
+                    {course._count.assignments &&
+                      course._count.assignments > 0 && (
+                        <Badge className="ml-2 bg-blue-100 text-blue-800 text-xs">
+                          {course._count.assignments}
+                        </Badge>
+                      )}
+                  </button>
+                </div>
+              </CardHeader>
+
+              <CardContent>
+                {/* Tab Content */}
+                {activeTab === "overview" && (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                        Course Description
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed">
+                        {course.longDescription || course.description}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h4 className="text-base font-semibold text-gray-900">
+                          Course Details
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
+                            <Clock className="w-5 h-5 text-green-600" />
+                            <span className="text-gray-700 font-medium">
+                              Duration: {course.duration} weeks
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                            <Award className="w-5 h-5 text-blue-600" />
+                            <span className="text-gray-700 font-medium">
+                              Level: {course.difficulty}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                            <Globe className="w-5 h-5 text-purple-600" />
+                            <span className="text-gray-700 font-medium">
+                              Mode: {course.mode.join(", ")}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h4 className="text-base font-semibold text-gray-900">
+                          Enrollment Info
+                        </h4>
+                        <div className="space-y-3">
+                          <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-lg border border-indigo-100">
+                            <Users className="w-5 h-5 text-indigo-600" />
+                            <span className="text-gray-700 font-medium">
+                              Applications: {course._count.applications}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg border border-emerald-100">
+                            <CheckCircle className="w-5 h-5 text-emerald-600" />
+                            <span className="text-gray-700 font-medium">
+                              Enrolled: {enrolled}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-3 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-100">
+                            <Shield className="w-5 h-5 text-yellow-600" />
+                            <span className="text-gray-700 font-medium">
+                              Status: {course.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "curriculum" && (
+                  <div className="space-y-4">
+                    {course.lessons && course.lessons.length > 0 ? (
+                      course.lessons.map((lesson, index) => (
+                        <div
+                          key={lesson.id}
+                          className="group bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-6 border border-blue-100 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
+                        >
+                          <div className="flex items-start space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-xl flex items-center justify-center text-sm font-bold group-hover:scale-110 transition-transform">
+                              {lesson.order}
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                                {lesson.title}
+                              </h4>
+                              {lesson.description && (
+                                <p className="text-gray-600 text-sm leading-relaxed">
+                                  {lesson.description}
+                                </p>
+                              )}
+                              <div className="flex items-center space-x-2 mt-3">
+                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                <span className="text-xs text-gray-500 font-medium">
+                                  Lesson {lesson.order}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <ArrowRight className="w-5 h-5 text-blue-600" />
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="w-16 h-16 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                          <BookOpen className="w-8 h-8 text-gray-500" />
+                        </div>
+                        <p className="text-gray-500 text-lg font-medium">
+                          No lessons available yet.
+                        </p>
+                        <p className="text-gray-400 text-sm mt-2">
+                          Curriculum will be updated soon.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {activeTab === "assignments" && (
+                  <CourseAssignmentsTab
+                    courseId={course.id}
+                    userRole={user?.role?.toLowerCase() || "student"}
+                    userId={user?.id}
+                  />
+                )}
               </CardContent>
             </Card>
           </div>
@@ -948,23 +1089,29 @@ export default function CourseDetailPage() {
 
                 <div className="space-y-4">
                   {isAuthenticated ? (
-                    <Link href={`/courses/${course.id}/apply`}>
-                      <Button className="w-full h-12 sm:h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 text-base sm:text-lg">
+                    <Button
+                      asChild
+                      className="w-full h-12 sm:h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 text-base sm:text-lg"
+                    >
+                      <Link href={`/courses/${course.id}/apply`}>
                         <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                         Apply Now
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   ) : (
-                    <Link
-                      href={`/auth/login?returnUrl=${encodeURIComponent(
-                        `/courses/${course.id}/apply`
-                      )}`}
+                    <Button
+                      asChild
+                      className="w-full h-12 sm:h-14 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 text-base sm:text-lg"
                     >
-                      <Button className="w-full h-12 sm:h-14 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white font-bold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200 text-base sm:text-lg">
+                      <Link
+                        href={`/auth/login?returnUrl=${encodeURIComponent(
+                          `/courses/${course.id}/apply`
+                        )}`}
+                      >
                         <Shield className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                         Login to Apply
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   )}
                   <p className="text-xs sm:text-sm text-gray-600 text-center">
                     {isAuthenticated
@@ -986,15 +1133,16 @@ export default function CourseDetailPage() {
                     Have questions about this course? Our admissions team is
                     here to help.
                   </p>
-                  <Link href="/contact">
-                    <Button
-                      variant="outline"
-                      className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                    >
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                  >
+                    <Link href="/contact">
                       <Calendar className="w-4 h-4 mr-2" />
                       Contact Admissions
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>

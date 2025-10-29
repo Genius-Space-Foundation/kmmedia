@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import PWARegistration from "@/components/PWARegistration";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { SessionProvider } from "@/components/providers/SessionProvider";
+import { AccessibilityProvider } from "@/components/providers/AccessibilityProvider";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -56,11 +58,15 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/images/logo.jpeg" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <ThemeProvider>
-          <PWARegistration />
-          {children}
-          <Toaster position="top-right" richColors />
-        </ThemeProvider>
+        <AccessibilityProvider>
+          <SessionProvider>
+            <ThemeProvider>
+              <PWARegistration />
+              {children}
+              <Toaster position="top-right" richColors />
+            </ThemeProvider>
+          </SessionProvider>
+        </AccessibilityProvider>
       </body>
     </html>
   );

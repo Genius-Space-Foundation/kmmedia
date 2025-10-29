@@ -1,4 +1,9 @@
 import nodemailer from "nodemailer";
+import {
+  assignmentEmailTemplates,
+  AssignmentEmailTemplateData,
+} from "./assignment-email-templates";
+import { AssignmentNotificationType } from "./assignment-notification-service";
 
 const EMAIL_HOST = process.env.EMAIL_HOST || "smtp.gmail.com";
 const EMAIL_PORT = parseInt(process.env.EMAIL_PORT || "587");
@@ -242,4 +247,22 @@ export const emailTemplates = {
   }),
 };
 
-export const POST = withAuth(handleUpload);
+// Assignment email sending function
+export async function sendAssignmentEmail(
+  to: string,
+  type: AssignmentNotificationType,
+  data: AssignmentEmailTemplateData
+): Promise<boolean> {
+  try {
+    const template = assignmentEmailTemplates[type](data);
+
+    return await sendEmail({
+      to,
+      subject: template.subject,
+      html: template.html,
+    });
+  } catch (error) {
+    console.error("Assignment email sending error:", error);
+    return false;
+  }
+}

@@ -221,6 +221,12 @@ import CollaborationHub from "@/components/instructor/dashboard/CollaborationHub
 import IntegrationHub from "@/components/instructor/dashboard/IntegrationHub";
 import AdvancedReporting from "@/components/instructor/dashboard/AdvancedReporting";
 
+// Import enhanced components
+import TaskPrioritizationSystem from "@/components/instructor/dashboard/TaskPrioritizationSystem";
+import EnhancedStudentActivityMonitoring from "@/components/instructor/dashboard/EnhancedStudentActivityMonitoring";
+import CourseAnalyticsInsights from "@/components/instructor/dashboard/CourseAnalyticsInsights";
+import IntegratedMessagingCenter from "@/components/instructor/dashboard/IntegratedMessagingCenter";
+
 interface User {
   id: string;
   name: string;
@@ -341,12 +347,91 @@ export default function ProfessionalInstructorDashboard() {
     router.push("/auth/login");
   };
 
+  // Enhanced Dashboard Handlers
+  const handleTaskClick = (taskId: string) => {
+    console.log("View task:", taskId);
+    // Navigate to task details or open modal
+  };
+
+  const handleMarkTaskComplete = (taskId: string) => {
+    console.log("Mark task complete:", taskId);
+    // Update task status
+  };
+
+  const handleUpdateTaskPriority = (taskId: string, priority: string) => {
+    console.log("Update task priority:", taskId, priority);
+    // Update task priority
+  };
+
+  const handleViewStudent = (studentId: string) => {
+    console.log("View student:", studentId);
+    // Navigate to student profile or open modal
+  };
+
+  const handleSendMessage = (studentId: string) => {
+    console.log("Send message to student:", studentId);
+    // Open messaging interface
+    setActiveTab("communication");
+  };
+
+  const handleCreateIntervention = (studentId: string) => {
+    console.log("Create intervention for student:", studentId);
+    // Open intervention creation modal
+  };
+
+  const handleViewCourse = (courseId: string) => {
+    console.log("View course:", courseId);
+    // Navigate to course details
+    setActiveTab("courses");
+  };
+
+  const handleImplementRecommendation = (recommendationId: string) => {
+    console.log("Implement recommendation:", recommendationId);
+    // Implement AI recommendation
+  };
+
+  const handleExportReport = (courseId: string) => {
+    console.log("Export report for course:", courseId);
+    // Export course analytics report
+  };
+
+  const handleMarkAsRead = (messageId: string) => {
+    console.log("Mark message as read:", messageId);
+    // Update message read status
+  };
+
+  const handleArchiveMessage = (messageId: string) => {
+    console.log("Archive message:", messageId);
+    // Archive message
+  };
+
+  const handleDeleteMessage = (messageId: string) => {
+    console.log("Delete message:", messageId);
+    // Delete message
+  };
+
+  const handleStartVideoCall = (participantId: string) => {
+    console.log("Start video call with:", participantId);
+    // Start video call
+  };
+
+  const handleSendMessageFromCenter = (message: any) => {
+    console.log("Send message:", message);
+    // Send message through messaging center
+  };
+
   const sidebarItems = [
     {
       id: "overview",
       label: "Overview",
       icon: LayoutDashboard,
       description: "Dashboard overview and quick stats",
+    },
+    {
+      id: "tasks",
+      label: "Task Prioritization",
+      icon: Target,
+      description: "Prioritized task management system",
     },
     {
       id: "courses",
@@ -356,9 +441,21 @@ export default function ProfessionalInstructorDashboard() {
     },
     {
       id: "students",
-      label: "Student Analytics",
+      label: "Student Monitoring",
       icon: Users,
-      description: "Track student progress and performance",
+      description: "Enhanced student activity tracking",
+    },
+    {
+      id: "analytics",
+      label: "Course Analytics",
+      icon: BarChart3,
+      description: "Course insights and recommendations",
+    },
+    {
+      id: "communication",
+      label: "Messaging Center",
+      icon: MessageSquare,
+      description: "Integrated messaging and communication",
     },
     {
       id: "assessments",
@@ -367,22 +464,16 @@ export default function ProfessionalInstructorDashboard() {
       description: "Create and manage assessments",
     },
     {
-      id: "communication",
-      label: "Communication Hub",
-      icon: MessageSquare,
-      description: "Announcements and messaging",
-    },
-    {
       id: "ai-assistant",
       label: "AI Assistant",
       icon: Brain,
       description: "AI-powered content creation",
     },
     {
-      id: "analytics",
+      id: "predictive",
       label: "Predictive Analytics",
-      icon: BarChart3,
-      description: "Advanced analytics and insights",
+      icon: TrendingUp,
+      description: "Advanced predictive insights",
     },
     {
       id: "collaboration",
@@ -408,17 +499,47 @@ export default function ProfessionalInstructorDashboard() {
     switch (activeTab) {
       case "overview":
         return <OverviewWidget />;
+      case "tasks":
+        return (
+          <TaskPrioritizationSystem
+            onTaskClick={handleTaskClick}
+            onMarkComplete={handleMarkTaskComplete}
+            onUpdatePriority={handleUpdateTaskPriority}
+          />
+        );
       case "courses":
         return <CourseManagement />;
       case "students":
-        return <StudentAnalytics />;
+        return (
+          <EnhancedStudentActivityMonitoring
+            onViewStudent={handleViewStudent}
+            onSendMessage={handleSendMessage}
+            onCreateIntervention={handleCreateIntervention}
+          />
+        );
+      case "analytics":
+        return (
+          <CourseAnalyticsInsights
+            onViewCourse={handleViewCourse}
+            onImplementRecommendation={handleImplementRecommendation}
+            onExportReport={handleExportReport}
+          />
+        );
+      case "communication":
+        return (
+          <IntegratedMessagingCenter
+            onSendMessage={handleSendMessageFromCenter}
+            onMarkAsRead={handleMarkAsRead}
+            onArchiveMessage={handleArchiveMessage}
+            onDeleteMessage={handleDeleteMessage}
+            onStartVideoCall={handleStartVideoCall}
+          />
+        );
       case "assessments":
         return <AssessmentCenter />;
-      case "communication":
-        return <CommunicationHub />;
       case "ai-assistant":
         return <AIContentAssistant />;
-      case "analytics":
+      case "predictive":
         return <PredictiveAnalytics />;
       case "collaboration":
         return <CollaborationHub />;

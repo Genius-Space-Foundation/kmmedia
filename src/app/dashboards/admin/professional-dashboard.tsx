@@ -1,13 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   LayoutDashboard,
   Users,
+  User,
   BookOpen,
   FileText,
   TrendingUp,
@@ -36,6 +46,8 @@ import {
   Eye,
   Edit,
   Trash2,
+  LogOut,
+  ChevronDown,
 } from "lucide-react";
 import ApplicationManagement from "@/components/admin/applications/ApplicationManagement";
 import UserManagement from "@/components/admin/users/UserManagement";
@@ -45,6 +57,7 @@ import ReportsAnalytics from "@/components/admin/reports/ReportsAnalytics";
 import ActivityLogs from "@/components/admin/logs/ActivityLogs";
 import FinancialManagement from "@/components/admin/payments/FinancialManagement";
 import DashboardOverview from "@/components/admin/dashboard/DashboardOverview";
+import AdminProfile from "@/components/admin/profile/AdminProfile";
 
 interface DashboardStats {
   totalUsers: number;
@@ -58,6 +71,7 @@ interface DashboardStats {
 }
 
 export default function ProfessionalDashboard() {
+  const router = useRouter();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -65,13 +79,49 @@ export default function ProfessionalDashboard() {
   const [users, setUsers] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
+    fetchCurrentUser();
     fetchStats();
     fetchUsers();
     fetchCourses();
     fetchApplications();
   }, []);
+
+  const handleLogout = () => {
+    // Clear all tokens
+    localStorage.removeItem("token");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+
+    // Redirect to login
+    router.push("/auth/login");
+  };
+
+  const fetchCurrentUser = async () => {
+    try {
+      const token =
+        localStorage.getItem("token") || localStorage.getItem("accessToken");
+      if (!token) return;
+
+      const response = await fetch("/api/user/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.user) {
+          setCurrentUser(data.user);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching current user:", error);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -221,6 +271,12 @@ export default function ProfessionalDashboard() {
       id: "logs",
       label: "Activity Logs",
       icon: Activity,
+      badge: null,
+    },
+    {
+      id: "profile",
+      label: "My Profile",
+      icon: User,
       badge: null,
     },
     {
@@ -389,20 +445,66 @@ export default function ProfessionalDashboard() {
                   </span>
                 </Button>
 
-                {/* Profile */}
-                <div className="flex items-center space-x-3 pl-4 border-l border-gray-200">
-                  <Avatar className="h-10 w-10 ring-2 ring-blue-500 ring-offset-2">
-                    <AvatarImage src="/images/logo.jpeg" />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                      AD
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="hidden lg:block">
-                    <p className="text-sm font-semibold text-gray-900">
-                      Admin User
-                    </p>
-                    <p className="text-xs text-gray-500">admin@kmmedia.com</p>
-                  </div>
+                {/* Profile Dropdown */}
+                <div className="pl-4 border-l border-gray-200">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="flex items-center space-x-3 hover:bg-gray-50"
+                      >
+                        <Avatar className="h-10 w-10 ring-2 ring-blue-500 ring-offset-2">
+                          {currentUser?.avatar && (
+                            <AvatarImage
+                              src={currentUser.avatar}
+                              alt={currentUser.name}
+                            />
+                          )}
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                            {currentUser?.name
+                              ? currentUser.name
+                                  .split(" ")
+                                  .map((n: string) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                                  .slice(0, 2)
+                              : "AD"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="hidden lg:block text-left">
+                          <p className="text-sm font-semibold text-gray-900">
+                            {currentUser?.name || "Admin User"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {currentUser?.email || "admin@kmmedia.com"}
+                          </p>
+                        </div>
+                        <ChevronDown className="h-4 w-4 text-gray-500 hidden lg:block" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setActiveTab("profile")}>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile Settings</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setActiveTab("settings")}
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>System Settings</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={handleLogout}
+                        className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Sign Out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
@@ -1258,6 +1360,9 @@ export default function ProfessionalDashboard() {
 
           {/* Activity Logs Tab */}
           {activeTab === "logs" && <ActivityLogs />}
+
+          {/* Profile Tab */}
+          {activeTab === "profile" && <AdminProfile />}
 
           {/* Settings Tab */}
           {activeTab === "settings" && <SystemSettings />}

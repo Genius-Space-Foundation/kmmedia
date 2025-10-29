@@ -31,7 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { makeAuthenticatedRequest } from "@/lib/token-utils";
 import { safeJsonParse } from "@/lib/api-utils";
 import { useRouter } from "next/navigation";
-import { Award, BookOpen } from "lucide-react";
+import { Award, BookOpen, Target } from "lucide-react";
 
 interface Course {
   id: string;
