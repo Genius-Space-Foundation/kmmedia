@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { sendEmail, sendAssignmentEmail } from "./email";
-import { sendSMS } from "./sms";
+import { smsService } from "./sms";
 import { AssignmentNotificationType } from "./assignment-notification-service";
 
 export interface NotificationData {
@@ -29,6 +29,7 @@ export async function sendNotification(
       where: { id: notification.userId },
       include: {
         profile: true,
+        notificationSettings: true,
       },
     });
 
@@ -37,48 +38,48 @@ export async function sendNotification(
       return false;
     }
 
-    // Create notification record
-    const notificationRecord = await prisma.notification.create({
-      data: {
-        userId: notification.userId,
-        type: notification.type,
-        title: notification.title,
-        message: notification.message,
-        data: notification.data,
-        priority: notification.priority || "MEDIUM",
-        category: notification.category || "SYSTEM",
-        status: "PENDING",
-      },
-    });
-
     let success = false;
 
     // Send based on type
     switch (notification.type) {
       case "EMAIL":
-        success = await sendEmailNotification(user.email, notification);
+        // Check if user wants email notifications
+        if (user.notificationSettings?.emailNotifications !== false) {
+          success = await sendEmailNotification(user.email, notification);
+        } else {
+          success = true; // Skip but don't fail
+        }
         break;
       case "SMS":
-        if (user.profile?.phone) {
+        // Check if user wants SMS notifications
+        if (
+          user.notificationSettings?.smsNotifications &&
+          user.profile?.phone
+        ) {
           success = await sendSMSNotification(user.profile.phone, notification);
+        } else {
+          success = true; // Skip but don't fail
         }
         break;
       case "IN_APP":
-        success = true; // Already created in database
+        // Always create in-app notifications
+        const notificationRecord = await prisma.notification.create({
+          data: {
+            userId: notification.userId,
+            title: notification.title,
+            content: notification.message,
+            type: notification.category?.toLowerCase() || "general",
+            priority: notification.priority?.toLowerCase() || "medium",
+            actionUrl: notification.data?.actionUrl,
+            actionText: notification.data?.actionText,
+          },
+        });
+        success = !!notificationRecord;
         break;
       case "PUSH":
         success = await sendPushNotification(notification);
         break;
     }
-
-    // Update notification status
-    await prisma.notification.update({
-      where: { id: notificationRecord.id },
-      data: {
-        status: success ? "SENT" : "FAILED",
-        sentAt: success ? new Date() : null,
-      },
-    });
 
     return success;
   } catch (error) {
@@ -247,10 +248,11 @@ async function sendSMSNotification(
   notification: NotificationData
 ) {
   try {
-    return await sendSMS({
+    const result = await smsService.sendSMS({
       to: phone,
       message: `${notification.title}\n\n${notification.message}`,
     });
+    return result.success;
   } catch (error) {
     console.error("SMS notification error:", error);
     return false;

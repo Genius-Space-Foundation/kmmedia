@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NotificationBell } from "@/components/ui/notification-bell";
 
 interface CourseCategory {
   name: string;
@@ -467,6 +468,14 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
                 />
               </svg>
             </Button>
+
+            {/* Notifications Bell - Only show for authenticated users */}
+            {user && (
+              <NotificationBell
+                userId={user.id}
+                className="text-brand-text-primary hover:bg-brand-neutral-100"
+              />
+            )}
 
             {/* Theme Toggle */}
             <Button

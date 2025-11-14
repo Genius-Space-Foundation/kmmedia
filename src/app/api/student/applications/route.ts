@@ -17,7 +17,17 @@ const createApplicationSchema = z.object({
     institution: z.string().min(1, "Institution is required"),
     yearCompleted: z.string().min(1, "Year completed is required"),
   }),
-  motivation: z.string().min(50, "Motivation must be at least 50 characters"),
+  motivation: z.object({
+    reasonForApplying: z
+      .string()
+      .min(50, "Reason for applying must be at least 50 characters"),
+    careerGoals: z
+      .string()
+      .min(20, "Career goals must be at least 20 characters"),
+    expectations: z
+      .string()
+      .min(20, "Expectations must be at least 20 characters"),
+  }),
   documents: z.array(z.string()).default([]), // File URLs after upload
 });
 
@@ -28,7 +38,7 @@ async function createApplication(req: AuthenticatedRequest) {
     const applicationData = createApplicationSchema.parse(body);
     const userId = req.user!.userId;
 
-    // Check if course exists and is approved
+    // Check if course exists and is available for applications
     const course = await prisma.course.findUnique({
       where: { id: applicationData.courseId },
     });
@@ -40,7 +50,7 @@ async function createApplication(req: AuthenticatedRequest) {
       );
     }
 
-    if (course.status !== "APPROVED") {
+    if (!["APPROVED", "PUBLISHED"].includes(course.status)) {
       return NextResponse.json(
         { success: false, message: "Course is not available for applications" },
         { status: 400 }
@@ -225,4 +235,3 @@ async function getStudentApplications(req: AuthenticatedRequest) {
 
 export const POST = withStudentAuth(createApplication);
 export const GET = withStudentAuth(getStudentApplications);
-

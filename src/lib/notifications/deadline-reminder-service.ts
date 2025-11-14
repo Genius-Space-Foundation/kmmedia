@@ -134,8 +134,9 @@ export class DeadlineReminderService {
         await this.sendOverdueNotifications(assignment.id);
         break;
     }
-  }  /
-**
+  }
+
+  /**
    * Send overdue notifications to students who haven't submitted
    */
   private static async sendOverdueNotifications(assignmentId: string): Promise<void> {
@@ -326,8 +327,8 @@ export class DeadlineReminderService {
       console.error("Error updating reminder preferences:", error);
     }
   }
-}  /
-**
+
+  /**
    * Send overdue notification to a specific user
    */
   private static async sendOverdueNotificationToUser(
@@ -372,4 +373,4 @@ export class DeadlineReminderService {
     } catch (error) {
       console.error("Error sending overdue notification:", error);
     }
-  }
+  }}

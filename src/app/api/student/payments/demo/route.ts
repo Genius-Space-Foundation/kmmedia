@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
+  // Guard: Only allow in development/staging environments
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { success: false, message: "Demo endpoint not available in production" },
+      { status: 404 }
+    );
+  }
+
   try {
     const body = await request.json();
     const { userId } = body;

@@ -3,6 +3,7 @@ import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
 import { verifyToken } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
@@ -84,11 +85,11 @@ export async function POST(request: NextRequest) {
     // Return the public URL
     const avatarUrl = `/uploads/avatars/${filename}`;
 
-    // TODO: Update user's avatar in database
-    // await prisma.user.update({
-    //   where: { id: userId },
-    //   data: { avatar: avatarUrl }
-    // });
+    // Update user's avatar in database
+    await prisma.user.update({
+      where: { id: userId },
+      data: { profileImage: avatarUrl },
+    });
 
     return NextResponse.json({
       success: true,

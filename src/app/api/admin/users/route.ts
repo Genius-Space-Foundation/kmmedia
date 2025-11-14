@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { Role, UserStatus } from "@prisma/client";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { sendEmail, emailTemplates } from "@/lib/notifications/email";
 
 const createUserSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -72,8 +73,20 @@ async function createUser(req: AuthenticatedRequest) {
       },
     });
 
-    // TODO: Send email with temporary password
-    console.log(`Temporary password for ${userData.email}: ${tempPassword}`);
+    // Send email with temporary password
+    const emailTemplate = emailTemplates.temporaryPassword({
+      userName: userData.name,
+      email: userData.email,
+      tempPassword,
+      role: userData.role,
+    });
+
+    await sendEmail({
+      to: userData.email,
+      ...emailTemplate,
+    }).catch((error) =>
+      console.error("Failed to send temporary password email:", error)
+    );
 
     return NextResponse.json({
       success: true,
@@ -182,5 +195,4 @@ async function getUsers(req: NextRequest) {
 }
 
 export const POST = withAdminAuth(createUser);
-// Temporarily bypass auth for testing
-export const GET = getUsers;
+export const GET = withAdminAuth(getUsers);

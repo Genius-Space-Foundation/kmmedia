@@ -170,7 +170,7 @@ export default function EmailManagement() {
                 rows={10}
               />
               <p className="text-sm text-gray-600">
-                Available variables: {{"{{"}}name{{"}}"}}, {{"{{"}}email{{"}}"}}, {{"{{"}}course{{"}}"}}
+                Available variables: {`{{name}}, {{email}}, {{course}}`}
               </p>
             </div>
 

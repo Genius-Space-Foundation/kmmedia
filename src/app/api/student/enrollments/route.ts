@@ -43,6 +43,16 @@ async function getStudentEnrollments(req: AuthenticatedRequest) {
                   duration: true,
                   order: true,
                   isPublished: true,
+                  resources: {
+                    select: {
+                      id: true,
+                      name: true,
+                      type: true,
+                      url: true,
+                      size: true,
+                      downloadable: true,
+                    },
+                  },
                 },
                 where: { isPublished: true },
                 orderBy: { order: "asc" },
@@ -109,7 +119,7 @@ async function getStudentEnrollments(req: AuthenticatedRequest) {
         isCompleted: enrollment.lessonCompletions.some(
           (comp) => comp.lessonId === lesson.id
         ),
-        resources: [], // TODO: Add resources when needed
+        resources: lesson.resources || [],
       }));
 
       return {

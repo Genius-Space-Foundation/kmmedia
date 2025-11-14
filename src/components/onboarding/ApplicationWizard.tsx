@@ -291,26 +291,34 @@ export default function ApplicationWizard({
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append("applicationData", JSON.stringify(applicationData));
-
-      applicationData.documents.forEach((file, index) => {
-        formData.append(`document_${index}`, file);
-      });
+      // For now, we'll submit without file uploads
+      // In a real implementation, you'd upload files first and get URLs
+      const submissionData = {
+        courseId: applicationData.courseId,
+        personalInfo: applicationData.personalInfo,
+        education: applicationData.education,
+        motivation: {
+          reasonForApplying: applicationData.motivation.reasonForApplying,
+          careerGoals: applicationData.motivation.careerGoals,
+          expectations: applicationData.motivation.expectations,
+        },
+        documents: [], // File URLs would go here after upload
+      };
 
       const response = await makeAuthenticatedRequest(
         "/api/student/applications",
         {
           method: "POST",
-          body: formData,
+          body: JSON.stringify(submissionData),
         }
       );
 
-      if (response.ok) {
+      const result = await response.json();
+
+      if (result.success) {
         onComplete(applicationData);
       } else {
-        const error = await response.json();
-        alert(error.message || "Failed to submit application");
+        alert(result.message || "Failed to submit application");
       }
     } catch (error) {
       console.error("Error submitting application:", error);
@@ -1153,5 +1161,3 @@ export default function ApplicationWizard({
     </Dialog>
   );
 }
-
-

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { CourseStatus } from "@prisma/client";
+import {
+  notifyCourseApproved,
+  notifyCourseRejected,
+} from "@/lib/notifications/notification-triggers";
 import { z } from "zod";
 
 const approvalSchema = z.object({
@@ -74,10 +78,16 @@ async function approveCourse(
       },
     });
 
-    // TODO: Send notification email to instructor
-    console.log(
-      `Course ${action}d: ${course.title} for instructor ${course.instructor.email}`
-    );
+    // Send notification to instructor
+    if (action === "approve") {
+      await notifyCourseApproved(id).catch((error) =>
+        console.error("Failed to send approval notification:", error)
+      );
+    } else {
+      await notifyCourseRejected(id).catch((error) =>
+        console.error("Failed to send rejection notification:", error)
+      );
+    }
 
     return NextResponse.json({
       success: true,

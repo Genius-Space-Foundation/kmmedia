@@ -7,20 +7,20 @@ export interface AssignmentNotificationData {
   assignmentId: string;
   studentId?: string;
   instructorId?: string;
-  type: AssignmentNotificationType;
+  type: string;
   data?: any;
 }
 
-export enum AssignmentNotificationType {
-  ASSIGNMENT_PUBLISHED = "ASSIGNMENT_PUBLISHED",
-  ASSIGNMENT_DUE_REMINDER_48H = "ASSIGNMENT_DUE_REMINDER_48H",
-  ASSIGNMENT_DUE_REMINDER_24H = "ASSIGNMENT_DUE_REMINDER_24H",
-  ASSIGNMENT_OVERDUE = "ASSIGNMENT_OVERDUE",
-  SUBMISSION_RECEIVED = "SUBMISSION_RECEIVED",
-  SUBMISSION_GRADED = "SUBMISSION_GRADED",
-  EXTENSION_GRANTED = "EXTENSION_GRANTED",
-  EXTENSION_REQUESTED = "EXTENSION_REQUESTED",
-}
+export const AssignmentNotificationType = {
+  ASSIGNMENT_PUBLISHED: "ASSIGNMENT_PUBLISHED",
+  ASSIGNMENT_DUE_REMINDER_48H: "ASSIGNMENT_DUE_REMINDER_48H",
+  ASSIGNMENT_DUE_REMINDER_24H: "ASSIGNMENT_DUE_REMINDER_24H",
+  ASSIGNMENT_OVERDUE: "ASSIGNMENT_OVERDUE",
+  SUBMISSION_RECEIVED: "SUBMISSION_RECEIVED",
+  SUBMISSION_GRADED: "SUBMISSION_GRADED",
+  EXTENSION_GRANTED: "EXTENSION_GRANTED",
+  EXTENSION_REQUESTED: "EXTENSION_REQUESTED",
+} as const;
 
 export interface NotificationPreferences {
   emailNotifications: boolean;
@@ -83,8 +83,9 @@ export class AssignmentNotificationService {
     } catch (error) {
       console.error("Error sending assignment published notification:", error);
     }
-  }  /
-**
+  }
+
+  /**
    * Send deadline reminder notifications
    */
   static async sendDeadlineReminder(
@@ -209,8 +210,9 @@ export class AssignmentNotificationService {
     } catch (error) {
       console.error("Error sending submission received notification:", error);
     }
-  }  /**
+  }
 
+  /**
    * Send notification when submission is graded
    */
   static async sendSubmissionGradedNotification(
@@ -317,6 +319,8 @@ export class AssignmentNotificationService {
       priority: template.priority,
       data: {
         type,
+        actionUrl: this.getActionUrl(type, data),
+        actionText: this.getActionText(type),
         ...data,
       },
     });
@@ -334,8 +338,9 @@ export class AssignmentNotificationService {
         ...data,
       },
     });
-  }  
-/**
+  }
+
+  /**
    * Get notification template based on type
    */
   static getNotificationTemplate(
@@ -447,5 +452,49 @@ export class AssignmentNotificationService {
         reminderTime: preferences.reminderTime ?? "09:00",
       },
     });
+  }
+
+  /**
+   * Get action URL for notification type
+   */
+  static getActionUrl(type: AssignmentNotificationType, data: any): string {
+    switch (type) {
+      case AssignmentNotificationType.ASSIGNMENT_PUBLISHED:
+      case AssignmentNotificationType.ASSIGNMENT_DUE_REMINDER_48H:
+      case AssignmentNotificationType.ASSIGNMENT_DUE_REMINDER_24H:
+      case AssignmentNotificationType.ASSIGNMENT_OVERDUE:
+        return `/assignments/${data.assignmentId}`;
+      case AssignmentNotificationType.SUBMISSION_RECEIVED:
+        return `/assignments/${data.assignmentId}/submissions`;
+      case AssignmentNotificationType.SUBMISSION_GRADED:
+        return `/assignments/${data.assignmentId}/submission`;
+      case AssignmentNotificationType.EXTENSION_GRANTED:
+      case AssignmentNotificationType.EXTENSION_REQUESTED:
+        return `/assignments/${data.assignmentId}`;
+      default:
+        return "/assignments";
+    }
+  }
+
+  /**
+   * Get action text for notification type
+   */
+  static getActionText(type: AssignmentNotificationType): string {
+    switch (type) {
+      case AssignmentNotificationType.ASSIGNMENT_PUBLISHED:
+      case AssignmentNotificationType.ASSIGNMENT_DUE_REMINDER_48H:
+      case AssignmentNotificationType.ASSIGNMENT_DUE_REMINDER_24H:
+      case AssignmentNotificationType.ASSIGNMENT_OVERDUE:
+        return "View Assignment";
+      case AssignmentNotificationType.SUBMISSION_RECEIVED:
+        return "View Submissions";
+      case AssignmentNotificationType.SUBMISSION_GRADED:
+        return "View Grade";
+      case AssignmentNotificationType.EXTENSION_GRANTED:
+      case AssignmentNotificationType.EXTENSION_REQUESTED:
+        return "View Details";
+      default:
+        return "View";
+    }
   }
 }

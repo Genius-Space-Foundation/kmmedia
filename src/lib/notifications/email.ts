@@ -95,6 +95,53 @@ export const emailTemplates = {
     `,
   }),
 
+  temporaryPassword: (data: {
+    userName: string;
+    email: string;
+    tempPassword: string;
+    role: string;
+  }) => ({
+    subject: "Welcome to KM Media Training Institute - Account Created",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">KM Media Training Institute</h1>
+        </div>
+        
+        <div style="padding: 30px; background: #f8f9fa;">
+          <h2 style="color: #333;">Welcome, ${data.userName}! 👋</h2>
+          
+          <p style="font-size: 16px; line-height: 1.6; color: #555;">
+            Your account has been created as a <strong>${data.role}</strong>.
+          </p>
+          
+          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
+            <h3 style="color: #667eea; margin-top: 0;">Your Login Credentials:</h3>
+            <p style="color: #555; margin: 5px 0;"><strong>Email:</strong> ${data.email}</p>
+            <p style="color: #555; margin: 5px 0;"><strong>Temporary Password:</strong> <code style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 14px;">${data.tempPassword}</code></p>
+          </div>
+          
+          <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+            <p style="color: #856404; margin: 0; font-size: 14px;">
+              ⚠️ <strong>Important:</strong> Please change your password after your first login for security reasons.
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/auth/login" 
+               style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Login Now
+            </a>
+          </div>
+          
+          <p style="color: #888; font-size: 14px;">
+            If you didn't request this account, please contact our administrator immediately.
+          </p>
+        </div>
+      </div>
+    `,
+  }),
+
   applicationRejected: (data: {
     studentName: string;
     courseName: string;

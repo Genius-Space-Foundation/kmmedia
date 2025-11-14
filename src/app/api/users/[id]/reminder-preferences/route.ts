@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { authOptions } from "@/lib/auth-config";
 import { DeadlineReminderService } from "@/lib/notifications/deadline-reminder-service";
 
 // GET /api/users/[id]/reminder-preferences - Get user reminder preferences

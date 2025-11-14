@@ -263,7 +263,6 @@ model Course {
   paymentPlans      PaymentPlan[]
   applicationDrafts ApplicationDraft[]
   assignments       Assignment[]
-  reminders         AssignmentReminder[]
 
   @@map("courses")
 }
@@ -294,6 +293,7 @@ model Assignment {
   instructor        User              @relation("InstructorAssignments", fields: [instructorId], references: [id])
   submissions       AssignmentSubmission[]
   extensions        AssignmentExtension[]
+  reminders         AssignmentReminder[]
 
   @@map("assignments")
 }
@@ -977,8 +977,8 @@ enum SubmissionStatus {
 }
 
 enum AssignmentReminderType {
-  48_HOUR
-  24_HOUR
+  FORTY_EIGHT_HOUR
+  TWENTY_FOUR_HOUR
   OVERDUE
 }
 

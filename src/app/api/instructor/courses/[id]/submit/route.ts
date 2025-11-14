@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { CourseStatus } from "@prisma/client";
+import { notifyCourseSubmittedForApproval } from "@/lib/notifications/notification-triggers";
 
 // Submit course for approval (Instructor only)
 async function submitForApproval(
@@ -88,9 +89,9 @@ async function submitForApproval(
       },
     });
 
-    // TODO: Send notification to admin
-    console.log(
-      `Course submitted for approval: ${course.title} by ${course.instructorId}`
+    // Send notification to admins
+    await notifyCourseSubmittedForApproval(id).catch((error) =>
+      console.error("Failed to send admin notification:", error)
     );
 
     return NextResponse.json({

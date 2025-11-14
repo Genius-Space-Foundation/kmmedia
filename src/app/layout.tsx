@@ -5,6 +5,7 @@ import PWARegistration from "@/components/PWARegistration";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { AccessibilityProvider } from "@/components/providers/AccessibilityProvider";
+import { NotificationProvider } from "@/components/ui/notification-provider";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -61,9 +62,11 @@ export default function RootLayout({
         <AccessibilityProvider>
           <SessionProvider>
             <ThemeProvider>
-              <PWARegistration />
-              {children}
-              <Toaster position="top-right" richColors />
+              <NotificationProvider>
+                <PWARegistration />
+                {children}
+                <Toaster position="top-right" richColors />
+              </NotificationProvider>
             </ThemeProvider>
           </SessionProvider>
         </AccessibilityProvider>

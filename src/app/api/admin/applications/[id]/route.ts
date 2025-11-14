@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import {
+  notifyApplicationApproved,
+  notifyApplicationRejected,
+} from "@/lib/notifications/notification-triggers";
 
 export async function PUT(
   request: NextRequest,
@@ -55,14 +59,14 @@ export async function PUT(
       },
     });
 
-    // Send notification email to user
+    // Send notification to user
     if (status === "APPROVED") {
-      // TODO: Send approval email
-      console.log(`Sending approval email to ${updatedApplication.user.email}`);
+      await notifyApplicationApproved(applicationId).catch((error) =>
+        console.error("Failed to send approval notification:", error)
+      );
     } else if (status === "REJECTED") {
-      // TODO: Send rejection email
-      console.log(
-        `Sending rejection email to ${updatedApplication.user.email}`
+      await notifyApplicationRejected(applicationId).catch((error) =>
+        console.error("Failed to send rejection notification:", error)
       );
     }
 

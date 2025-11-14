@@ -13,7 +13,7 @@ async function getStudentCourses(req: AuthenticatedRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
 
     const where: any = {
-      status: "APPROVED", // Only show approved courses
+      status: { in: ["APPROVED", "PUBLISHED"] }, // Show approved and published courses
     };
 
     if (category && category !== "ALL") {
@@ -117,4 +117,3 @@ async function getStudentCourses(req: AuthenticatedRequest) {
 }
 
 export const GET = withStudentAuth(getStudentCourses);
-

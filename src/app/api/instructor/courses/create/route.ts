@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withInstructorAuth } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
-import { uploadToCloudinary } from "@/lib/storage/cloudinary";
+import { uploadFile } from "@/lib/storage/cloudinary";
 
 // Create a new course
 async function createCourse(req: NextRequest) {
@@ -62,7 +62,7 @@ async function createCourse(req: NextRequest) {
     if (thumbnailFile && thumbnailFile.size > 0) {
       try {
         const thumbnailBuffer = await thumbnailFile.arrayBuffer();
-        const thumbnailResult = await uploadToCloudinary(
+        const thumbnailResult = await uploadFile(
           Buffer.from(thumbnailBuffer),
           `courses/thumbnails/${instructorId}`,
           {
