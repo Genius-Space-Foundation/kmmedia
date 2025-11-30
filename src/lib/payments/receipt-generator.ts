@@ -1,4 +1,5 @@
 import PDFDocument from "pdfkit";
+import { formatCurrency } from "@/lib/currency";
 
 export interface ReceiptData {
   receiptNumber: string;
@@ -24,16 +25,6 @@ export function generateReceiptNumber(): string {
     .toString()
     .padStart(4, "0");
   return `RCP-${timestamp}-${random}`;
-}
-
-/**
- * Format currency (GHS)
- */
-function formatCurrency(amount: number): string {
-  return `GH₵${amount.toLocaleString("en-GH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
 }
 
 /**

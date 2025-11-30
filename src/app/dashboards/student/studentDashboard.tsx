@@ -34,6 +34,7 @@ import StudentProgressTracking from "@/components/student-progress-tracking";
 import UserDropdown from "@/components/user-dropdown";
 // import { makeAuthenticatedRequest, clearAuthTokens } from "@/lib/token-utils";
 import { safeJsonParse } from "@/lib/api-utils";
+import { formatCurrency } from "@/lib/currency";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import ApplicationWizard from "@/components/onboarding/ApplicationWizard";
 import AchievementSystem from "@/components/gamification/AchievementSystem";
@@ -46,7 +47,9 @@ import StudentProfile from "@/components/student/profile/StudentProfile";
 import PersonalizedOverview from "@/components/student/dashboard/PersonalizedOverview";
 import CourseProgressVisualization from "@/components/student/dashboard/CourseProgressVisualization";
 import DeadlinesAndReminders from "@/components/student/dashboard/DeadlinesAndReminders";
+
 import AchievementProgressTracking from "@/components/student/dashboard/AchievementProgressTracking";
+import AssignmentSubmissionPortal from "@/components/student/dashboard/AssignmentSubmissionPortal";
 
 interface Course {
   id: string;
@@ -224,7 +227,6 @@ export default function StudentDashboard() {
       unit: "hours" as const,
     },
   });
-
   // Course Catalog States
   const [courseFilter, setCourseFilter] = useState({
     category: "ALL",
@@ -234,6 +236,8 @@ export default function StudentDashboard() {
   });
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [showCourseDetails, setShowCourseDetails] = useState(false);
+
+  const [assessmentFilter, setAssessmentFilter] = useState("ALL"); // ALL, QUIZZES, ASSIGNMENTS
 
   // Application States
   const [showApplicationForm, setShowApplicationForm] = useState(false);
@@ -1304,7 +1308,7 @@ export default function StudentDashboard() {
                                 <div className="flex items-center space-x-2">
                                   <span className="text-yellow-500">💰</span>
                                   <span className="text-gray-600">
-                                    ₵{course.price.toLocaleString()}
+                                    {formatCurrency(course.price)}
                                   </span>
                                 </div>
                               </div>
@@ -1315,7 +1319,7 @@ export default function StudentDashboard() {
                                     <span className="font-semibold">
                                       Application Fee:
                                     </span>{" "}
-                                    ₵{course.applicationFee.toLocaleString()}
+                                    {formatCurrency(course.applicationFee)}
                                   </p>
                                 </div>
                               )}
@@ -1352,22 +1356,94 @@ export default function StudentDashboard() {
 
           {/* Assessments Tab (Merged Assessments & Deadlines) */}
           {activeTab === "assessments" && (
-            <div className="space-y-8">
-              {/* Deadlines Section */}
-              <DeadlinesAndReminders
-                deadlines={upcomingDeadlines}
-                onSetReminder={handleSetReminder}
-                onViewDeadline={handleViewDeadline}
-                onAddReminder={handleAddReminder}
-              />
-              
-              {/* Assessments Section */}
-              <StudentAssessments
-                assessments={assessments}
-                submissions={assessmentSubmissions}
-                onTakeAssessment={handleTakeAssessment}
-                onViewSubmission={handleViewSubmission}
-              />
+            <div className="space-y-6">
+              {/* Sub-navigation for Assessments */}
+              <div className="flex space-x-4 border-b border-gray-200 pb-2">
+                <button
+                  className={`pb-2 px-1 ${
+                    assessmentFilter === "ALL"
+                      ? "border-b-2 border-brand-primary text-brand-primary font-medium"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  onClick={() => setAssessmentFilter("ALL")}
+                >
+                  Overview
+                </button>
+                <button
+                  className={`pb-2 px-1 ${
+                    assessmentFilter === "ASSIGNMENTS"
+                      ? "border-b-2 border-brand-primary text-brand-primary font-medium"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  onClick={() => setAssessmentFilter("ASSIGNMENTS")}
+                >
+                  Assignments
+                </button>
+                <button
+                  className={`pb-2 px-1 ${
+                    assessmentFilter === "QUIZZES"
+                      ? "border-b-2 border-brand-primary text-brand-primary font-medium"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  onClick={() => setAssessmentFilter("QUIZZES")}
+                >
+                  Quizzes & Exams
+                </button>
+              </div>
+
+              {/* Overview View */}
+              {assessmentFilter === "ALL" && (
+                <div className="space-y-8">
+                  <DeadlinesAndReminders
+                    deadlines={upcomingDeadlines}
+                    onSetReminder={handleSetReminder}
+                    onViewDeadline={handleViewDeadline}
+                    onAddReminder={handleAddReminder}
+                  />
+                  
+                  <div className="grid grid-cols-1 gap-6">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Recent Assignments</CardTitle>
+                        <CardDescription>Your latest assignment tasks</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <AssignmentSubmissionPortal userId={user?.id || ""} />
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>Upcoming Quizzes</CardTitle>
+                        <CardDescription>Scheduled quizzes and exams</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <StudentAssessments
+                          assessments={assessments}
+                          submissions={assessmentSubmissions}
+                          onTakeAssessment={handleTakeAssessment}
+                          onViewSubmission={handleViewSubmission}
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
+                </div>
+              )}
+
+              {/* Assignments View */}
+              {assessmentFilter === "ASSIGNMENTS" && (
+                <AssignmentSubmissionPortal userId={user?.id || ""} />
+              )}
+
+              {/* Quizzes View */}
+              {assessmentFilter === "QUIZZES" && (
+                <StudentAssessments
+                  assessments={assessments}
+                  submissions={assessmentSubmissions}
+                  onTakeAssessment={handleTakeAssessment}
+                  onViewSubmission={handleViewSubmission}
+                />
+              )}
             </div>
           )}
 
