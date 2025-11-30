@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { AssignmentService } from "@/lib/assignments/assignment-service";
 import { z } from "zod";
@@ -48,7 +48,7 @@ async function grantExtension(
         {
           success: false,
           message: "Invalid input",
-          errors: error.errors,
+          errors: error.issues,
         },
         { status: 400 }
       );

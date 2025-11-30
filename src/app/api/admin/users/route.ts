@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
-import { Role, UserStatus } from "@prisma/client";
+import { UserRole, UserStatus } from "@prisma/client";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { sendEmail, emailTemplates } from "@/lib/notifications/email";
@@ -45,7 +45,7 @@ async function createUser(req: AuthenticatedRequest) {
         name: userData.name,
         email: userData.email,
         password: hashedPassword,
-        role: userData.role as Role,
+        role: userData.role as UserRole,
         status: userData.status as UserStatus,
         emailVerified: new Date(), // Auto-verify admin-created users
       },
@@ -98,7 +98,7 @@ async function createUser(req: AuthenticatedRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
+        { success: false, message: "Invalid input", errors: error.issues },
         { status: 400 }
       );
     }

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { sendEmail } from "./email";
 import { sendNotification } from "./notification-manager";
 import { Assignment, AssignmentSubmission, User } from "@prisma/client";
+import { AssignmentNotificationType } from "./types";
 
 export interface AssignmentNotificationData {
   assignmentId: string;
@@ -10,17 +11,6 @@ export interface AssignmentNotificationData {
   type: string;
   data?: any;
 }
-
-export const AssignmentNotificationType = {
-  ASSIGNMENT_PUBLISHED: "ASSIGNMENT_PUBLISHED",
-  ASSIGNMENT_DUE_REMINDER_48H: "ASSIGNMENT_DUE_REMINDER_48H",
-  ASSIGNMENT_DUE_REMINDER_24H: "ASSIGNMENT_DUE_REMINDER_24H",
-  ASSIGNMENT_OVERDUE: "ASSIGNMENT_OVERDUE",
-  SUBMISSION_RECEIVED: "SUBMISSION_RECEIVED",
-  SUBMISSION_GRADED: "SUBMISSION_GRADED",
-  EXTENSION_GRANTED: "EXTENSION_GRANTED",
-  EXTENSION_REQUESTED: "EXTENSION_REQUESTED",
-} as const;
 
 export interface NotificationPreferences {
   emailNotifications: boolean;

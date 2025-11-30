@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { AssignmentService } from "@/lib/assignments/assignment-service";
 import {
@@ -34,7 +34,7 @@ async function createAssignment(req: AuthenticatedRequest) {
         {
           success: false,
           message: "Invalid input",
-          errors: formatValidationErrors(error.errors),
+          errors: formatValidationErrors(error.issues),
         },
         { status: 400 }
       );

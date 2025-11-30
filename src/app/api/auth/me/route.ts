@@ -1,47 +1,37 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { verifyToken } from "@/lib/auth";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/db";
+import { UserStatus } from "@prisma/client";
 
 export async function GET() {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("auth-token")?.value;
+    const session = await getServerSession(authOptions);
 
-    if (!token) {
+    if (!session || !session.user) {
       return NextResponse.json(
         {
           success: false,
-          error: "No authentication token",
+          error: "No authentication session",
         },
         { status: 401 }
       );
     }
 
-    // Verify the token
-    const decoded = await verifyToken(token);
-    if (!decoded || !decoded.userId) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid token",
-        },
-        { status: 401 }
-      );
-    }
-
-    // Get user from database
+    // Get full user details from database
     const user = await prisma.user.findUnique({
       where: {
-        id: decoded.userId,
-        status: "ACTIVE",
+        id: session.user.id,
+        status: UserStatus.ACTIVE,
       },
       select: {
         id: true,
         name: true,
         email: true,
         role: true,
+        status: true,
         profileImage: true,
+        image: true,
       },
     });
 
@@ -49,7 +39,7 @@ export async function GET() {
       return NextResponse.json(
         {
           success: false,
-          error: "User not found",
+          error: "User not found or inactive",
         },
         { status: 404 }
       );

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +30,7 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnUrl = searchParams.get("returnUrl");
+  const returnUrl = searchParams.get("returnUrl") || "/dashboards/student";
 
   const {
     register,
@@ -44,46 +45,29 @@ export function LoginForm() {
     setError("");
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: data.email,
+        password: data.password,
       });
 
-      // Check if response is JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        console.error("Server returned non-JSON response:", contentType);
-        setError("Server error: Invalid response format");
-        return;
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Store JWT tokens in localStorage
-        localStorage.setItem("accessToken", result.tokens.accessToken);
-        localStorage.setItem("refreshToken", result.tokens.refreshToken);
-        localStorage.setItem("user", JSON.stringify(result.user));
-
-        // Redirect to return URL if provided, otherwise to dashboard
-        if (returnUrl) {
-          router.push(returnUrl);
-        } else {
-          // Redirect based on user role
-          const role = result.user.role.toLowerCase();
-          router.push(`/dashboards/${role}`);
-        }
-      } else {
-        setError(result.message || "Login failed");
+      if (result?.error) {
+        setError("Invalid email or password");
+        setIsLoading(false);
+      } else if (result?.ok) {
+        // Use window.location.href to force a full reload and ensure cookies are set
+        window.location.href = returnUrl;
       }
     } catch (error) {
       setError("An error occurred. Please try again.");
-    } finally {
       setIsLoading(false);
     }
+
+
+  };
+
+  const handleSocialLogin = (provider: "google" | "github") => {
+    signIn(provider, { callbackUrl: returnUrl });
   };
 
   return (
@@ -300,6 +284,7 @@ export function LoginForm() {
           <div className="mt-6 grid grid-cols-2 gap-4">
             <button
               type="button"
+              onClick={() => handleSocialLogin("google")}
               className="group flex items-center justify-center px-4 py-3 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -313,6 +298,7 @@ export function LoginForm() {
 
             <button
               type="button"
+              onClick={() => handleSocialLogin("github")}
               className="group flex items-center justify-center px-4 py-3 border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import LearningProfileSetup from "@/components/onboarding/LearningProfileSetup";
 import CourseRecommendations from "@/components/onboarding/CourseRecommendations";
 
-export default function OnboardingPage() {
+function OnboardingPageContent() {
   const [currentPhase, setCurrentPhase] = useState<
     "onboarding" | "profile" | "recommendations"
   >("onboarding");
@@ -84,5 +84,17 @@ export default function OnboardingPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    }>
+      <OnboardingPageContent />
+    </Suspense>
   );
 }

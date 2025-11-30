@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
 import EnhancedNavigation from "@/components/navigation/EnhancedNavigation";
+import Footer from "@/components/layout/Footer";
 
 interface User {
   id: string;
@@ -43,165 +44,136 @@ export default function AboutPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-neutral-50 via-brand-neutral-100 to-brand-neutral-200 relative overflow-hidden">
-      {/* Modern Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-brand-primary/5 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute -bottom-40 -left-40 w-80 h-80 bg-brand-secondary/5 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-tertiary/3 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
-
+    <div className="min-h-screen bg-brand-neutral-50 flex flex-col">
       {/* Enhanced Navigation */}
       <EnhancedNavigation user={user} />
 
-      <div className="relative max-w-full mx-auto">
+      <main className="flex-grow">
         {/* Hero Section */}
-        <section className="relative min-h-[60vh] flex items-center justify-center hero-gradient overflow-hidden">
-          {/* Background Image */}
-          <div className="absolute inset-0">
+        <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden">
+          {/* Background Image with Overlay */}
+          <div className="absolute inset-0 z-0">
             <img
               src="/images/2.jpeg"
               alt="About KM Media Training Institute"
-              className="w-full h-full object-cover opacity-20"
+              className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 hero-overlay"></div>
+            <div className="absolute inset-0 bg-neutral-900/80"></div>
           </div>
 
-          <div className="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-            {/* Badge */}
-            <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-white text-sm font-medium mb-8">
-              <span className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></span>
-              About Our Institute
-            </div>
-
+          <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="max-w-3xl mx-auto space-y-6">
+              {/* Badge */}
+             
             {/* Main Heading */}
             <h1 className="text-responsive-4xl font-bold text-white mb-6 leading-tight animate-fade-in-up">
               Empowering the Next Generation of
               <br />
               <span className="text-brand-accent">Media Professionals</span>
-            </h1>
-
-            {/* Description */}
-            <p className="text-responsive-xl text-white/90 mb-12 max-w-4xl mx-auto leading-relaxed animate-slide-in-up">
-              Since our founding, we've been dedicated to providing world-class
-              media education through innovative hybrid learning experiences
-              that combine theoretical knowledge with hands-on practical
-              training.
-            </p>
+              </h1>
+              
+              <p className="text-lg sm:text-xl text-neutral-300 leading-relaxed max-w-2xl mx-auto">
+                Bridging the gap between academic theory and professional practice through innovative, hands-on media education.
+              </p>
+            </div>
           </div>
         </section>
 
-        {/* Mission & Vision */}
-        <section className="py-20 px-responsive">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
-              <Card className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-blue-50">
-                <CardHeader className="text-center pb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-2xl">🎯</span>
-                  </div>
-                  <CardTitle className="text-2xl text-brand-text-primary">
-                    Our Mission
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-center">
-                  <p className="text-brand-text-secondary leading-relaxed text-lg">
-                    To democratize access to quality media education by
-                    providing comprehensive, industry-relevant training that
-                    bridges the gap between academic learning and professional
-                    practice in the rapidly evolving media landscape.
-                  </p>
-                </CardContent>
-              </Card>
+        {/* Mission & Vision Section */}
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16 items-start">
+              {/* Mission */}
+              <div className="space-y-6">
+                <div className="w-12 h-12 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary text-2xl">
+                  🎯
+                </div>
+                <h2 className="text-3xl font-bold text-neutral-900">Our Mission</h2>
+                <p className="text-lg text-neutral-600 leading-relaxed">
+                  To democratize access to quality media education by providing comprehensive, industry-relevant training. We strive to empower individuals with the practical skills and theoretical knowledge needed to thrive in the rapidly evolving global media landscape.
+                </p>
+              </div>
 
-              <Card className="group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white to-purple-50">
-                <CardHeader className="text-center pb-6">
-                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <span className="text-2xl">🌟</span>
-                  </div>
-                  <CardTitle className="text-2xl text-brand-text-primary">
-                    Our Vision
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-center">
-                  <p className="text-brand-text-secondary leading-relaxed text-lg">
-                    To become the leading media training institute in Africa,
-                    recognized for excellence in education, innovation in
-                    teaching methodologies, and for producing graduates who
-                    shape the future of media and communication.
-                  </p>
-                </CardContent>
-              </Card>
+              {/* Vision */}
+              <div className="space-y-6">
+                <div className="w-12 h-12 rounded-xl bg-brand-secondary/10 flex items-center justify-center text-brand-secondary text-2xl">
+                  👁️
+                </div>
+                <h2 className="text-3xl font-bold text-neutral-900">Our Vision</h2>
+                <p className="text-lg text-neutral-600 leading-relaxed">
+                  To be the premier media training institute in Africa, recognized globally for excellence in education, innovation in teaching methodologies, and for producing graduates who become ethical leaders and creative pioneers in the media industry.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Statistics Strip */}
+        <section className="py-16 bg-brand-neutral-900 text-white">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-neutral-800">
+              <div className="p-4">
+                <div className="text-4xl sm:text-5xl font-bold text-brand-primary mb-2">500+</div>
+                <div className="text-sm sm:text-base text-neutral-400 font-medium uppercase tracking-wider">Graduates</div>
+              </div>
+              <div className="p-4">
+                <div className="text-4xl sm:text-5xl font-bold text-brand-primary mb-2">95%</div>
+                <div className="text-sm sm:text-base text-neutral-400 font-medium uppercase tracking-wider">Job Placement</div>
+              </div>
+              <div className="p-4">
+                <div className="text-4xl sm:text-5xl font-bold text-brand-primary mb-2">50+</div>
+                <div className="text-sm sm:text-base text-neutral-400 font-medium uppercase tracking-wider">Partners</div>
+              </div>
+              <div className="p-4">
+                <div className="text-4xl sm:text-5xl font-bold text-brand-primary mb-2">5</div>
+                <div className="text-sm sm:text-base text-neutral-400 font-medium uppercase tracking-wider">Years Active</div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Core Values */}
-        <section className="py-20 px-responsive">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-              <h2 className="text-responsive-3xl sm:text-responsive-4xl font-bold text-brand-gradient-hero mb-3 sm:mb-4">
-                Our Core Values
-              </h2>
-              <p className="text-responsive-base sm:text-responsive-lg text-brand-text-secondary max-w-2xl mx-auto">
-                The principles that guide everything we do and shape our
-                approach to education
+        <section className="py-20 bg-brand-neutral-50">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">Our Core Values</h2>
+              <p className="text-lg text-neutral-600">
+                The fundamental principles that guide our educational approach and professional conduct.
               </p>
             </div>
 
-            <div className="grid grid-responsive-4 gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
               {[
                 {
                   icon: "🎓",
                   title: "Excellence",
-                  description:
-                    "We strive for the highest standards in education and training delivery",
-                  gradient: "from-blue-500 to-indigo-600",
+                  description: "We hold ourselves and our students to the highest standards of academic and practical performance."
                 },
                 {
                   icon: "🤝",
                   title: "Integrity",
-                  description:
-                    "We maintain honesty, transparency, and ethical practices in all our dealings",
-                  gradient: "from-green-500 to-emerald-600",
+                  description: "We operate with transparency, honesty, and strong ethical principles in all our interactions."
                 },
                 {
-                  icon: "🚀",
+                  icon: "💡",
                   title: "Innovation",
-                  description:
-                    "We embrace new technologies and methodologies to enhance learning",
-                  gradient: "from-purple-500 to-pink-600",
+                  description: "We embrace new technologies and creative methodologies to stay ahead of industry trends."
                 },
                 {
                   icon: "🌍",
                   title: "Impact",
-                  description:
-                    "We are committed to making a positive difference in our students' lives",
-                  gradient: "from-orange-500 to-red-600",
-                },
+                  description: "We focus on creating positive change in our community and the broader media landscape."
+                }
               ].map((value, index) => (
-                <Card
-                  key={index}
-                  className="group hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:scale-105"
-                >
-                  <CardHeader className="text-center pb-4">
-                    <div
-                      className={`w-16 h-16 bg-gradient-to-br ${value.gradient} rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}
-                    >
-                      <span className="text-2xl">{value.icon}</span>
+                <Card key={index} className="border-none shadow-sm hover:shadow-md transition-shadow duration-300 bg-white">
+                  <CardHeader className="text-center pt-8 pb-4">
+                    <div className="w-16 h-16 mx-auto bg-brand-neutral-100 rounded-full flex items-center justify-center text-3xl mb-4">
+                      {value.icon}
                     </div>
-                    <CardTitle className="text-xl text-brand-text-primary">
-                      {value.title}
-                    </CardTitle>
+                    <CardTitle className="text-xl font-bold text-neutral-900">{value.title}</CardTitle>
                   </CardHeader>
-                  <CardContent className="text-center">
-                    <p className="text-brand-text-secondary leading-relaxed">
+                  <CardContent className="text-center pb-8">
+                    <p className="text-neutral-600 leading-relaxed">
                       {value.description}
                     </p>
                   </CardContent>
@@ -212,200 +184,87 @@ export default function AboutPage() {
         </section>
 
         {/* Team Section */}
-        <section className="py-20 px-responsive">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-8 sm:mb-12 lg:mb-16">
-              <h2 className="text-responsive-3xl sm:text-responsive-4xl font-bold text-brand-gradient-hero mb-3 sm:mb-4">
-                Meet Our Team
-              </h2>
-              <p className="text-responsive-base sm:text-responsive-lg text-brand-text-secondary max-w-2xl mx-auto">
-                Industry experts and passionate educators dedicated to your
-                success
-              </p>
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+              <div className="max-w-2xl">
+                <h2 className="text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">Meet Our Leadership</h2>
+                <p className="text-lg text-neutral-600">
+                  Guided by industry veterans and passionate educators dedicated to your success.
+                </p>
+              </div>
+              <Link href="/contact">
+                <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white rounded-xl">
+                  Join Our Team
+                </Button>
+              </Link>
             </div>
 
-            <div className="grid grid-responsive-3 gap-6 sm:gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 {
                   name: "Dr. Adebayo Johnson",
                   role: "Founder & Director",
-                  specialization: "Media Strategy & Leadership",
-                  image: "👨‍💼",
-                  bio: "20+ years in media industry with expertise in digital transformation",
+                  bio: "20+ years in media strategy and leadership.",
+                  image: "👨‍💼"
                 },
                 {
                   name: "Sarah Okafor",
                   role: "Head of Curriculum",
-                  specialization: "Digital Marketing & Content Strategy",
-                  image: "👩‍🏫",
-                  bio: "Former marketing director with passion for education and innovation",
+                  bio: "Expert in digital marketing and content strategy.",
+                  image: "👩‍🏫"
                 },
                 {
                   name: "Michael Adeyemi",
                   role: "Lead Instructor",
-                  specialization: "Video Production & Broadcasting",
-                  image: "👨‍🎬",
-                  bio: "Award-winning filmmaker and broadcast journalist with global experience",
-                },
+                  bio: "Award-winning filmmaker and broadcast journalist.",
+                  image: "👨‍🎬"
+                }
               ].map((member, index) => (
-                <Card
-                  key={index}
-                  className="group hover:shadow-xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:scale-105"
-                >
-                  <CardHeader className="text-center pb-4">
-                    <div className="w-24 h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                      <span className="text-4xl">{member.image}</span>
-                    </div>
-                    <CardTitle className="text-xl text-brand-text-primary">
-                      {member.name}
-                    </CardTitle>
-                    <CardDescription className="text-brand-primary font-medium">
-                      {member.role}
-                    </CardDescription>
-                    <p className="text-sm text-brand-secondary font-medium">
-                      {member.specialization}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="text-center">
-                    <p className="text-brand-text-secondary leading-relaxed text-sm">
+                <div key={index} className="group relative overflow-hidden rounded-xl bg-brand-neutral-50 border border-brand-neutral-100">
+                  <div className="aspect-[4/3] bg-brand-neutral-200 flex items-center justify-center text-6xl group-hover:scale-105 transition-transform duration-500">
+                    {member.image}
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold text-neutral-900 mb-1">{member.name}</h3>
+                    <p className="text-brand-primary font-medium text-sm mb-3">{member.role}</p>
+                    <p className="text-neutral-600 text-sm leading-relaxed">
                       {member.bio}
                     </p>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Statistics */}
-        <section className="py-20 px-responsive">
-          <div className="max-w-7xl mx-auto">
-            <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl sm:rounded-3xl shadow-lg p-6 sm:p-8 lg:p-12">
-              <div className="text-center mb-8 sm:mb-12">
-                <h2 className="text-responsive-3xl sm:text-responsive-4xl font-bold text-brand-gradient-hero mb-3 sm:mb-4">
-                  Our Impact in Numbers
-                </h2>
-                <p className="text-responsive-base sm:text-responsive-lg text-brand-text-secondary">
-                  Measurable results that speak to our commitment to excellence
-                </p>
-              </div>
-
-              <div className="grid grid-responsive-4 gap-4 sm:gap-6 lg:gap-8">
-                {[
-                  { number: "500+", label: "Graduates", icon: "🎓" },
-                  { number: "95%", label: "Job Placement Rate", icon: "💼" },
-                  { number: "50+", label: "Industry Partners", icon: "🤝" },
-                  { number: "5", label: "Years of Excellence", icon: "⭐" },
-                ].map((stat, index) => (
-                  <div key={index} className="text-center group">
-                    <div className="text-4xl mb-2 group-hover:scale-110 transition-transform duration-300">
-                      {stat.icon}
-                    </div>
-                    <div className="text-4xl font-bold text-brand-accent mb-2">
-                      {stat.number}
-                    </div>
-                    <div className="text-brand-text-secondary font-medium">
-                      {stat.label}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Call to Action */}
-        <section className="py-20 px-responsive text-center">
-          <div className="max-w-7xl mx-auto">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-responsive-3xl sm:text-responsive-4xl font-bold text-brand-text-primary mb-4 sm:mb-6">
-                Ready to Start Your Journey?
-              </h2>
-              <p className="text-responsive-lg sm:text-responsive-xl text-brand-text-secondary mb-6 sm:mb-8 max-w-2xl mx-auto">
-                Join hundreds of successful graduates who have transformed their
-                careers through our comprehensive media training programs.
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6">
-                <Link href="/auth/register">
-                  <Button
-                    size="lg"
-                    className="btn-touch-friendly px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg bg-brand-gradient-primary hover:opacity-90 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 text-white"
-                  >
-                    🚀 Apply Now
-                  </Button>
-                </Link>
-                <Link href="/courses">
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="btn-touch-friendly px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg border-2 border-brand-primary/20 hover:bg-brand-primary/5 hover:border-brand-primary/30 transition-all duration-200"
-                  >
-                    📚 View Courses
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="mt-12 sm:mt-16 lg:mt-20 py-8 sm:py-10 lg:py-12 bg-gradient-to-r from-gray-900 to-slate-800 text-white rounded-t-2xl sm:rounded-t-3xl">
-          <div className="max-w-4xl mx-auto px-responsive text-center">
-            <div className="flex items-center justify-center space-x-2 sm:space-x-3 mb-4 sm:mb-6">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden">
-                <img
-                  src="/images/logo.jpeg"
-                  alt="KM Media Training Institute Logo"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <h3 className="text-responsive-xl sm:text-responsive-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                  KM Media Training Institute
-                </h3>
-                <p className="text-brand-neutral-400 text-xs sm:text-sm">
-                  Excellence in Media Education
-                </p>
-              </div>
-            </div>
-            <p className="text-responsive-sm sm:text-responsive-base text-brand-neutral-300 mb-6 sm:mb-8 max-w-2xl mx-auto">
-              Empowering the next generation of media professionals through
-              innovative hybrid learning experiences.
+        {/* CTA Section */}
+        <section className="py-24 bg-brand-primary relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/patterns/grid.svg')] opacity-10"></div>
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6">
+              Ready to Start Your Journey?
+            </h2>
+            <p className="text-xl text-brand-primary-light mb-10 max-w-2xl mx-auto">
+              Join a community of passionate creators and launch your career in the media industry today.
             </p>
-            <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mb-6 sm:mb-8">
-              <Link
-                href="/about"
-                className="text-brand-neutral-400 hover:text-brand-primary-light transition-colors"
-              >
-                About
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+              <Link href="/auth/register">
+                <Button size="lg" className="bg-white text-brand-primary hover:bg-brand-neutral-100 border-none px-8 py-6 text-lg font-semibold shadow-lg rounded-xl">
+                  Apply Now
+                </Button>
               </Link>
-              <Link
-                href="/courses"
-                className="text-brand-neutral-400 hover:text-brand-primary-light transition-colors"
-              >
-                Courses
+              <Link href="/courses">
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold rounded-xl">
+                  Explore Courses
+                </Button>
               </Link>
-              <Link
-                href="/stories"
-                className="text-brand-neutral-400 hover:text-brand-primary-light transition-colors"
-              >
-                Stories
-              </Link>
-              <Link
-                href="/contact"
-                className="text-brand-neutral-400 hover:text-brand-primary-light transition-colors"
-              >
-                Contact
-              </Link>
-            </div>
-            <div className="pt-4 sm:pt-6 border-t border-brand-neutral-700">
-              <p className="text-responsive-sm text-brand-neutral-400">
-                &copy; 2025 KM Media Training Institute. All rights reserved.
-              </p>
             </div>
           </div>
-        </footer>
-      </div>
+        </section>
+      </main>
+
+      <Footer />
     </div>
   );
 }

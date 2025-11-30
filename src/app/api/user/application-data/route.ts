@@ -1,37 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/db";
-import { verifyToken } from "@/lib/auth";
 
 /**
  * GET /api/user/application-data
  * Fetches user profile data formatted for course application forms
  * Includes all available user information to pre-fill application fields
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     console.log("========== APPLICATION DATA API REQUEST ==========");
 
-    // Get the authorization header
-    const authHeader = request.headers.get("authorization");
+    const session = await getServerSession(authOptions);
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, message: "Authorization token required" },
+        { success: false, message: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const token = authHeader.substring(7);
-    const payload = verifyToken(token, false);
-
-    if (!payload || !payload.userId) {
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
-    }
-
-    const userId = payload.userId;
+    const userId = session.user.id;
     console.log("Fetching application data for user:", userId);
 
     // Fetch user with comprehensive profile data

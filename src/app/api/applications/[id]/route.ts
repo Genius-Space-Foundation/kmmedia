@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import {
   withAuth,
   withAdminAuth,
@@ -133,7 +133,7 @@ async function updateApplication(
         status: status as ApplicationStatus,
         reviewedAt: new Date(),
         reviewedBy: adminId,
-        notes,
+        reviewNotes: notes,
       },
       include: {
         user: {
@@ -156,15 +156,8 @@ async function updateApplication(
     });
 
     // If approved, create enrollment
-    if (status === "APPROVED") {
-      await prisma.enrollment.create({
-        data: {
-          userId: application.userId,
-          courseId: application.courseId,
-          status: "ACTIVE",
-        },
-      });
-    }
+    // Note: Enrollment is NO LONGER created automatically on approval.
+    // It will be created when the student pays the tuition fee.
 
     return NextResponse.json({
       success: true,
@@ -176,7 +169,7 @@ async function updateApplication(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
+        { success: false, message: "Invalid input", errors: error.issues },
         { status: 400 }
       );
     }

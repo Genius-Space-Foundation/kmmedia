@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { withAdminAuth } from "@/lib/middleware/auth";
+import { withAdminAuth } from "@/lib/middleware";
+import { sendEmail, emailTemplates } from "@/lib/notifications/email";
 
 async function bulkHandler(request: NextRequest) {
   try {
@@ -46,8 +47,57 @@ async function bulkHandler(request: NextRequest) {
       },
     });
 
-    // Send notifications (TODO: Implement email notifications)
-    console.log(`Bulk ${action}: ${result.count} applications updated`);
+    // Send email notifications to students (async, don't block response)
+    if (action === "APPROVE" || action === "REJECT") {
+      // Fetch applications with student and course details
+      const applications = await prisma.application.findMany({
+        where: { id: { in: applicationIds } },
+        include: {
+          user: { select: { email: true, name: true } },
+          course: {
+            select: {
+              title: true,
+              instructor: { select: { name: true } },
+            },
+          },
+        },
+      });
+
+      // Send emails to each student
+      applications.forEach((application) => {
+        if (action === "APPROVE") {
+          sendEmail({
+            to: application.user.email,
+            ...emailTemplates.applicationApproved({
+              studentName: application.user.name || "Student",
+              courseName: application.course.title,
+              instructorName: application.course.instructor.name || "Instructor",
+            }),
+          }).catch((error) => {
+            console.error(
+              `Failed to send approval email to ${application.user.email}:`,
+              error
+            );
+          });
+        } else if (action === "REJECT") {
+          sendEmail({
+            to: application.user.email,
+            ...emailTemplates.applicationRejected({
+              studentName: application.user.name || "Student",
+              courseName: application.course.title,
+              reason: comments,
+            }),
+          }).catch((error) => {
+            console.error(
+              `Failed to send rejection email to ${application.user.email}:`,
+              error
+            );
+          });
+        }
+      });
+    }
+
+    console.log(`Bulk ${action}: ${result.count} applications updated, emails sent`);
 
     return NextResponse.json({
       success: true,

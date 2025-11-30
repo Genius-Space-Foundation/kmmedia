@@ -1,43 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
-import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get("authorization");
+    const session = await getServerSession(authOptions);
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, message: "Authorization token required" },
+        { success: false, message: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const token = authHeader.substring(7); // Remove "Bearer " prefix
-
-    // Verify JWT token using the auth library
-    const payload = verifyToken(token, false);
-
-    if (!payload) {
-      console.error("JWT verification failed - Invalid token");
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
-    }
-
-    const userId = payload.userId;
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
-    }
+    const userId = session.user.id;
 
     const data = await request.formData();
     const file: File | null = data.get("avatar") as unknown as File;

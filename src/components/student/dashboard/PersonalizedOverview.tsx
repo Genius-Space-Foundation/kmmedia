@@ -106,7 +106,7 @@ export default function PersonalizedOverview({
   return (
     <div className="space-y-6">
       {/* Welcome Header */}
-      <Card className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-0 shadow-lg">
+      <Card className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-0 shadow-lg rounded-xl">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
@@ -143,7 +143,7 @@ export default function PersonalizedOverview({
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -159,7 +159,7 @@ export default function PersonalizedOverview({
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -175,7 +175,7 @@ export default function PersonalizedOverview({
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -191,7 +191,7 @@ export default function PersonalizedOverview({
           </CardContent>
         </Card>
 
-        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+        <Card className="bg-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 rounded-xl">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -221,7 +221,7 @@ export default function PersonalizedOverview({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Continue Learning */}
-        <Card className="bg-white border-0 shadow-lg">
+        <Card className="bg-white border-0 shadow-lg rounded-xl">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center space-x-2">
               <PlayCircle className="h-5 w-5 text-blue-600" />
@@ -272,7 +272,7 @@ export default function PersonalizedOverview({
         </Card>
 
         {/* Upcoming Deadlines */}
-        <Card className="bg-white border-0 shadow-lg">
+        <Card className="bg-white border-0 shadow-lg rounded-xl">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center space-x-2">
@@ -323,7 +323,7 @@ export default function PersonalizedOverview({
 
       {/* Recent Achievements */}
       {achievements.length > 0 && (
-        <Card className="bg-white border-0 shadow-lg">
+        <Card className="bg-white border-0 shadow-lg rounded-xl">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center space-x-2">

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { UserStatus } from "@prisma/client";
@@ -102,7 +102,7 @@ async function bulkUserActions(req: AuthenticatedRequest) {
     }
 
     // Log the bulk action for audit purposes
-    console.log(`Bulk action performed by admin ${req.user.id}:`, {
+    console.log(`Bulk action performed by admin ${req.user!.userId}:`, {
       action,
       userIds,
       comments,
@@ -138,7 +138,7 @@ async function bulkUserActions(req: AuthenticatedRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
+        { success: false, message: "Invalid input", errors: error.issues },
         { status: 400 }
       );
     }

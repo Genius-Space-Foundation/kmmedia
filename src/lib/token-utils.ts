@@ -42,36 +42,40 @@ export async function makeAuthenticatedRequest(
     );
   }
 
+  // Try to get token from localStorage (legacy support)
   let accessToken = localStorage.getItem("accessToken");
 
-  if (!accessToken) {
-    // Try to refresh token
-    accessToken = await refreshTokenIfNeeded();
-    if (!accessToken) {
-      throw new Error("No valid authentication token available");
-    }
+  // Prepare headers
+  const headers: HeadersInit = {
+    ...options.headers,
+    "Content-Type": "application/json",
+  };
+
+  // If token exists, add it to headers
+  if (accessToken) {
+    (headers as any)["Authorization"] = `Bearer ${accessToken}`;
   }
 
+  // Proceed with request - if no token, we rely on session cookies
   const response = await fetch(url, {
     ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
+    headers,
+    credentials: 'include', // Ensure cookies are sent with the request
   });
 
-  // If token is invalid, try to refresh and retry once
-  if (response.status === 401) {
+  // If we get a 401 and we had a token, it might be expired
+  if (response.status === 401 && accessToken) {
+    // Try to refresh token
     const newToken = await refreshTokenIfNeeded();
     if (newToken) {
+      // Retry with new token
       return fetch(url, {
         ...options,
         headers: {
-          ...options.headers,
+          ...headers,
           Authorization: `Bearer ${newToken}`,
-          "Content-Type": "application/json",
         },
+        credentials: 'include',
       });
     }
   }

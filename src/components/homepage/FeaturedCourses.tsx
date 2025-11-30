@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, Users, Clock, ArrowRight, BookOpen } from "lucide-react";
+import { SkeletonCourseCard } from "@/components/ui/skeleton";
 
 interface CoursePreview {
   id: string;
@@ -101,19 +102,16 @@ export default function FeaturedCourses() {
 
   if (isLoading) {
     return (
-      <section className="py-20 bg-gray-50">
+      <section className="py-16 sm:py-20 bg-neutral-50" aria-busy="true" aria-label="Loading featured courses">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="h-8 bg-gray-200 rounded w-64 mx-auto mb-4 animate-pulse"></div>
-            <div className="h-6 bg-gray-200 rounded w-96 mx-auto animate-pulse"></div>
+          <div className="text-center mb-12 sm:mb-16">
+            <div className="h-8 bg-neutral-200 rounded-full w-48 mx-auto mb-4 animate-pulse"></div>
+            <div className="h-10 bg-neutral-200 rounded w-80 mx-auto mb-3 animate-pulse"></div>
+            <div className="h-6 bg-neutral-200 rounded w-96 mx-auto animate-pulse"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-xl p-6 animate-pulse">
-                <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
-                <div className="h-6 bg-gray-200 rounded mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              </div>
+              <SkeletonCourseCard key={i} />
             ))}
           </div>
         </div>
@@ -122,20 +120,15 @@ export default function FeaturedCourses() {
   }
 
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-neutral-50" id="featured-courses">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center px-4 py-2 bg-brand-primary-light text-brand-primary rounded-full text-sm font-medium mb-4">
-            <BookOpen className="w-4 h-4 mr-2" />
+          <h2 className="text-3xl font-bold text-neutral-900 mb-4">
             Featured Courses
-          </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            Start Your Learning Journey
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Discover our most popular courses designed by industry experts to
-            help you master new skills and advance your career
+          <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
+            Discover our most popular courses designed by industry experts.
           </p>
         </div>
 
@@ -144,83 +137,68 @@ export default function FeaturedCourses() {
           {featuredCourses.slice(0, 6).map((course) => (
             <Card
               key={course.id}
-              className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg overflow-hidden"
+              className="group hover:shadow-lg transition-all duration-300 border border-neutral-200 bg-white overflow-hidden"
             >
-              <div className="relative">
-                {/* Course Image Placeholder */}
-                <div className="h-48 bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center">
-                  <BookOpen className="w-12 h-12 text-white/80" />
-                </div>
-
-                {/* Course Level Badge */}
+              <div className="relative overflow-hidden h-48 bg-neutral-100 flex items-center justify-center">
+                {/* Placeholder for course image */}
+                <BookOpen className="w-12 h-12 text-neutral-300" />
+                
                 {course.level && (
-                  <Badge className="absolute top-4 left-4 bg-white/90 text-gray-800 hover:bg-white">
+                  <Badge className="absolute top-4 left-4 bg-white text-neutral-900 hover:bg-white shadow-sm font-medium">
                     {course.level}
                   </Badge>
                 )}
 
-                {/* Price Badge */}
                 {course.price && (
-                  <Badge className="absolute top-4 right-4 bg-brand-primary hover:bg-brand-primary-dark">
+                  <Badge className="absolute top-4 right-4 bg-brand-primary text-white hover:bg-brand-primary shadow-sm font-bold">
                     ${course.price}
                   </Badge>
                 )}
               </div>
 
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between mb-2">
-                  <Badge variant="outline" className="text-xs">
+              <CardHeader className="pb-3 pt-5">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-brand-primary uppercase tracking-wider">
                     {course.category}
-                  </Badge>
+                  </span>
                   <div className="flex items-center space-x-1">
-                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="text-sm font-medium text-gray-600">
+                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    <span className="text-sm font-medium text-neutral-700">
                       {course.rating}
                     </span>
                   </div>
                 </div>
-                <CardTitle className="text-lg font-bold text-gray-900 group-hover:text-brand-primary transition-colors line-clamp-2">
+                <CardTitle className="text-xl font-bold text-neutral-900 line-clamp-2 mb-1">
                   {course.title}
                 </CardTitle>
               </CardHeader>
 
-              <CardContent className="pt-0">
+              <CardContent className="pt-0 pb-5">
                 {course.description && (
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  <p className="text-neutral-600 text-sm mb-4 line-clamp-2 leading-relaxed">
                     {course.description}
                   </p>
                 )}
 
-                <div className="flex items-center justify-between text-sm text-gray-500 mb-4">
-                  <div className="flex items-center space-x-1">
+                <div className="flex items-center justify-between text-sm text-neutral-500 mb-6 pt-4 border-t border-neutral-100">
+                  <div className="flex items-center gap-1.5">
                     <Users className="w-4 h-4" />
-                    <span>{course.enrollments} enrolled</span>
+                    <span>{course.enrollments} students</span>
                   </div>
                   {course.duration && (
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center gap-1.5">
                       <Clock className="w-4 h-4" />
                       <span>{course.duration} weeks</span>
                     </div>
                   )}
                 </div>
 
-                {course.instructor && (
-                  <div className="flex items-center space-x-2 mb-4">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                      <span className="text-xs font-medium text-gray-600">
-                        {course.instructor.name.charAt(0)}
-                      </span>
-                    </div>
-                    <span className="text-sm text-gray-600">
-                      {course.instructor.name}
-                    </span>
-                  </div>
-                )}
-
-                <Button asChild className="w-full btn-brand-primary group">
+                <Button 
+                  asChild 
+                  className="w-full bg-white text-brand-primary border border-brand-primary hover:bg-brand-primary hover:text-white transition-colors"
+                >
                   <Link href={`/courses/${course.id}`}>
-                    View Course
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    View Details
                   </Link>
                 </Button>
               </CardContent>
@@ -233,11 +211,10 @@ export default function FeaturedCourses() {
           <Button
             asChild
             size="lg"
-            className="btn-brand-primary text-lg px-8 py-3"
+            className="bg-brand-primary text-white hover:bg-brand-secondary px-8 py-3 rounded-md font-medium shadow-sm transition-all"
           >
             <Link href="/courses">
               View All Courses
-              <ArrowRight className="w-5 h-5 ml-2" />
             </Link>
           </Button>
         </div>

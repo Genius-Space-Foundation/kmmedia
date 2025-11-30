@@ -3,7 +3,7 @@ import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 import {
   initializePayment,
   generatePaymentReference,
-  convertToKobo,
+  convertToPesewas,
 } from "@/lib/payments/paystack";
 import { createPaymentRecord } from "@/lib/payments/paystack";
 import { prisma } from "@/lib/db";
@@ -40,7 +40,7 @@ async function handler(req: AuthenticatedRequest) {
     // Initialize payment with Paystack
     const paystackResponse = await initializePayment({
       email: user.email,
-      amount: convertToKobo(amount),
+      amount: convertToPesewas(amount),
       reference,
       metadata: {
         userId,
@@ -78,7 +78,7 @@ async function handler(req: AuthenticatedRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
+        { success: false, message: "Invalid input", errors: error.issues },
         { status: 400 }
       );
     }

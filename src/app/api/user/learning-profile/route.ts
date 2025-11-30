@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/db";
-import { verifyToken } from "@/lib/auth";
 import { z } from "zod";
 
 const learningProfileSchema = z.object({
@@ -19,24 +20,17 @@ const learningProfileSchema = z.object({
 // GET - Fetch user's learning profile
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get("accessToken")?.value;
-    if (!token) {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, message: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
-    }
-
     const learningProfile = await prisma.learningProfile.findUnique({
-      where: { userId: payload.userId },
+      where: { userId: session.user.id },
     });
 
     return NextResponse.json({
@@ -55,18 +49,11 @@ export async function GET(request: NextRequest) {
 // PUT - Create or update user's learning profile
 export async function PUT(request: NextRequest) {
   try {
-    const token = request.cookies.get("accessToken")?.value;
-    if (!token) {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, message: "Authentication required" },
-        { status: 401 }
-      );
-    }
-
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
         { status: 401 }
       );
     }
@@ -76,14 +63,14 @@ export async function PUT(request: NextRequest) {
 
     // Check if profile exists
     const existingProfile = await prisma.learningProfile.findUnique({
-      where: { userId: payload.userId },
+      where: { userId: session.user.id },
     });
 
     let learningProfile;
     if (existingProfile) {
       // Update existing profile
       learningProfile = await prisma.learningProfile.update({
-        where: { userId: payload.userId },
+        where: { userId: session.user.id },
         data: {
           ...profileData,
           updatedAt: new Date(),
@@ -93,7 +80,7 @@ export async function PUT(request: NextRequest) {
       // Create new profile
       learningProfile = await prisma.learningProfile.create({
         data: {
-          userId: payload.userId,
+          userId: session.user.id,
           interests: profileData.interests || [],
           skillLevel: profileData.skillLevel || "beginner",
           learningStyle: profileData.learningStyle || "visual",
@@ -122,7 +109,7 @@ export async function PUT(request: NextRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
+        { success: false, message: "Invalid input", errors: error.issues },
         { status: 400 }
       );
     }

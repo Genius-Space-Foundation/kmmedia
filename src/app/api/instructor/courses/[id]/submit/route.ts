@@ -2,22 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { CourseStatus } from "@prisma/client";
-import { notifyCourseSubmittedForApproval } from "@/lib/notifications/notification-triggers";
+import { sendEmail } from "@/lib/notifications/email";
+import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
-// Submit course for approval (Instructor only)
-async function submitForApproval(
+async function submitCourse(
   req: AuthenticatedRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = params;
+    const courseId = params.id;
     const instructorId = req.user!.userId;
 
+    // 1. Check if course exists and belongs to instructor
     const course = await prisma.course.findUnique({
-      where: { id },
-      include: {
-        lessons: true,
-      },
+      where: { id: courseId },
     });
 
     if (!course) {
@@ -27,7 +25,6 @@ async function submitForApproval(
       );
     }
 
-    // Check if instructor owns the course
     if (course.instructorId !== instructorId) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
@@ -35,82 +32,76 @@ async function submitForApproval(
       );
     }
 
-    // Check if course is in draft status
-    if (course.status !== CourseStatus.DRAFT) {
+    // 2. Validate Course State
+    if (course.status !== "DRAFT" && course.status !== "REJECTED") {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Only draft courses can be submitted for approval",
+        { 
+          success: false, 
+          message: `Course cannot be submitted. Current status: ${course.status}` 
         },
         { status: 400 }
       );
     }
 
-    // Validate course has minimum content
-    if (!course.description || course.description.length < 50) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Course description must be at least 50 characters",
+    // 3. Basic Validation (Ensure critical fields are present)
+    if (!course.title || !course.description || !course.price) {
+       return NextResponse.json(
+        { 
+          success: false, 
+          message: "Please ensure Title, Description, and Price are set before submitting." 
         },
         { status: 400 }
       );
     }
 
-    if (course.lessons.length === 0) {
-      return NextResponse.json(
-        { success: false, message: "Course must have at least one lesson" },
-        { status: 400 }
-      );
-    }
-
-    // Update course status
+    // 4. Update Status
     const updatedCourse = await prisma.course.update({
-      where: { id },
+      where: { id: courseId },
       data: {
-        status: CourseStatus.PENDING_APPROVAL,
+        status: "PENDING_APPROVAL",
         submittedAt: new Date(),
-      },
-      include: {
-        instructor: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        _count: {
-          select: {
-            applications: true,
-            enrollments: true,
-            lessons: true,
-          },
-        },
       },
     });
 
-    // Send notification to admins
-    await notifyCourseSubmittedForApproval(id).catch((error) =>
-      console.error("Failed to send admin notification:", error)
-    );
+    // Notify all admins about the course submission
+    const admins = await prisma.user.findMany({
+      where: { role: "ADMIN" },
+      select: { email: true, name: true },
+    });
+
+    const instructor = await prisma.user.findUnique({
+      where: { id: instructorId },
+      select: { name: true },
+    });
+
+    // Send emails to all admins (async, don't block response)
+    admins.forEach((admin) => {
+      sendEmail({
+        to: admin.email,
+        ...extendedEmailTemplates.courseSubmittedForReview({
+          adminName: admin.name || "Admin",
+          instructorName: instructor?.name || "Instructor",
+          courseName: updatedCourse.title,
+          courseId: updatedCourse.id,
+        }),
+      }).catch((error) => {
+        console.error(`Failed to send course submission email to ${admin.email}:`, error);
+      });
+    });
 
     return NextResponse.json({
       success: true,
       data: updatedCourse,
       message: "Course submitted for approval successfully",
     });
+
   } catch (error) {
     console.error("Submit course error:", error);
     return NextResponse.json(
-      {
-        success: false,
-        message:
-          error instanceof Error ? error.message : "Course submission failed",
-      },
+      { success: false, message: "Failed to submit course" },
       { status: 500 }
     );
   }
 }
 
-export const PUT = withInstructorAuth(submitForApproval);
-
+export const POST = withInstructorAuth(submitCourse);

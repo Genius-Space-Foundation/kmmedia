@@ -2,11 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import StudentSidebar from "../navigation/StudentSidebar";
-import UserDropdown from "@/components/user-dropdown";
-import { Button } from "@/components/ui/button";
-import { Bell, Menu, X, Search } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useSession } from "next-auth/react";
+import { makeAuthenticatedRequest } from "@/lib/token-utils";
+import { ModernSidebar } from "@/components/dashboard/modern-sidebar";
+import { ModernHeader } from "@/components/dashboard/modern-header";
+import {
+  LayoutDashboard,
+  BookOpen,
+  FileText,
+  CreditCard,
+  MessageSquare,
+  Settings,
+  Award,
+  Calendar,
+  Target,
+  User,
+} from "lucide-react";
 
 interface StudentLayoutProps {
   children: React.ReactNode;
@@ -21,29 +32,31 @@ export default function StudentLayout({
   onTabChange,
   className = "",
 }: StudentLayoutProps) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notifications, setNotifications] = useState(3); // This would come from props/state
-  const [user, setUser] = useState<any>(null); // User state
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [user, setUser] = useState<any>(null);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
-  // Load user data on component mount
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        if (token) {
-          // Fetch user profile
-          const response = await fetch("/api/user/profile", {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          });
+        if (status === "authenticated") {
+          // Check if user has STUDENT role
+          if (session?.user?.role !== "STUDENT") {
+            console.warn("Non-student user accessing student dashboard");
+            // Redirect to appropriate dashboard based on role
+            if (session?.user?.role === "ADMIN") {
+              router.push("/admin");
+            } else if (session?.user?.role === "INSTRUCTOR") {
+              router.push("/instructor");
+            }
+            return;
+          }
 
+          const response = await makeAuthenticatedRequest("/api/user/profile");
           if (response.ok) {
             const data = await response.json();
-            setUser(data.data);
+            setUser(data.user || data.data);
           }
         }
       } catch (error) {
@@ -52,188 +65,80 @@ export default function StudentLayout({
     };
 
     loadUserData();
-  }, []);
-
-  const toggleSidebar = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
-
-  // Handler functions for UserDropdown
-  const handleUpdateProfile = (updatedUser: any) => {
-    console.log("Update profile:", updatedUser);
-    setUser(updatedUser);
-    // Update local storage if needed
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-  };
-
-  const handleUpdatePassword = (data: any) => {
-    console.log("Update password:", data);
-    // Implement password update logic
-  };
+  }, [status, session, router]);
 
   const handleLogout = async () => {
     try {
-      // Clear local storage
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
-
-      // Redirect to login
-      router.push("/auth/login");
+      // Use NextAuth signOut
+      const { signOut } = await import("next-auth/react");
+      await signOut({ callbackUrl: "/auth/login" });
     } catch (error) {
       console.error("Logout error:", error);
-      // Still redirect even if there's an error
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
       router.push("/auth/login");
     }
   };
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-  };
-
-  // Handle responsive behavior
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setSidebarCollapsed(true);
-      }
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const navigationItems = [
+    { id: "overview", label: "Overview", icon: LayoutDashboard, badge: null },
+    { id: "learning", label: "My Learning", icon: BookOpen, badge: null },
+    { id: "courses", label: "Course Catalog", icon: Target, badge: null },
+    { id: "deadlines", label: "Deadlines", icon: Calendar, badge: null },
+    { id: "achievements", label: "Achievements", icon: Award, badge: null },
+    {
+      id: "recommendations",
+      label: "Recommendations",
+      icon: Target,
+      badge: null,
+    },
+    { id: "analytics", label: "Analytics", icon: LayoutDashboard, badge: null },
+    { id: "assessments", label: "Assessments", icon: FileText, badge: null },
+    { id: "payments", label: "Payments", icon: CreditCard, badge: null },
+    {
+      id: "notifications",
+      label: "Notifications",
+      icon: MessageSquare,
+      badge: null,
+    },
+    { id: "profile", label: "My Profile", icon: User, badge: null },
+    { id: "settings", label: "Settings", icon: Settings, badge: null },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Mobile Header */}
-      <div className="lg:hidden bg-white/95 backdrop-blur-sm border-b border-gray-200 px-4 py-3 sticky top-0 z-50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMobileMenu}
-              className="h-8 w-8 p-0"
-            >
-              {mobileMenuOpen ? (
-                <X className="h-4 w-4" />
-              ) : (
-                <Menu className="h-4 w-4" />
-              )}
-            </Button>
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">🎓</span>
-            </div>
-            <span className="font-semibold text-gray-900">Student Portal</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="h-4 w-4" />
-              {notifications > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs bg-red-500 text-white">
-                  {notifications}
-                </Badge>
-              )}
-            </Button>
-            <UserDropdown
-              user={user}
-              onUpdateProfile={handleUpdateProfile}
-              onUpdatePassword={handleUpdatePassword}
-              onLogout={handleLogout}
-            />
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 flex">
+      {/* Modern Sidebar */}
+      <ModernSidebar
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        activeTab={activeTab}
+        onTabChange={onTabChange}
+        navigationItems={navigationItems}
+        brandName="KM Media"
+        brandSubtitle="Student Portal"
+        brandInitials="KM"
+      />
 
-      <div className="flex">
-        {/* Sidebar */}
-        <div
-          className={`${
-            sidebarCollapsed ? "lg:w-16" : "lg:w-64"
-          } transition-all duration-300 ${
-            mobileMenuOpen
-              ? "fixed inset-y-0 left-0 z-50 w-64"
-              : "hidden lg:block"
-          }`}
-        >
-          <StudentSidebar
-            isCollapsed={sidebarCollapsed}
-            onToggle={toggleSidebar}
-            activeTab={activeTab}
-            onTabChange={onTabChange}
-            className="h-full"
-          />
-        </div>
+      {/* Main Content */}
+      <div
+        className={`flex-1 transition-all duration-300 ${
+          sidebarOpen ? "ml-72" : "ml-20"
+        }`}
+      >
+        {/* Modern Header */}
+        <ModernHeader
+          title="Student Dashboard"
+          subtitle={`Welcome back, ${
+            user?.name || "Student"
+          }! Ready to continue learning?`}
+          currentUser={user}
+          onProfileClick={() => onTabChange("profile")}
+          onSettingsClick={() => onTabChange("settings")}
+          onLogout={handleLogout}
+          notificationCount={0}
+        />
 
-        {/* Mobile Overlay */}
-        {mobileMenuOpen && (
-          <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-        )}
-
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col min-h-screen">
-          {/* Desktop Header */}
-          <header className="hidden lg:block bg-white/80 backdrop-blur-sm border-b border-gray-200/50 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-lg">🎓</span>
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-800 bg-clip-text text-transparent">
-                      Welcome back, {user?.name || "Student"}!
-                    </h1>
-                    <p className="text-sm text-gray-600">
-                      Ready to continue your learning journey?
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="w-80">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search courses, lessons..."
-                      className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
-                    />
-                  </div>
-                </div>
-
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="h-4 w-4" />
-                  {notifications > 0 && (
-                    <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs bg-red-500 text-white">
-                      {notifications}
-                    </Badge>
-                  )}
-                </Button>
-
-                <UserDropdown
-                  user={user}
-                  onUpdateProfile={handleUpdateProfile}
-                  onUpdatePassword={handleUpdatePassword}
-                  onLogout={handleLogout}
-                />
-              </div>
-            </div>
-          </header>
-
-          {/* Page Content */}
-          <main className={`flex-1 p-4 lg:p-6 ${className}`}>{children}</main>
-        </div>
+        {/* Page Content */}
+        <main className={`px-8 py-8 ${className}`}>{children}</main>
       </div>
     </div>
   );
 }
-

@@ -1,51 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/db";
-import { verifyToken } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
     console.log("========== PROFILE API GET REQUEST ==========");
 
-    // Get the authorization header
-    const authHeader = request.headers.get("authorization");
-    console.log("Auth header present:", !!authHeader);
+    const session = await getServerSession(authOptions);
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.log("❌ No auth header or invalid format");
+    if (!session?.user?.id) {
+      console.log("❌ No active session");
       return NextResponse.json(
-        { success: false, message: "Authorization token required" },
+        { success: false, message: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const token = authHeader.substring(7); // Remove "Bearer " prefix
-    console.log("Token extracted, length:", token.length);
-    console.log("Token first 20 chars:", token.substring(0, 20) + "...");
-
-    // Verify JWT token using the auth library
-    console.log("Attempting to verify token...");
-    const payload = verifyToken(token, false);
-    console.log("Verification result:", payload ? "✅ Valid" : "❌ Invalid");
-
-    if (!payload) {
-      console.error("❌ JWT verification failed - Invalid token");
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
-    }
-
-    console.log("✅ Token verified! Payload:", payload);
-    const userId = payload.userId;
-    console.log("User ID from token:", userId);
-
-    if (!userId) {
-      console.log("❌ No userId in payload");
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
-    }
+    const userId = session.user.id;
+    console.log("User ID from session:", userId);
 
     console.log("Fetching user from database...");
     const user = await prisma.user.findUnique({
@@ -120,37 +93,16 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    // Get the authorization header
-    const authHeader = request.headers.get("authorization");
+    const session = await getServerSession(authOptions);
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, message: "Authorization token required" },
+        { success: false, message: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const token = authHeader.substring(7); // Remove "Bearer " prefix
-
-    // Verify JWT token using the auth library
-    const payload = verifyToken(token, false);
-
-    if (!payload) {
-      console.error("JWT verification failed - Invalid token");
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
-    }
-
-    const userId = payload.userId;
-
-    if (!userId) {
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
-    }
+    const userId = session.user.id;
 
     const body = await request.json();
     const { name, email, phone, address, bio, dateOfBirth, avatar } = body;

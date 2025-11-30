@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -31,7 +32,7 @@ import { Label } from "@/components/ui/label";
 import StudentAssessments from "@/components/student-assessments";
 import StudentProgressTracking from "@/components/student-progress-tracking";
 import UserDropdown from "@/components/user-dropdown";
-import { makeAuthenticatedRequest, clearAuthTokens } from "@/lib/token-utils";
+// import { makeAuthenticatedRequest, clearAuthTokens } from "@/lib/token-utils";
 import { safeJsonParse } from "@/lib/api-utils";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import ApplicationWizard from "@/components/onboarding/ApplicationWizard";
@@ -186,6 +187,7 @@ interface TicketResponse {
 }
 
 export default function StudentDashboard() {
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
@@ -272,10 +274,13 @@ export default function StudentDashboard() {
   });
 
   useEffect(() => {
-    fetchDashboardData();
-    fetchUserProfile();
-    fetchEnhancedDashboardData();
-  }, []);
+    if (status === "authenticated") {
+      fetchDashboardData();
+      fetchUserProfile();
+      fetchEnhancedDashboardData();
+    }
+  }, [status, session]);
+
 
   useEffect(() => {
     // Check if user needs onboarding
@@ -290,27 +295,35 @@ export default function StudentDashboard() {
 
   const fetchUserProfile = async () => {
     try {
-      const response = await makeAuthenticatedRequest("/api/user/profile");
-      const result = await response.json();
-
-      if (result.success) {
-        setUser(result.user);
+      // Use session data if available
+      if (session?.user) {
+        setUser({
+          ...session.user,
+          // Add default values for missing fields
+          bio: "Student",
+          phone: "",
+          location: "",
+          interests: [],
+          notifications: {
+            email: true,
+            push: false,
+            sms: false
+          }
+        });
       } else {
-        console.error("Failed to fetch user profile:", result.message);
-        if (result.message === "Invalid token") {
-          clearAuthTokens();
-          router.push("/auth/login");
+        // Fallback to API call if needed, but rely on cookie auth
+        const response = await fetch("/api/user/profile");
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            setUser(result.user);
+          }
         }
       }
+      setLoading(false);
     } catch (error) {
-      console.error("Error fetching user profile:", error);
-      if (
-        error instanceof Error &&
-        error.message.includes("No valid authentication token")
-      ) {
-        clearAuthTokens();
-        router.push("/auth/login");
-      }
+      console.error("Error setting user profile:", error);
+      setLoading(false);
     }
   };
 
@@ -422,23 +435,18 @@ export default function StudentDashboard() {
 
   const fetchDashboardData = async () => {
     try {
-      // Check if user is authenticated
-      const token = localStorage.getItem("accessToken");
-      console.log("Token from localStorage:", token ? "Found" : "Not found");
-
-      if (!token) {
-        console.log("No authentication token found, redirecting to login");
+      if (status === "loading") return;
+      
+      if (status === "unauthenticated") {
+        console.log("User unauthenticated, redirecting to login");
         router.push("/auth/login");
         return;
       }
 
-      console.log("Token found, proceeding with API calls...");
+      console.log("Session found, proceeding with API calls...");
 
-      // Fetch all student data in parallel with Authorization header
-      console.log(
-        "Making API calls with token:",
-        token.substring(0, 20) + "..."
-      );
+      // Fetch all student data in parallel (cookies are sent automatically)
+      console.log("Making API calls...");
       const [
         coursesRes,
         applicationsRes,
@@ -449,55 +457,16 @@ export default function StudentDashboard() {
         notificationsRes,
         statsRes,
       ] = await Promise.all([
-        fetch("/api/student/courses", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }),
-        fetch("/api/student/applications", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }),
-        fetch("/api/student/enrollments", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }),
-        fetch("/api/student/payments", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }),
-        fetch("/api/student/support-tickets", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }),
-        fetch("/api/student/assessments", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }),
-        fetch("/api/student/notifications/user", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }),
-        fetch("/api/student/stats/user", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }),
+        fetch("/api/student/courses"),
+        fetch("/api/student/applications"),
+        fetch("/api/student/enrollments"),
+        fetch("/api/student/payments"),
+        fetch("/api/student/support-tickets"),
+        fetch("/api/student/assessments"),
+        fetch("/api/student/notifications/user"),
+        fetch("/api/student/stats/user"),
       ]);
+
 
       // Check for 401 responses (unauthorized)
       if (

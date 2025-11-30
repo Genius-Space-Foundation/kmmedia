@@ -5,11 +5,11 @@ import { generateReceiptForPayment } from "@/lib/payments/receipt-generator";
 
 /**
  * GET /api/payments/[id]/receipt
- * Generate or retrieve payment receipt
+ * Generate and stream payment receipt PDF
  */
 async function handleGet(
   req: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const userId = req.user?.userId;
@@ -17,28 +17,32 @@ async function handleGet(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const paymentId = params.id;
+    // Await params for Next.js 15 compatibility
+    const { id: paymentId } = await params;
 
     // Fetch payment with related data
     const payment = await db.payment.findUnique({
       where: { id: paymentId },
-      include: {
+      select: {
+        id: true,
+        amount: true,
+        method: true, // ADD THIS - needed for receipt generation
+        createdAt: true,
+        reference: true,
+        type: true,
+        status: true,
+        userId: true,
         user: {
           select: {
             name: true,
             email: true,
           },
         },
-        course: {
+        enrollment: {
           select: {
-            title: true,
-          },
-        },
-        installment: {
-          include: {
-            paymentPlan: {
+            course: {
               select: {
-                installmentCount: true,
+                title: true,
               },
             },
           },
@@ -66,21 +70,34 @@ async function handleGet(
       );
     }
 
-    // Check if receipt already exists
-    if (payment.receiptUrl) {
-      return NextResponse.json({
-        success: true,
-        receiptUrl: payment.receiptUrl,
-        message: "Receipt already generated",
+    // Fetch installment data if this is an installment payment
+    let installmentData: { installmentNumber: number; totalInstallments: number } | undefined;
+    if (payment.type === "INSTALLMENT") {
+      const installment = await db.paymentInstallment.findFirst({
+        where: { paymentId: payment.id },
+        include: {
+          paymentPlan: {
+            select: {
+              installmentCount: true,
+            },
+          },
+        },
       });
+
+      if (installment) {
+        installmentData = {
+          installmentNumber: installment.installmentNumber,
+          totalInstallments: installment.paymentPlan.installmentCount,
+        };
+      }
     }
 
-    // Generate new receipt
-    const receiptResult = await generateReceiptForPayment(
+    // Generate receipt PDF buffer
+    const pdfBuffer = await generateReceiptForPayment(
       {
         id: payment.id,
         amount: payment.amount,
-        paymentMethod: payment.paymentMethod,
+        paymentMethod: payment.method,
         createdAt: payment.createdAt,
         reference: payment.reference || undefined,
         type: payment.type,
@@ -89,40 +106,22 @@ async function handleGet(
         name: payment.user.name || "Unknown",
         email: payment.user.email,
       },
-      payment.course
+      payment.enrollment?.course
         ? {
-            title: payment.course.title,
+            title: payment.enrollment.course.title,
           }
         : undefined,
-      payment.installment
-        ? {
-            installmentNumber: payment.installment.installmentNumber,
-            totalInstallments:
-              payment.installment.paymentPlan.installmentCount,
-          }
-        : undefined
+      installmentData
     );
 
-    if (!receiptResult.success) {
-      return NextResponse.json(
-        { error: receiptResult.error || "Failed to generate receipt" },
-        { status: 500 }
-      );
-    }
-
-    // Update payment with receipt URL
-    await db.payment.update({
-      where: { id: paymentId },
-      data: {
-        receiptUrl: receiptResult.url,
+    // Return PDF stream (convert Buffer to Uint8Array for NextResponse compatibility)
+    return new NextResponse(new Uint8Array(pdfBuffer), {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="receipt-${payment.reference || payment.id}.pdf"`,
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      receiptUrl: receiptResult.url,
-      message: "Receipt generated successfully",
-    });
   } catch (error) {
     console.error("Receipt generation error:", error);
     return NextResponse.json(

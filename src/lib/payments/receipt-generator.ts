@@ -1,6 +1,4 @@
 import PDFDocument from "pdfkit";
-import { writeFileSync, mkdirSync } from "fs";
-import { join } from "path";
 
 export interface ReceiptData {
   receiptNumber: string;
@@ -17,27 +15,22 @@ export interface ReceiptData {
   totalInstallments?: number;
 }
 
-export interface ReceiptResult {
-  success: boolean;
-  filePath?: string;
-  url?: string;
-  error?: string;
-}
-
 /**
  * Generate receipt number
  */
 export function generateReceiptNumber(): string {
   const timestamp = Date.now();
-  const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+  const random = Math.floor(Math.random() * 10000)
+    .toString()
+    .padStart(4, "0");
   return `RCP-${timestamp}-${random}`;
 }
 
 /**
- * Format currency (NGN)
+ * Format currency (GHS)
  */
 function formatCurrency(amount: number): string {
-  return `₦${amount.toLocaleString("en-NG", {
+  return `GH₵${amount.toLocaleString("en-GH", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -47,7 +40,7 @@ function formatCurrency(amount: number): string {
  * Format date
  */
 function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat("en-NG", {
+  return new Intl.DateTimeFormat("en-GH", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -57,245 +50,211 @@ function formatDate(date: Date): string {
 }
 
 /**
- * Generate PDF receipt
+ * Generate PDF receipt as Buffer
  */
-export async function generatePaymentReceipt(
-  data: ReceiptData
-): Promise<ReceiptResult> {
-  try {
-    // Create receipts directory if it doesn't exist
-    const receiptsDir = join(process.cwd(), "public", "receipts");
+export async function generateReceiptPdf(data: ReceiptData): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
     try {
-      mkdirSync(receiptsDir, { recursive: true });
-    } catch (err) {
-      // Directory might already exist
-    }
+      // Create PDF document
+      const doc = new PDFDocument({
+        size: "A4",
+        margins: { top: 50, bottom: 50, left: 50, right: 50 },
+      });
 
-    const fileName = `${data.receiptNumber}.pdf`;
-    const filePath = join(receiptsDir, fileName);
+      const buffers: Buffer[] = [];
+      doc.on("data", (chunk) => buffers.push(chunk));
+      doc.on("end", () => resolve(Buffer.concat(buffers)));
+      doc.on("error", reject);
 
-    // Create PDF document
-    const doc = new PDFDocument({
-      size: "A4",
-      margins: { top: 50, bottom: 50, left: 50, right: 50 },
-    });
+      // Header
+      doc
+        .fontSize(24)
+        .font("Helvetica-Bold")
+        .text("KM MEDIA TRAINING INSTITUTE", { align: "center" })
+        .moveDown(0.5);
 
-    // Pipe to file
-    const stream = doc.pipe(require("fs").createWriteStream(filePath));
+      doc
+        .fontSize(10)
+        .font("Helvetica")
+        .text("Learn Today, Lead Tomorrow", { align: "center" })
+        .moveDown(0.3);
 
-    // Header
-    doc
-      .fontSize(24)
-      .font("Helvetica-Bold")
-      .text("KM MEDIA TRAINING INSTITUTE", { align: "center" })
-      .moveDown(0.5);
+      doc
+        .fontSize(9)
+        .text("Email: info@kmmedia.ng | Phone: +234 XXX XXX XXXX", {
+          align: "center",
+        })
+        .moveDown(2);
 
-    doc
-      .fontSize(10)
-      .font("Helvetica")
-      .text("Learn Today, Lead Tomorrow", { align: "center" })
-      .moveDown(0.3);
+      // Receipt title
+      doc
+        .fontSize(18)
+        .font("Helvetica-Bold")
+        .text("PAYMENT RECEIPT", { align: "center" })
+        .moveDown(1.5);
 
-    doc
-      .fontSize(9)
-      .text("Email: info@kmmedia.ng | Phone: +234 XXX XXX XXXX", {
-        align: "center",
-      })
-      .moveDown(2);
+      // Receipt details box
+      const startY = doc.y;
+      doc
+        .rect(50, startY, doc.page.width - 100, 0)
+        .stroke("#333333")
+        .moveDown(0.5);
 
-    // Receipt title
-    doc
-      .fontSize(18)
-      .font("Helvetica-Bold")
-      .text("PAYMENT RECEIPT", { align: "center" })
-      .moveDown(1.5);
+      // Receipt info
+      doc.fontSize(10).font("Helvetica");
 
-    // Receipt details box
-    const startY = doc.y;
-    doc
-      .rect(50, startY, doc.page.width - 100, 0)
-      .stroke("#333333")
-      .moveDown(0.5);
+      const leftColumn = 70;
+      const rightColumn = 320;
+      let currentY = startY + 20;
 
-    // Receipt info
-    doc.fontSize(10).font("Helvetica");
+      // Receipt Number
+      doc.text("Receipt Number:", leftColumn, currentY, { continued: true });
+      doc.font("Helvetica-Bold").text(data.receiptNumber, { align: "left" });
+      currentY += 20;
 
-    const leftColumn = 70;
-    const rightColumn = 320;
-    let currentY = startY + 20;
-
-    // Receipt Number
-    doc.text("Receipt Number:", leftColumn, currentY, { continued: true });
-    doc.font("Helvetica-Bold").text(data.receiptNumber, { align: "left" });
-    currentY += 20;
-
-    // Payment Date
-    doc.font("Helvetica").text("Payment Date:", leftColumn, currentY, {
-      continued: true,
-    });
-    doc
-      .font("Helvetica-Bold")
-      .text(formatDate(data.paymentDate), { align: "left" });
-    currentY += 20;
-
-    // Transaction Reference
-    if (data.transactionReference) {
-      doc.font("Helvetica").text("Transaction Ref:", leftColumn, currentY, {
+      // Payment Date
+      doc.font("Helvetica").text("Payment Date:", leftColumn, currentY, {
         continued: true,
       });
       doc
         .font("Helvetica-Bold")
-        .text(data.transactionReference, { align: "left" });
+        .text(formatDate(data.paymentDate), { align: "left" });
       currentY += 20;
-    }
 
-    currentY += 10;
-    doc.moveDown(1);
+      // Transaction Reference
+      if (data.transactionReference) {
+        doc.font("Helvetica").text("Transaction Ref:", leftColumn, currentY, {
+          continued: true,
+        });
+        doc
+          .font("Helvetica-Bold")
+          .text(data.transactionReference, { align: "left" });
+        currentY += 20;
+      }
 
-    // Student Information
-    doc
-      .fontSize(12)
-      .font("Helvetica-Bold")
-      .text("Student Information", leftColumn, currentY)
-      .moveDown(0.5);
-    currentY = doc.y;
+      currentY += 10;
+      doc.moveDown(1);
 
-    doc.fontSize(10).font("Helvetica");
-    doc.text("Name:", leftColumn, currentY, { continued: true });
-    doc.font("Helvetica-Bold").text(data.studentName, { align: "left" });
-    currentY += 20;
-
-    doc.font("Helvetica").text("Email:", leftColumn, currentY, {
-      continued: true,
-    });
-    doc.font("Helvetica-Bold").text(data.studentEmail, { align: "left" });
-    currentY += 30;
-
-    // Payment Details
-    doc
-      .fontSize(12)
-      .font("Helvetica-Bold")
-      .text("Payment Details", leftColumn, currentY)
-      .moveDown(0.5);
-    currentY = doc.y;
-
-    doc.fontSize(10).font("Helvetica");
-    doc.text("Description:", leftColumn, currentY, { continued: true });
-    doc.font("Helvetica-Bold").text(data.description, { align: "left" });
-    currentY += 20;
-
-    if (data.courseName) {
-      doc.font("Helvetica").text("Course:", leftColumn, currentY, {
-        continued: true,
-      });
-      doc.font("Helvetica-Bold").text(data.courseName, { align: "left" });
-      currentY += 20;
-    }
-
-    if (data.installmentNumber && data.totalInstallments) {
-      doc.font("Helvetica").text("Installment:", leftColumn, currentY, {
-        continued: true,
-      });
+      // Student Information
       doc
+        .fontSize(12)
         .font("Helvetica-Bold")
+        .text("Student Information", leftColumn, currentY)
+        .moveDown(0.5);
+      currentY = doc.y;
+
+      doc.fontSize(10).font("Helvetica");
+      doc.text("Name:", leftColumn, currentY, { continued: true });
+      doc.font("Helvetica-Bold").text(data.studentName, { align: "left" });
+      currentY += 20;
+
+      doc.font("Helvetica").text("Email:", leftColumn, currentY, {
+        continued: true,
+      });
+      doc.font("Helvetica-Bold").text(data.studentEmail, { align: "left" });
+      currentY += 30;
+
+      // Payment Details
+      doc
+        .fontSize(12)
+        .font("Helvetica-Bold")
+        .text("Payment Details", leftColumn, currentY)
+        .moveDown(0.5);
+      currentY = doc.y;
+
+      doc.fontSize(10).font("Helvetica");
+      doc.text("Description:", leftColumn, currentY, { continued: true });
+      doc.font("Helvetica-Bold").text(data.description, { align: "left" });
+      currentY += 20;
+
+      if (data.courseName) {
+        doc.font("Helvetica").text("Course:", leftColumn, currentY, {
+          continued: true,
+        });
+        doc.font("Helvetica-Bold").text(data.courseName, { align: "left" });
+        currentY += 20;
+      }
+
+      if (data.installmentNumber && data.totalInstallments) {
+        doc.font("Helvetica").text("Installment:", leftColumn, currentY, {
+          continued: true,
+        });
+        doc
+          .font("Helvetica-Bold")
+          .text(`${data.installmentNumber} of ${data.totalInstallments}`, {
+            align: "left",
+          });
+        currentY += 20;
+      }
+
+      doc.font("Helvetica").text("Payment Method:", leftColumn, currentY, {
+        continued: true,
+      });
+      doc.font("Helvetica-Bold").text(data.paymentMethod, { align: "left" });
+      currentY += 40;
+
+      // Amount box
+      doc
+        .rect(50, currentY, doc.page.width - 100, 60)
+        .fillAndStroke("#f0f0f0", "#333333");
+
+      doc.fillColor("#000000");
+      doc
+        .fontSize(12)
+        .font("Helvetica-Bold")
+        .text("Amount Paid", leftColumn, currentY + 15);
+      doc
+        .fontSize(20)
+        .font("Helvetica-Bold")
+        .text(formatCurrency(data.amount), leftColumn, currentY + 35);
+
+      currentY += 80;
+
+      // Footer
+      const footerY = doc.page.height - 120;
+      doc
+        .fontSize(9)
+        .font("Helvetica")
         .text(
-          `${data.installmentNumber} of ${data.totalInstallments}`,
-          { align: "left" }
+          "This is an automatically generated receipt. No signature required.",
+          50,
+          footerY,
+          {
+            align: "center",
+            width: doc.page.width - 100,
+          }
         );
-      currentY += 20;
+
+      doc
+        .fontSize(8)
+        .text(
+          "For inquiries, contact support@kmmedia.ng or call +234 XXX XXX XXXX",
+          50,
+          footerY + 20,
+          {
+            align: "center",
+            width: doc.page.width - 100,
+          }
+        );
+
+      doc
+        .fontSize(7)
+        .fillColor("#666666")
+        .text(`Generated on ${formatDate(new Date())}`, 50, footerY + 40, {
+          align: "center",
+          width: doc.page.width - 100,
+        });
+
+      // Finalize PDF
+      doc.end();
+    } catch (error) {
+      reject(error);
     }
-
-    doc.font("Helvetica").text("Payment Method:", leftColumn, currentY, {
-      continued: true,
-    });
-    doc.font("Helvetica-Bold").text(data.paymentMethod, { align: "left" });
-    currentY += 40;
-
-    // Amount box
-    doc
-      .rect(50, currentY, doc.page.width - 100, 60)
-      .fillAndStroke("#f0f0f0", "#333333");
-
-    doc.fillColor("#000000");
-    doc
-      .fontSize(12)
-      .font("Helvetica-Bold")
-      .text("Amount Paid", leftColumn, currentY + 15);
-    doc
-      .fontSize(20)
-      .font("Helvetica-Bold")
-      .text(formatCurrency(data.amount), leftColumn, currentY + 35);
-
-    currentY += 80;
-
-    // Footer
-    const footerY = doc.page.height - 120;
-    doc
-      .fontSize(9)
-      .font("Helvetica")
-      .text(
-        "This is an automatically generated receipt. No signature required.",
-        50,
-        footerY,
-        {
-          align: "center",
-          width: doc.page.width - 100,
-        }
-      );
-
-    doc
-      .fontSize(8)
-      .text(
-        "For inquiries, contact support@kmmedia.ng or call +234 XXX XXX XXXX",
-        50,
-        footerY + 20,
-        {
-          align: "center",
-          width: doc.page.width - 100,
-        }
-      );
-
-    doc
-      .fontSize(7)
-      .fillColor("#666666")
-      .text(
-        `Generated on ${formatDate(new Date())}`,
-        50,
-        footerY + 40,
-        {
-          align: "center",
-          width: doc.page.width - 100,
-        }
-      );
-
-    // Finalize PDF
-    doc.end();
-
-    // Wait for stream to finish
-    await new Promise<void>((resolve, reject) => {
-      stream.on("finish", resolve);
-      stream.on("error", reject);
-    });
-
-    const publicUrl = `/receipts/${fileName}`;
-
-    return {
-      success: true,
-      filePath,
-      url: publicUrl,
-    };
-  } catch (error) {
-    console.error("Receipt generation error:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Receipt generation failed",
-    };
-  }
+  });
 }
 
 /**
- * Generate receipt for payment
- * Convenience wrapper for common use case
+ * Generate receipt for payment (Helper)
  */
 export async function generateReceiptForPayment(
   payment: {
@@ -317,7 +276,7 @@ export async function generateReceiptForPayment(
     installmentNumber: number;
     totalInstallments: number;
   }
-): Promise<ReceiptResult> {
+): Promise<Buffer> {
   const receiptNumber = generateReceiptNumber();
 
   const receiptData: ReceiptData = {
@@ -335,5 +294,5 @@ export async function generateReceiptForPayment(
     totalInstallments: installment?.totalInstallments,
   };
 
-  return generatePaymentReceipt(receiptData);
+  return generateReceiptPdf(receiptData);
 }

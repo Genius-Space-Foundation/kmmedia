@@ -37,63 +37,9 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/api/admin/") ||
     pathname.startsWith("/api/user/")
   ) {
-    // Check for JWT token in Authorization header
-    const authHeader = request.headers.get("authorization");
-    console.log("Middleware - Authorization header:", authHeader);
-    const token = authHeader?.startsWith("Bearer ")
-      ? authHeader.substring(7)
-      : null;
-
-    if (!token) {
-      console.log("Middleware - No token found, returning 401");
-      // Return 401 for API routes
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    // Verify the JWT token
-    console.log(
-      "Middleware - Verifying token:",
-      token.substring(0, 20) + "..."
-    );
-    let payload: any;
-    try {
-      payload = jwt.verify(
-        token,
-        process.env.JWT_SECRET || "your-secret-key"
-      ) as any;
-      if (!payload) {
-        console.log("Middleware - Token verification failed");
-        return NextResponse.json(
-          { success: false, message: "Invalid token" },
-          { status: 401 }
-        );
-      }
-    } catch (error) {
-      console.log("Middleware - Token verification failed:", error);
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
-    }
-    console.log(
-      "Middleware - Token verified successfully for user:",
-      payload.email
-    );
-
-    // Add user info to request headers for API routes to use
-    const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("x-user-id", payload.userId);
-    requestHeaders.set("x-user-role", payload.role);
-    requestHeaders.set("x-user-email", payload.email);
-
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+    // We'll let the individual route handlers verify authentication using getServerSession
+    // This allows both session-based (cookies) and token-based auth to work if implemented in the handlers
+    return NextResponse.next();
   }
 
   return NextResponse.next();

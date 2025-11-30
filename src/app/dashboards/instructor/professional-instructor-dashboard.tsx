@@ -4,31 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   LayoutDashboard,
   BookOpen,
   Users,
@@ -36,178 +11,21 @@ import {
   MessageSquare,
   BarChart3,
   Settings,
-  Bell,
-  Search,
-  Filter,
-  Download,
-  Plus,
-  Edit,
-  Trash2,
-  Eye,
-  TrendingUp,
-  TrendingDown,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Star,
-  Calendar,
-  Mail,
-  Phone,
-  MapPin,
-  Globe,
-  ChevronRight,
-  Menu,
-  X,
-  LogOut,
   User,
   Award,
   Target,
   Activity,
-  PieChart,
-  ArrowUpRight,
-  ArrowDownRight,
-  Play,
-  Pause,
-  RefreshCw,
+  Calendar,
+  CheckCircle,
+  TrendingUp,
   Zap,
-  Brain,
-  Lightbulb,
-  Users2,
-  MessageCircle,
-  Share2,
-  Link as LinkIcon,
-  Database,
-  Cloud,
-  Shield,
-  Lock,
-  Unlock,
-  EyeOff,
-  Maximize,
-  Minimize,
-  RotateCcw,
-  Save,
-  Send,
-  Upload,
-  Download as DownloadIcon,
-  Copy,
-  Cut,
-  Paste,
-  Archive,
-  Trash,
-  MoreHorizontal,
-  ChevronDown,
-  ChevronUp,
-  ChevronLeft,
-  ChevronRight as ChevronRightIcon,
-  Home,
-  GraduationCap,
-  BookMarked,
-  ClipboardList,
-  BarChart,
-  UserCheck,
-  MessageSquareText,
-  Video,
-  Mic,
-  Camera,
-  Headphones,
-  Monitor,
-  Smartphone,
-  Tablet,
-  Laptop,
-  Desktop,
-  Server,
-  HardDrive,
-  Wifi,
-  Signal,
-  Battery,
-  Power,
-  Zap as ZapIcon,
-  Flame,
-  Snowflake,
-  Sun,
-  Moon,
-  CloudRain,
-  Wind,
-  Droplets,
-  Thermometer,
-  Gauge,
-  Timer,
-  Stopwatch,
-  Hourglass,
-  Calendar as CalendarIcon,
-  Clock as ClockIcon,
-  MapPin as MapPinIcon,
-  Navigation,
-  Compass,
-  Globe as GlobeIcon,
-  World,
-  Earth,
-  Satellite,
-  Rocket,
-  Plane,
-  Car,
-  Bike,
-  Bus,
-  Train,
-  Ship,
-  Anchor,
-  Flag,
-  Trophy,
-  Medal,
-  Crown,
-  Gem,
-  Diamond,
-  Heart,
-  Smile,
-  Frown,
-  Meh,
-  ThumbsUp,
-  ThumbsDown,
-  Hand,
-  Point,
-  Fingerprint,
-  Key,
-  Lock as LockIcon,
-  Unlock as UnlockIcon,
-  Shield as ShieldIcon,
-  Check,
-  X as XIcon,
-  Plus as PlusIcon,
-  Minus,
-  Divide,
-  Multiply,
-  Equal,
-  Infinity,
-  Pi,
-  Sigma,
-  Alpha,
-  Beta,
-  Gamma,
-  Delta,
-  Epsilon,
-  Zeta,
-  Eta,
-  Theta,
-  Iota,
-  Kappa,
-  Lambda,
-  Mu,
-  Nu,
-  Xi,
-  Omicron,
-  Rho,
-  Tau,
-  Upsilon,
-  Phi,
-  Chi,
-  Psi,
-  Omega,
+  Link2,
+  UserCog,
 } from "lucide-react";
 import { makeAuthenticatedRequest, clearAuthTokens } from "@/lib/token-utils";
-
-// Import layout components
-import InstructorSidebar from "@/components/instructor/layout/InstructorSidebar";
-import InstructorHeader from "@/components/instructor/layout/InstructorHeader";
+import { ModernSidebar } from "@/components/dashboard/modern-sidebar";
+import { ModernHeader } from "@/components/dashboard/modern-header";
+import { StatCard } from "@/components/ui/stat-card";
 
 // Import modular components
 import OverviewWidget from "@/components/instructor/dashboard/OverviewWidget";
@@ -226,6 +44,7 @@ import TaskPrioritizationSystem from "@/components/instructor/dashboard/TaskPrio
 import EnhancedStudentActivityMonitoring from "@/components/instructor/dashboard/EnhancedStudentActivityMonitoring";
 import CourseAnalyticsInsights from "@/components/instructor/dashboard/CourseAnalyticsInsights";
 import IntegratedMessagingCenter from "@/components/instructor/dashboard/IntegratedMessagingCenter";
+import InstructorProfileEditor from "@/components/instructor/profile/InstructorProfileEditor";
 
 interface User {
   id: string;
@@ -447,9 +266,9 @@ export default function ProfessionalInstructorDashboard() {
     },
     {
       id: "analytics",
-      label: "Course Analytics",
+      label: "Analytics & Reports",
       icon: BarChart3,
-      description: "Course insights and recommendations",
+      description: "Course insights, analytics and reports",
     },
     {
       id: "communication",
@@ -466,7 +285,7 @@ export default function ProfessionalInstructorDashboard() {
     {
       id: "ai-assistant",
       label: "AI Assistant",
-      icon: Brain,
+      icon: Zap,
       description: "AI-powered content creation",
     },
     {
@@ -478,20 +297,20 @@ export default function ProfessionalInstructorDashboard() {
     {
       id: "collaboration",
       label: "Collaboration Hub",
-      icon: Users2,
+      icon: UserCog,
       description: "Team collaboration and reviews",
     },
     {
       id: "integrations",
       label: "Integration Hub",
-      icon: LinkIcon,
+      icon: Link2,
       description: "Third-party integrations",
     },
     {
-      id: "reports",
-      label: "Advanced Reporting",
-      icon: BarChart,
-      description: "Custom reports and exports",
+      id: "profile",
+      label: "My Profile",
+      icon: User,
+      description: "Manage your profile and settings",
     },
   ];
 
@@ -519,11 +338,14 @@ export default function ProfessionalInstructorDashboard() {
         );
       case "analytics":
         return (
-          <CourseAnalyticsInsights
-            onViewCourse={handleViewCourse}
-            onImplementRecommendation={handleImplementRecommendation}
-            onExportReport={handleExportReport}
-          />
+          <div className="space-y-6">
+            <CourseAnalyticsInsights
+              onViewCourse={handleViewCourse}
+              onImplementRecommendation={handleImplementRecommendation}
+              onExportReport={handleExportReport}
+            />
+            <AdvancedReporting />
+          </div>
         );
       case "communication":
         return (
@@ -545,8 +367,8 @@ export default function ProfessionalInstructorDashboard() {
         return <CollaborationHub />;
       case "integrations":
         return <IntegrationHub />;
-      case "reports":
-        return <AdvancedReporting />;
+      case "profile":
+        return <InstructorProfileEditor />;
       default:
         return <OverviewWidget />;
     }
@@ -554,83 +376,116 @@ export default function ProfessionalInstructorDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <div className="relative">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-t-blue-600 border-r-transparent border-b-transparent border-l-transparent absolute top-0 left-0"></div>
+          </div>
+          <p className="mt-4 text-gray-600 font-semibold">Loading instructor dashboard...</p>
         </div>
       </div>
     );
   }
 
+  const navigationItems = sidebarItems.map(item => ({
+    id: item.id,
+    label: item.label,
+    icon: item.icon,
+    badge: null,
+  }));
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="flex h-screen">
-        {/* Sidebar */}
-        <InstructorSidebar
-          user={user}
-          notifications={notifications}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 flex">
+      {/* Modern Sidebar */}
+      <ModernSidebar
+        isOpen={sidebarOpen}
+        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        navigationItems={navigationItems}
+        brandName="KM Media"
+        brandSubtitle="Instructor Portal"
+        brandInitials="KM"
+      />
+
+      {/* Main Content */}
+      <div
+        className={`flex-1 transition-all duration-300 ${
+          sidebarOpen ? "ml-72" : "ml-20"
+        }`}
+      >
+        {/* Modern Header */}
+        <ModernHeader
+          title="Instructor Dashboard"
+          subtitle="Manage your courses and students"
+          currentUser={user}
+          onProfileClick={() => setActiveTab("profile")}
+          onSettingsClick={() => setActiveTab("profile")}
           onLogout={handleLogout}
-          sidebarOpen={sidebarOpen}
-          onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
+          notificationCount={notifications?.filter((n: Notification) => !n.read).length || 0}
         />
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header */}
-          <InstructorHeader
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            notifications={notifications}
-            stats={stats}
-            onLogout={handleLogout}
-            onSidebarToggle={() => setSidebarOpen(!sidebarOpen)}
-            activeTab={activeTab}
-            user={user}
-          />
-
-          {/* Main Content Area */}
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-7xl mx-auto">
-              {/* Page Header */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900">
-                      {
-                        sidebarItems.find((item) => item.id === activeTab)
-                          ?.label
-                      }
-                    </h1>
-                    <p className="text-gray-600 mt-2">
-                      {
-                        sidebarItems.find((item) => item.id === activeTab)
-                          ?.description
-                      }
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Button variant="outline" className="rounded-xl">
-                      <Download className="w-4 h-4 mr-2" />
-                      Export
-                    </Button>
-                    <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl">
-                      <Plus className="w-4 h-4 mr-2" />
-                      New
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-gray-200/50">
-                {renderContent()}
-              </div>
+        <main className="max-w-7xl mx-auto px-8 py-8">
+          {/* Stats Grid for Overview Tab */}
+          {activeTab === "overview" && stats && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <StatCard
+                title="Total Courses"
+                value={stats.totalCourses || 0}
+                change="+5.2%"
+                trend="up"
+                icon={BookOpen}
+                iconColor="blue"
+                subtitle="Active courses"
+              />
+              <StatCard
+                title="Active Students"
+                value={stats.activeStudents || 0}
+                change="+12.3%"
+                trend="up"
+                icon={Users}
+                iconColor="green"
+                subtitle="Enrolled students"
+              />
+              <StatCard
+                title="Pending Assessments"
+                value={stats.pendingAssessments || 0}
+                change="-3.1%"
+                trend="down"
+                icon={FileText}
+                iconColor="orange"
+                subtitle="Requires grading"
+              />
+              <StatCard
+                title="Average Rating"
+                value={stats.averageRating?.toFixed(1) || "0.0"}
+                change="+0.3"
+                trend="up"
+                icon={Award}
+                iconColor="purple"
+                subtitle="Course ratings"
+              />
             </div>
-          </main>
-        </div>
+          )}
+
+          {/* Page Content */}
+          <div className="space-y-6">
+            {activeTab !== "overview" && (
+              <div>
+                <h2 className="text-3xl font-black text-gray-900">
+                  {sidebarItems.find((item) => item.id === activeTab)?.label}
+                </h2>
+                <p className="text-gray-600 mt-2">
+                  {sidebarItems.find((item) => item.id === activeTab)?.description}
+                </p>
+              </div>
+            )}
+            
+            {renderContent()}
+          </div>
+        </main>
       </div>
     </div>
   );

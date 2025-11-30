@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NotificationBell } from "@/components/ui/notification-bell";
@@ -46,8 +46,17 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
   const [categories, setCategories] = useState<CourseCategory[]>([]);
 
   const router = useRouter();
+  const pathname = usePathname();
   const searchRef = useRef<HTMLDivElement>(null);
   const megaMenuRef = useRef<HTMLDivElement>(null);
+
+  // Helper function to check if a link is active
+  const isActive = (path: string) => {
+    if (path === "/") {
+      return pathname === "/";
+    }
+    return pathname?.startsWith(path);
+  };
 
   // Fetch course categories for mega menu
   useEffect(() => {
@@ -151,11 +160,15 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
           {/* Logo Section */}
           <Link
             href="/"
-            className="flex items-center space-x-3 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 rounded-lg"
+            className="flex items-center space-x-3 hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 rounded-xl"
             aria-label="KM Media Training Institute - Go to homepage"
           >
-            <div className="w-10 h-10 bg-brand-primary rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-sm">KM</span>
+            <div className="relative h-10 w-10 overflow-hidden rounded-full">
+              <img
+                src="/images/logo.jpeg"
+                alt="KM Media Training Institute"
+                className="h-full w-full object-cover"
+              />
             </div>
             <div>
               <h1 className="text-lg font-bold text-brand-text-primary">
@@ -172,10 +185,13 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
             <Button
               asChild
               variant="ghost"
-              className="px-4 py-2 text-sm font-medium text-brand-text-primary hover:bg-brand-neutral-100 radius-button"
+              className={`px-4 py-2 text-sm font-medium hover:bg-brand-neutral-100 radius-button ${
+                isActive("/") 
+                  ? "text-brand-primary font-semibold" 
+                  : "text-brand-text-primary"
+              }`}
             >
               <Link href="/">
-                <span className="mr-2">🏠</span>
                 Home
               </Link>
             </Button>
@@ -184,13 +200,16 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
             <div className="relative" ref={megaMenuRef}>
               <Button
                 variant="ghost"
-                className="px-4 py-2 text-sm font-medium text-brand-text-primary hover:bg-brand-neutral-100 radius-button"
+                className={`px-4 py-2 text-sm font-medium hover:bg-brand-neutral-100 rounded-xl ${
+                  isActive("/courses") 
+                    ? "text-brand-primary font-semibold" 
+                    : "text-brand-text-primary"
+                }`}
                 onMouseEnter={() => setIsMegaMenuOpen(true)}
                 onClick={() => setIsMegaMenuOpen(!isMegaMenuOpen)}
                 aria-expanded={isMegaMenuOpen}
                 aria-haspopup="true"
               >
-                <span className="mr-2">📚</span>
                 Courses
                 <svg
                   className={`ml-1 w-4 h-4 transition-transform duration-200 ${
@@ -233,11 +252,11 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
                         <Link
                           key={category.slug}
                           href={`/courses?category=${category.slug}`}
-                          className="flex items-center p-3 rounded-lg hover:bg-brand-neutral-50 transition-colors group focus:outline-none focus:ring-2 focus:ring-brand-primary/50"
+                          className="flex items-center p-3 rounded-xl hover:bg-brand-neutral-50 transition-colors group focus:outline-none focus:ring-2 focus:ring-brand-primary/50"
                           onClick={() => setIsMegaMenuOpen(false)}
                           role="menuitem"
                         >
-                          <div className="w-10 h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center mr-3 group-hover:bg-brand-primary/20 transition-colors">
+                          <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center mr-3 group-hover:bg-brand-primary/20 transition-colors">
                             <span className="text-lg" aria-hidden="true">
                               {category.icon}
                             </span>
@@ -287,10 +306,13 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
             <Button
               asChild
               variant="ghost"
-              className="px-4 py-2 text-sm font-medium text-brand-text-primary hover:bg-brand-neutral-100 radius-button"
+              className={`px-4 py-2 text-sm font-medium hover:bg-brand-neutral-100 radius-button ${
+                isActive("/about") 
+                  ? "text-brand-primary font-semibold" 
+                  : "text-brand-text-primary"
+              }`}
             >
               <Link href="/about">
-                <span className="mr-2">👤</span>
                 About
               </Link>
             </Button>
@@ -298,10 +320,13 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
             <Button
               asChild
               variant="ghost"
-              className="px-4 py-2 text-sm font-medium text-brand-text-primary hover:bg-brand-neutral-100 radius-button"
+              className={`px-4 py-2 text-sm font-medium hover:bg-brand-neutral-100 radius-button ${
+                isActive("/stories") 
+                  ? "text-brand-primary font-semibold" 
+                  : "text-brand-text-primary"
+              }`}
             >
               <Link href="/stories">
-                <span className="mr-2">📄</span>
                 Stories
               </Link>
             </Button>
@@ -319,7 +344,7 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setIsSearchOpen(true)}
                   onKeyDown={handleKeyDown}
-                  className="w-64 h-9 pl-10 pr-4 bg-brand-neutral-50 border-brand-border/30 text-brand-text-primary placeholder-brand-text-muted/60 focus:bg-white focus:border-brand-primary/50 text-sm hidden md:block"
+                  className="w-64 h-9 pl-10 pr-4 bg-brand-neutral-50 border-brand-border/30 text-brand-text-primary placeholder-brand-text-muted/60 focus:bg-white focus:border-brand-primary/50 text-sm hidden md:block rounded-xl"
                   aria-label="Search courses and instructors"
                   role="searchbox"
                   aria-autocomplete="list"
@@ -347,7 +372,7 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
                   isSearching ||
                   searchQuery.length > 2) && (
                   <div
-                    className="absolute top-full left-0 mt-2 w-full bg-white rounded-lg shadow-2xl border border-brand-border/20 overflow-hidden animate-fade-in-up max-h-96 overflow-y-auto z-50"
+                    className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-2xl border border-brand-border/20 overflow-hidden animate-fade-in-up max-h-96 overflow-y-auto z-50"
                     role="listbox"
                     aria-label="Search results"
                   >
@@ -374,7 +399,7 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
                             aria-selected={false}
                             tabIndex={0}
                           >
-                            <div className="w-8 h-8 bg-brand-primary/10 rounded-lg flex items-center justify-center">
+                            <div className="w-8 h-8 bg-brand-primary/10 rounded-xl flex items-center justify-center">
                               <span className="text-sm" aria-hidden="true">
                                 {result.type === "course"
                                   ? "📚"
@@ -404,7 +429,7 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
                               href={`/search?q=${encodeURIComponent(
                                 searchQuery
                               )}`}
-                              className="flex items-center justify-center w-full py-2 text-sm font-medium text-brand-primary hover:bg-brand-primary/5 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-brand-primary/50"
+                              className="flex items-center justify-center w-full py-2 text-sm font-medium text-brand-primary hover:bg-brand-primary/5 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-brand-primary/50"
                               onClick={() => {
                                 setIsSearchOpen(false);
                                 setSearchQuery("");
@@ -493,7 +518,7 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
                 <Link href={`/dashboards/${user.role.toLowerCase()}`}>
                   <Button
                     variant="ghost"
-                    className="text-brand-text-primary hover:bg-brand-neutral-100 px-3 py-2 text-sm font-medium"
+                    className="text-brand-text-primary hover:bg-brand-neutral-100 px-3 py-2 text-sm font-medium rounded-xl"
                   >
                     <span className="mr-2">📊</span>
                     Dashboard
@@ -531,7 +556,7 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
                 >
                   <Link href="/auth/login">Sign in</Link>
                 </Button>
-                <Button asChild className="btn-brand-primary">
+                <Button asChild className="btn-brand-primary rounded-xl">
                   <Link href="/auth/register">Sign up</Link>
                 </Button>
               </>

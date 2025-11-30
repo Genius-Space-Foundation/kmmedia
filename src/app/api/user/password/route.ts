@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth";
@@ -36,6 +36,14 @@ async function updatePassword(req: AuthenticatedRequest) {
       );
     }
 
+    // Check if user has a password set
+    if (!user.password) {
+      return NextResponse.json(
+        { success: false, message: "Password not set for this user" },
+        { status: 400 }
+      );
+    }
+
     // Verify current password
     const isCurrentPasswordValid = await verifyPassword(
       data.currentPassword,
@@ -68,7 +76,7 @@ async function updatePassword(req: AuthenticatedRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
+        { success: false, message: "Invalid input", errors: error.issues },
         { status: 400 }
       );
     }

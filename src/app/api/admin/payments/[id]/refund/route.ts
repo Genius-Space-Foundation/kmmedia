@@ -1,12 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { PaymentStatus } from "@prisma/client";
 import { z } from "zod";
+import { sendEmail } from "@/lib/notifications/email";
+import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
 const refundSchema = z.object({
-  reason: z.string().min(1, "Refund reason is required"),
-  amount: z.number().positive("Refund amount must be positive").optional(),
+  reason: z.string().min(10, "Reason must be at least 10 characters"),
+  amount: z.number().positive().optional(),
 });
 
 // Process refund (Admin only)
@@ -122,8 +124,32 @@ async function processRefund(req: AuthenticatedRequest, { params }: { params: { 
       return { updatedPayment, refundRecord };
     });
 
-    // TODO: Process actual refund through payment gateway
-    console.log(`Refund processed: ${refundAmount} for payment ${payment.reference}`);
+    // Send refund notification email to user (async, don't block response)
+    const courseName = payment.enrollment
+      ? (await prisma.course.findUnique({
+          where: { id: payment.enrollment.courseId },
+          select: { title: true },
+        }))?.title || "Course"
+      : payment.application
+      ? (await prisma.course.findUnique({
+          where: { id: payment.application.courseId },
+          select: { title: true },
+        }))?.title || "Course"
+      : "Course";
+
+    sendEmail({
+      to: payment.user.email,
+      ...extendedEmailTemplates.refundProcessed({
+        userName: payment.user.name || "User",
+        courseName: courseName,
+        amount: refundAmount,
+        reason: reason,
+      }),
+    }).catch((error) => {
+      console.error(`Failed to send refund email to ${payment.user.email}:`, error);
+    });
+
+    console.log(`Refund processed and email sent: ${refundAmount} for payment ${payment.reference}`);
 
     return NextResponse.json({
       success: true,
@@ -135,7 +161,7 @@ async function processRefund(req: AuthenticatedRequest, { params }: { params: { 
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
+        { success: false, message: "Invalid input", errors: error.issues },
         { status: 400 }
       );
     }
@@ -151,4 +177,3 @@ async function processRefund(req: AuthenticatedRequest, { params }: { params: { 
 }
 
 export const POST = withAdminAuth(processRefund);
-

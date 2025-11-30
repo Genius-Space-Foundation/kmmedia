@@ -183,19 +183,19 @@ export default function StudentAssessments({
 
       {/* Assessment Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="rounded-xl shadow-lg border-0">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-gray-600">
               Total Assessments
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalAssessments}</div>
+            <div className="text-2xl font-bold text-gray-900">{totalAssessments}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-xl shadow-lg border-0">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Completed</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -203,9 +203,9 @@ export default function StudentAssessments({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-xl shadow-lg border-0">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Passed</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Passed</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
@@ -213,9 +213,9 @@ export default function StudentAssessments({
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-xl shadow-lg border-0">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Average Score</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">Average Score</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
@@ -236,7 +236,7 @@ export default function StudentAssessments({
             {assessments.map((assessment) => (
               <Card
                 key={assessment.id}
-                className="hover:shadow-lg transition-shadow"
+                className="rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 border-0"
               >
                 <CardHeader>
                   <div className="flex justify-between items-start">
@@ -308,7 +308,7 @@ export default function StudentAssessments({
         <TabsContent value="submissions" className="space-y-4">
           <div className="space-y-2">
             {submissions.map((submission) => (
-              <Card key={submission.id} className="hover:bg-gray-50">
+              <Card key={submission.id} className="rounded-xl shadow-md hover:shadow-lg transition-all duration-300 border-0 hover:bg-gray-50">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">

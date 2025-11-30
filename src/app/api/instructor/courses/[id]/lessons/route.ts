@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { LessonType } from "@prisma/client";
@@ -79,7 +79,7 @@ async function createLesson(
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
+        { success: false, message: "Invalid input", errors: error.issues },
         { status: 400 }
       );
     }
@@ -97,7 +97,7 @@ async function createLesson(
 
 // Get course lessons (Instructor only)
 async function getCourseLessons(
-  req: NextRequest,
+  req: AuthenticatedRequest,
   { params }: { params: { id: string } }
 ) {
   try {

@@ -41,29 +41,32 @@ const step1Schema = z.object({
     .max(100, "Email must be less than 100 characters"),
 });
 
-const step2Schema = z
-  .object({
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .max(128, "Password must be less than 128 characters")
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Password must contain at least one lowercase letter, one uppercase letter, and one number"
-      ),
-    confirmPassword: z.string(),
-    phone: z
-      .string()
-      .optional()
-      .refine(
-        (val) => !val || /^\+?[\d\s\-\(\)]+$/.test(val),
-        "Invalid phone number format"
-      ),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
+const step2BaseSchema = z.object({
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .max(128, "Password must be less than 128 characters")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      "Password must contain at least one lowercase letter, one uppercase letter, and one number"
+    ),
+  confirmPassword: z.string(),
+  phone: z
+    .string()
+    .optional()
+    .refine(
+      (val) => !val || /^\+?[\d\s\-\(\)]+$/.test(val),
+      "Invalid phone number format"
+    ),
+});
+
+const step2Schema = step2BaseSchema.refine(
+  (data) => data.password === data.confirmPassword,
+  {
     message: "Passwords don't match",
     path: ["confirmPassword"],
-  });
+  }
+);
 
 const step3Schema = z.object({
   role: z.enum(["STUDENT", "INSTRUCTOR"]).default("STUDENT"),
@@ -75,7 +78,13 @@ const step3Schema = z.object({
 });
 
 // Combined schema for final submission
-const registrationSchema = step1Schema.merge(step2Schema).merge(step3Schema);
+const registrationSchema = step1Schema
+  .merge(step2BaseSchema)
+  .merge(step3Schema)
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
 type RegistrationFormData = z.infer<typeof registrationSchema>;
 
@@ -178,8 +187,18 @@ export function MultiStepRegistrationForm() {
     setValue,
     getValues,
     formState: { errors },
-  } = useForm<RegistrationFormData>({
+  } = useForm({
     resolver: zodResolver(registrationSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+      role: "STUDENT",
+      interests: [],
+      experience: "",
+      phone: "",
+    },
     mode: "onChange",
   });
 
@@ -209,9 +228,9 @@ export function MultiStepRegistrationForm() {
       if (currentStep < steps.length) {
         setCurrentStep(currentStep + 1);
       } else {
-        await handleSubmit(onSubmit)();
+        await handleSubmit(onSubmit as any)();
       }
-    } catch (validationError) {
+    } catch {
       // Trigger validation to show errors
       await trigger();
     }
@@ -247,13 +266,25 @@ export function MultiStepRegistrationForm() {
       const result = await response.json();
 
       if (result.success) {
-        // Redirect to onboarding or dashboard based on role
-        const role = result.user.role.toLowerCase();
-        router.push(`/auth/onboarding?role=${role}`);
+        // Automatically sign in the user
+        const signInResult = await signIn("credentials", {
+          email: data.email,
+          password: data.password,
+          redirect: false,
+        });
+
+        if (signInResult?.error) {
+          setError("Registration successful, but failed to log in automatically. Please log in manually.");
+          setTimeout(() => router.push("/auth/login"), 2000);
+        } else {
+          // Redirect to onboarding or dashboard based on role
+          const role = result.user.role.toLowerCase();
+          router.push(`/auth/onboarding?role=${role}`);
+        }
       } else {
         setError(result.message || "Registration failed");
       }
-    } catch (error) {
+    } catch {
       setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -275,7 +306,7 @@ export function MultiStepRegistrationForm() {
       } else if (result?.url) {
         router.push(result.url);
       }
-    } catch (error) {
+    } catch {
       setError(
         `An error occurred during ${provider} sign-in. Please try again.`
       );

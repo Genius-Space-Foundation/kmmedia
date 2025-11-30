@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { makeAuthenticatedRequest } from "@/lib/token-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,18 +67,7 @@ export default function StudentProfile({ userId, user }: StudentProfileProps) {
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          console.error("No access token found");
-          return;
-        }
-
-        const response = await fetch("/api/user/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await makeAuthenticatedRequest("/api/user/profile");
         const result = await response.json();
 
         if (result.success && result.user) {
@@ -140,18 +130,8 @@ export default function StudentProfile({ userId, user }: StudentProfileProps) {
 
     setIsSaving(true);
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        alert("No access token found. Please log in again.");
-        return;
-      }
-
-      const response = await fetch("/api/user/profile", {
+      const response = await makeAuthenticatedRequest("/api/user/profile", {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           ...profileData,
           avatar,
@@ -215,19 +195,11 @@ export default function StudentProfile({ userId, user }: StudentProfileProps) {
         });
       }, 100);
 
-      // Get token for authorization
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        throw new Error("No access token found");
-      }
-
       // Upload to server
       const response = await fetch("/api/upload/avatar", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
         body: formData,
+        credentials: "include",
       });
 
       const result = await response.json();

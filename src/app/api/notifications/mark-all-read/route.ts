@@ -1,27 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
+import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 
-export async function PATCH(request: NextRequest) {
+async function markAllNotificationsRead(request: AuthenticatedRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const body = await request.json().catch(() => ({}));
+    const targetUserId = body.userId || request.user!.userId;
 
-    const body = await request.json();
-    const userId = body.userId || session.user.id;
-
-    // Ensure user can only mark their own notifications as read (unless admin)
-    if (userId !== session.user.id && session.user.role !== "ADMIN") {
+    if (
+      targetUserId !== request.user!.userId &&
+      request.user!.role !== "ADMIN"
+    ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Mark all unread notifications as read
     const result = await prisma.notification.updateMany({
       where: {
-        userId,
+        userId: targetUserId,
         read: false,
       },
       data: {
@@ -42,3 +37,5 @@ export async function PATCH(request: NextRequest) {
     );
   }
 }
+
+export const PATCH = withAuth(markAllNotificationsRead);

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import {
   uploadAvatar,
   uploadCourseMaterial,
@@ -10,26 +11,16 @@ import { prisma } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
-    const authHeader = request.headers.get("authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, message: "Authorization token required" },
+        { success: false, message: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const token = authHeader.substring(7);
-    const payload = verifyToken(token, false);
-
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
-    }
-
-    const userId = payload.userId;
+    const userId = session.user.id;
 
     // Check if Cloudinary is configured
     if (!isCloudinaryConfigured()) {

@@ -1,20 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-config";
+import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+async function getNotification(
+  request: AuthenticatedRequest,
+  notificationId: string
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const notification = await prisma.notification.findUnique({
-      where: { id: params.id },
+      where: { id: notificationId },
     });
 
     if (!notification) {
@@ -24,10 +18,9 @@ export async function GET(
       );
     }
 
-    // Ensure user can only access their own notifications (unless admin)
     if (
-      notification.userId !== session.user.id &&
-      session.user.role !== "ADMIN"
+      notification.userId !== request.user!.userId &&
+      request.user!.role !== "ADMIN"
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -42,18 +35,13 @@ export async function GET(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+async function deleteNotification(
+  request: AuthenticatedRequest,
+  notificationId: string
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const notification = await prisma.notification.findUnique({
-      where: { id: params.id },
+      where: { id: notificationId },
     });
 
     if (!notification) {
@@ -63,16 +51,15 @@ export async function DELETE(
       );
     }
 
-    // Ensure user can only delete their own notifications (unless admin)
     if (
-      notification.userId !== session.user.id &&
-      session.user.role !== "ADMIN"
+      notification.userId !== request.user!.userId &&
+      request.user!.role !== "ADMIN"
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await prisma.notification.delete({
-      where: { id: params.id },
+      where: { id: notificationId },
     });
 
     return NextResponse.json({ success: true });
@@ -84,3 +71,13 @@ export async function DELETE(
     );
   }
 }
+
+export const GET = (
+  request: NextRequest,
+  context: { params: { id: string } }
+) => withAuth((req) => getNotification(req, context.params.id))(request);
+
+export const DELETE = (
+  request: NextRequest,
+  context: { params: { id: string } }
+) => withAuth((req) => deleteNotification(req, context.params.id))(request);

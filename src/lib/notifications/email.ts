@@ -3,7 +3,7 @@ import {
   assignmentEmailTemplates,
   AssignmentEmailTemplateData,
 } from "./assignment-email-templates";
-import { AssignmentNotificationType } from "./assignment-notification-service";
+import { AssignmentNotificationType } from "./types";
 
 const EMAIL_HOST = process.env.EMAIL_HOST || "smtp.gmail.com";
 const EMAIL_PORT = parseInt(process.env.EMAIL_PORT || "587");
@@ -286,6 +286,106 @@ export const emailTemplates = {
             <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboards/instructor" 
                style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
               View Course
+            </a>
+          </div>
+        </div>
+      </div>
+    `,
+  }),
+
+  welcome: (data: { name: string }) => ({
+    subject: "Welcome to KM Media Training Institute! 🚀",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">KM Media Training Institute</h1>
+        </div>
+        
+        <div style="padding: 30px; background: #f8f9fa;">
+          <h2 style="color: #333;">Welcome, ${data.name}! 👋</h2>
+          
+          <p style="font-size: 16px; line-height: 1.6; color: #555;">
+            Thank you for joining KM Media Training Institute. We're thrilled to have you on board!
+          </p>
+          
+          <p style="font-size: 16px; line-height: 1.6; color: #555;">
+            Explore our wide range of courses and start your journey towards mastering media skills today.
+          </p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/courses" 
+               style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Explore Courses
+            </a>
+          </div>
+        </div>
+      </div>
+    `,
+  }),
+
+  paymentReceipt: (data: {
+    studentName: string;
+    amount: number;
+    courseName?: string;
+    receiptUrl: string;
+  }) => ({
+    subject: "Payment Receipt - KM Media Training Institute",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">KM Media Training Institute</h1>
+        </div>
+        
+        <div style="padding: 30px; background: #f8f9fa;">
+          <h2 style="color: #333;">Payment Successful! ✅</h2>
+          
+          <p style="font-size: 16px; line-height: 1.6; color: #555;">
+            Dear ${data.studentName},
+          </p>
+          
+          <p style="font-size: 16px; line-height: 1.6; color: #555;">
+            We have received your payment of <strong>GH₵${data.amount.toLocaleString()}</strong>
+            ${data.courseName ? ` for <strong>${data.courseName}</strong>` : ""}.
+          </p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${data.receiptUrl}" 
+               style="background: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Download Receipt
+            </a>
+          </div>
+        </div>
+      </div>
+    `,
+  }),
+
+  enrollmentConfirmation: (data: {
+    studentName: string;
+    courseName: string;
+  }) => ({
+    subject: `Enrollment Confirmed - ${data.courseName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0;">KM Media Training Institute</h1>
+        </div>
+        
+        <div style="padding: 30px; background: #f8f9fa;">
+          <h2 style="color: #333;">Enrollment Confirmed! 🎓</h2>
+          
+          <p style="font-size: 16px; line-height: 1.6; color: #555;">
+            Dear ${data.studentName},
+          </p>
+          
+          <p style="font-size: 16px; line-height: 1.6; color: #555;">
+            You have successfully enrolled in <strong>${data.courseName}</strong>.
+            You can now access all course materials and start learning.
+          </p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboards/student" 
+               style="background: #667eea; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Go to Dashboard
             </a>
           </div>
         </div>

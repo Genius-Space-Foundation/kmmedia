@@ -47,7 +47,7 @@ const assignmentSchema = z.object({
     .optional(),
   dueDate: z
     .date()
-    .refine((date) => date > new Date(), "Due date must be in the future"),
+    .refine((date) => !date || date > new Date(), "Due date must be in the future"),
   maxFileSize: z
     .number()
     .min(1, "Minimum file size is 1MB")
@@ -284,7 +284,7 @@ export function AssignmentCreator({
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {watchedValues.dueDate ? (
-                        format(watchedValues.dueDate, "PPP")
+                        format(new Date(watchedValues.dueDate), "PPP")
                       ) : (
                         <span>Pick a date</span>
                       )}

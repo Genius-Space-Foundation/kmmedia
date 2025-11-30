@@ -1,177 +1,99 @@
+"use client";
+
+import React from "react";
+import { LucideIcon, TrendingUp, TrendingDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Card, CardHeader, CardTitle } from "./card";
 
 interface StatCardProps {
   title: string;
   value: string | number;
-  icon?: string;
-  description?: string;
-  trend?: {
-    value: number;
-    label: string;
-    direction: "up" | "down" | "neutral";
-  };
+  change?: string;
+  trend?: "up" | "down" | "neutral";
+  icon: LucideIcon;
+  iconColor?: string;
+  subtitle?: string;
   className?: string;
-  gradient?: string;
 }
 
 export function StatCard({
   title,
   value,
-  icon,
-  description,
-  trend,
+  change,
+  trend = "neutral",
+  icon: Icon,
+  iconColor = "blue",
+  subtitle,
   className,
-  gradient = "from-blue-500 to-indigo-600",
 }: StatCardProps) {
-  const trendIcon =
-    trend?.direction === "up"
-      ? "📈"
-      : trend?.direction === "down"
-      ? "📉"
-      : "➡️";
-  const trendColor =
-    trend?.direction === "up"
-      ? "text-green-600"
-      : trend?.direction === "down"
-      ? "text-red-600"
-      : "text-gray-600";
+  const colorClasses = {
+    blue: "from-blue-500 to-blue-600",
+    purple: "from-purple-500 to-purple-600",
+    green: "from-green-500 to-green-600",
+    orange: "from-orange-500 to-orange-600",
+    red: "from-red-500 to-red-600",
+    indigo: "from-indigo-500 to-indigo-600",
+  };
+
+  const trendColors = {
+    up: "text-green-600 bg-green-50",
+    down: "text-red-600 bg-red-50",
+    neutral: "text-gray-600 bg-gray-50",
+  };
 
   return (
-    <Card
+    <div
       className={cn(
-        "group hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-white hover:scale-105",
+        "group relative bg-white rounded-2xl border border-gray-200/60 p-6 shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 overflow-hidden",
         className
       )}
     >
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <div className="flex items-center space-x-3">
-          {icon && (
+      {/* Background Gradient Glow */}
+      <div
+        className={cn(
+          "absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br rounded-full blur-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-500",
+          colorClasses[iconColor as keyof typeof colorClasses] ||
+            colorClasses.blue
+        )}
+      />
+
+      <div className="relative z-10">
+        {/* Header with Icon */}
+        <div className="flex items-start justify-between mb-4">
+          <div
+            className={cn(
+              "flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300",
+              colorClasses[iconColor as keyof typeof colorClasses] ||
+                colorClasses.blue
+            )}
+          >
+            <Icon className="w-7 h-7 text-white" />
+          </div>
+
+          {change && (
             <div
               className={cn(
-                "w-12 h-12 bg-gradient-to-br rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300",
-                `bg-gradient-to-br ${gradient}`
+                "flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold",
+                trendColors[trend]
               )}
             >
-              <span className="text-white text-xl">{icon}</span>
+              {trend === "up" && <TrendingUp className="w-3.5 h-3.5" />}
+              {trend === "down" && <TrendingDown className="w-3.5 h-3.5" />}
+              <span>{change}</span>
             </div>
           )}
-          <div>
-            <CardTitle className="text-sm font-medium text-gray-600">
-              {title}
-            </CardTitle>
-            <div className="text-3xl font-bold text-gray-900">
-              {typeof value === "number" ? value.toLocaleString() : value}
-            </div>
-            {description && (
-              <p className="text-xs text-gray-500 mt-1">{description}</p>
-            )}
-            {trend && (
-              <div
-                className={cn(
-                  "flex items-center space-x-1 text-xs mt-2",
-                  trendColor
-                )}
-              >
-                <span>{trendIcon}</span>
-                <span>
-                  {trend.value > 0 ? "+" : ""}
-                  {trend.value}%
-                </span>
-                <span className="text-gray-500">{trend.label}</span>
-              </div>
-            )}
-          </div>
         </div>
-      </CardHeader>
-    </Card>
-  );
-}
 
-// Predefined stat cards for common use cases
-export function UserStatsCard({
-  count,
-  type = "users",
-}: {
-  count: number;
-  type?: "users" | "students" | "instructors";
-}) {
-  const config = {
-    users: {
-      icon: "👥",
-      title: "Total Users",
-      gradient: "from-blue-500 to-indigo-600",
-    },
-    students: {
-      icon: "🎓",
-      title: "Students",
-      gradient: "from-green-500 to-emerald-600",
-    },
-    instructors: {
-      icon: "👨‍🏫",
-      title: "Instructors",
-      gradient: "from-purple-500 to-pink-600",
-    },
-  };
+        {/* Title */}
+        <h3 className="text-sm font-medium text-gray-600 mb-2">{title}</h3>
 
-  return (
-    <StatCard
-      title={config[type].title}
-      value={count}
-      icon={config[type].icon}
-      gradient={config[type].gradient}
-    />
-  );
-}
+        {/* Value */}
+        <div className="text-3xl font-bold text-gray-900 mb-1">{value}</div>
 
-export function CourseStatsCard({
-  count,
-  type = "total",
-}: {
-  count: number;
-  type?: "total" | "active" | "pending";
-}) {
-  const config = {
-    total: {
-      icon: "📚",
-      title: "Total Courses",
-      gradient: "from-purple-500 to-pink-600",
-    },
-    active: {
-      icon: "✅",
-      title: "Active Courses",
-      gradient: "from-green-500 to-emerald-600",
-    },
-    pending: {
-      icon: "⏳",
-      title: "Pending Approval",
-      gradient: "from-yellow-500 to-orange-600",
-    },
-  };
-
-  return (
-    <StatCard
-      title={config[type].title}
-      value={count}
-      icon={config[type].icon}
-      gradient={config[type].gradient}
-    />
-  );
-}
-
-export function RevenueStatsCard({
-  amount,
-  currency = "₵",
-}: {
-  amount: number;
-  currency?: string;
-}) {
-  return (
-    <StatCard
-      title="Total Revenue"
-      value={`${currency}${amount.toLocaleString()}`}
-      icon="💰"
-      gradient="from-green-500 to-emerald-600"
-    />
+        {/* Subtitle */}
+        {subtitle && (
+          <p className="text-sm text-gray-500 leading-relaxed">{subtitle}</p>
+        )}
+      </div>
+    </div>
   );
 }

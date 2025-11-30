@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/db";
 import { sendEmail, sendAssignmentEmail } from "./email";
 import { smsService } from "./sms";
-import { AssignmentNotificationType } from "./assignment-notification-service";
+import { AssignmentNotificationType } from "./types";
 
 export interface NotificationData {
   userId: string;

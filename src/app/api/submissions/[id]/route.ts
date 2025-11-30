@@ -348,7 +348,7 @@ async function handleUpdateSubmission(
         {
           success: false,
           message: "Invalid submission data",
-          errors: error.errors.map((e) => ({
+          errors: error.issues.map((e) => ({
             field: e.path.join("."),
             message: e.message,
           })),

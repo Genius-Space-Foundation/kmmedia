@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ import {
   AlertCircle,
   Star,
   Zap,
+  X,
 } from "lucide-react";
 import { getCurrentBreakpoint, isMobile } from "@/lib/mobile-utils";
 
@@ -680,24 +681,4 @@ export function MobileFloatingActionButton({
   );
 }
 
-export {
-  MobileStatsWidget,
-  MobileProgressWidget,
-  MobileQuickAction,
-  MobileActivityItem,
-  MobileLearningStreak,
-  MobileUpcomingDeadline,
-  MobileShortcutGrid,
-  MobileFloatingActionButton,
-};
 
-export default {
-  MobileStatsWidget,
-  MobileProgressWidget,
-  MobileQuickAction,
-  MobileActivityItem,
-  MobileLearningStreak,
-  MobileUpcomingDeadline,
-  MobileShortcutGrid,
-  MobileFloatingActionButton,
-};

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
@@ -50,7 +50,6 @@ async function createAnnouncement(req: AuthenticatedRequest) {
         scheduledFor: announcementData.scheduledFor
           ? new Date(announcementData.scheduledFor)
           : null,
-        recipients: announcementData.recipients,
         isPublished: !announcementData.isScheduled, // Auto-publish if not scheduled
       },
       include: {
@@ -73,7 +72,7 @@ async function createAnnouncement(req: AuthenticatedRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
+        { success: false, message: "Invalid input", errors: error.issues },
         { status: 400 }
       );
     }

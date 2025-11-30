@@ -11,6 +11,8 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Home,
   BookOpen,
   User,
@@ -414,6 +416,7 @@ export default function MobileDashboardLayout({
               size="sm"
               onClick={() => setIsCompactMode(!isCompactMode)}
               className="p-2 text-gray-600"
+              aria-label={isCompactMode ? "Expand view" : "Compact view"}
             >
               {isCompactMode ? (
                 <ChevronDown className="w-4 h-4" />

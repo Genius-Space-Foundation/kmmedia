@@ -44,13 +44,13 @@ export interface GradingValidationResult {
 export interface GradingHistoryEntry {
   id: string;
   submissionId: string;
-  previousGrade?: number;
+  previousGrade?: number | null;
   newGrade: number;
-  previousFeedback?: string;
-  newFeedback?: string;
+  previousFeedback?: string | null;
+  newFeedback?: string | null;
   gradedBy: string;
   gradedAt: Date;
-  reason?: string;
+  reason?: string | null;
 }
 
 export class GradingService {
@@ -73,7 +73,7 @@ export class GradingService {
       const validationResult = gradeValidationSchema.safeParse(gradeData);
       if (!validationResult.success) {
         result.isValid = false;
-        result.errors = validationResult.error.errors.map((e) => e.message);
+        result.errors = validationResult.error.issues.map((e) => e.message);
         return result;
       }
 

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
@@ -20,23 +20,6 @@ const createSubmissionSchema = z.object({
     )
     .optional(),
   isDraft: z.boolean().default(false),
-});
-
-const updateSubmissionSchema = z.object({
-  submissionText: z.string().optional(),
-  files: z
-    .array(
-      z.object({
-        id: z.string(),
-        originalName: z.string(),
-        fileName: z.string(),
-        fileType: z.string(),
-        fileSize: z.number(),
-        cloudinaryUrl: z.string(),
-      })
-    )
-    .optional(),
-  isDraft: z.boolean().optional(),
 });
 
 // Create or update submission
@@ -137,12 +120,12 @@ async function handleCreateSubmission(
     const submissionData = {
       assignmentId: validatedData.assignmentId,
       studentId: userId,
-      files: validatedData.files ? JSON.stringify(validatedData.files) : null,
-      submissionText: validatedData.submissionText || null,
+      files: validatedData.files ? JSON.stringify(validatedData.files) : undefined,
+      submissionText: validatedData.submissionText || undefined,
       status: validatedData.isDraft ? "DRAFT" : "SUBMITTED",
       isLate,
       daysLate,
-      submittedAt: validatedData.isDraft ? null : now,
+      submittedAt: validatedData.isDraft ? undefined : now,
     };
 
     let submission;
@@ -262,7 +245,7 @@ async function handleCreateSubmission(
         {
           success: false,
           message: "Invalid submission data",
-          errors: error.errors.map((e) => ({
+          errors: error.issues.map((e) => ({
             field: e.path.join("."),
             message: e.message,
           })),

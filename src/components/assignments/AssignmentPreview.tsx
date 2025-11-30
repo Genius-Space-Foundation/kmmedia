@@ -74,6 +74,7 @@ export function AssignmentPreview({
   };
 
   const getTimeUntilDue = () => {
+    if (!data.dueDate) return "No due date set";
     const now = new Date();
     const timeDiff = data.dueDate.getTime() - now.getTime();
     const days = Math.ceil(timeDiff / (1000 * 3600 * 24));
@@ -131,7 +132,7 @@ export function AssignmentPreview({
                   <div>
                     <p className="text-sm font-medium">Due Date</p>
                     <p className="text-sm text-gray-600">
-                      {format(data.dueDate, "PPP 'at' p")}
+                      {data.dueDate ? format(new Date(data.dueDate), "PPP 'at' p") : "No due date set"}
                     </p>
                   </div>
                 </div>

@@ -59,28 +59,35 @@ async function createApplication(req: AuthenticatedRequest) {
       );
     }
 
-    // Check if application fee has been paid
-    const applicationFeePayment = await prisma.payment.findFirst({
-      where: {
-        userId,
-        applicationId: null, // Not yet linked to an application
-        type: "APPLICATION_FEE",
-        status: "COMPLETED",
-        metadata: {
-          path: ["courseId"],
-          equals: courseId,
-        },
-      },
-    });
+    // Check if application fee has been paid (if applicable)
+    // Check if application fee has been paid (if applicable)
+    let applicationFeePaymentId: string | null = null;
 
-    if (!applicationFeePayment) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Application fee must be paid before submitting application",
+    if (course.applicationFee > 0) {
+      const applicationFeePayment = await prisma.payment.findFirst({
+        where: {
+          userId,
+          applicationId: null, // Not yet linked to an application
+          type: "APPLICATION_FEE",
+          status: "COMPLETED",
+          metadata: {
+            path: ["courseId"],
+            equals: courseId,
+          },
         },
-        { status: 400 }
-      );
+      });
+
+      if (!applicationFeePayment) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Application fee must be paid before submitting application",
+          },
+          { status: 400 }
+        );
+      }
+      
+      applicationFeePaymentId = applicationFeePayment.id;
     }
 
     // Create application
@@ -111,11 +118,13 @@ async function createApplication(req: AuthenticatedRequest) {
       },
     });
 
-    // Link the payment to the application
-    await prisma.payment.update({
-      where: { id: applicationFeePayment.id },
-      data: { applicationId: application.id },
-    });
+    // Link the payment to the application if applicable
+    if (applicationFeePaymentId) {
+      await prisma.payment.update({
+        where: { id: applicationFeePaymentId },
+        data: { applicationId: application.id },
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -127,7 +136,7 @@ async function createApplication(req: AuthenticatedRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
+        { success: false, message: "Invalid input", errors: error.issues },
         { status: 400 }
       );
     }

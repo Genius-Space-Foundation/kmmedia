@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "./auth";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./auth-config";
 import { UserRole } from "@prisma/client";
 
 export interface AuthenticatedRequest extends NextRequest {
@@ -12,59 +13,31 @@ export interface AuthenticatedRequest extends NextRequest {
 }
 
 export function withAuth(
-  handler: (req: AuthenticatedRequest) => Promise<NextResponse>,
+  handler: (req: AuthenticatedRequest, ...args: any[]) => Promise<NextResponse>,
   allowedRoles?: UserRole[]
 ) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
     try {
-      // First try to get user info from headers set by Next.js middleware
-      let userId = req.headers.get("x-user-id");
-      let userRole = req.headers.get("x-user-role") as UserRole;
-      let userEmail = req.headers.get("x-user-email");
+      // Get session from NextAuth
+      const session = await getServerSession(authOptions);
 
-      // If not available from headers, try to verify JWT token directly
-      if (!userId || !userRole || !userEmail) {
-        const authHeader = req.headers.get("authorization");
-        const token = authHeader?.startsWith("Bearer ")
-          ? authHeader.substring(7)
-          : null;
-
-        if (!token) {
-          return NextResponse.json(
-            { success: false, message: "No authentication token provided" },
-            { status: 401 }
-          );
-        }
-
-        // Verify the JWT token
-        const payload = verifyToken(token);
-        console.log(
-          "Token verification result:",
-          payload ? "Valid" : "Invalid"
+      if (!session || !session.user) {
+        return NextResponse.json(
+          { success: false, message: "No authentication session" },
+          { status: 401 }
         );
-        if (!payload) {
-          return NextResponse.json(
-            { success: false, message: "Invalid token" },
-            { status: 401 }
-          );
-        }
-
-        userId = payload.userId;
-        userRole = payload.role;
-        userEmail = payload.email;
-        console.log("User role:", userRole);
       }
 
-      // Create user object
+      // Create user object with type assertions
       const user = {
-        userId,
-        email: userEmail,
-        role: userRole,
-        status: "ACTIVE" as const, // Assuming active if token is valid
+        userId: session.user.id!,
+        email: session.user.email!,
+        role: session.user.role as UserRole,
+        status: session.user.status,
       };
 
       // Check role permissions
-      if (allowedRoles && !allowedRoles.includes(userRole)) {
+      if (allowedRoles && !allowedRoles.includes(user.role)) {
         return NextResponse.json(
           { success: false, message: "Insufficient permissions" },
           { status: 403 }
@@ -75,7 +48,7 @@ export function withAuth(
       const authenticatedReq = req as AuthenticatedRequest;
       authenticatedReq.user = user;
 
-      return handler(authenticatedReq);
+      return handler(authenticatedReq, ...args);
     } catch (error) {
       console.error("Auth middleware error:", error);
       return NextResponse.json(
@@ -87,19 +60,19 @@ export function withAuth(
 }
 
 export function withAdminAuth(
-  handler: (req: AuthenticatedRequest) => Promise<NextResponse>
+  handler: (req: AuthenticatedRequest, ...args: any[]) => Promise<NextResponse>
 ) {
   return withAuth(handler, [UserRole.ADMIN]);
 }
 
 export function withInstructorAuth(
-  handler: (req: AuthenticatedRequest) => Promise<NextResponse>
+  handler: (req: AuthenticatedRequest, ...args: any[]) => Promise<NextResponse>
 ) {
   return withAuth(handler, [UserRole.ADMIN, UserRole.INSTRUCTOR]);
 }
 
 export function withStudentAuth(
-  handler: (req: AuthenticatedRequest) => Promise<NextResponse>
+  handler: (req: AuthenticatedRequest, ...args: any[]) => Promise<NextResponse>
 ) {
   return withAuth(handler, [UserRole.ADMIN, UserRole.STUDENT]);
 }

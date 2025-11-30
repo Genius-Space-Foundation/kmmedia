@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import {
   withInstructorAuth,
   withAuth,
@@ -103,7 +103,7 @@ async function updateAssignment(
         {
           success: false,
           message: "Invalid input",
-          errors: error.errors,
+          errors: error.issues,
         },
         { status: 400 }
       );

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { sendEmail, emailTemplates } from "@/lib/notifications/email";
+import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
 export async function PUT(
   request: NextRequest,
@@ -11,7 +13,7 @@ export async function PUT(
     const { action, comments, updatedAt } = body;
 
     // Validate action
-    const validActions = ["APPROVE", "REJECT", "PUBLISH", "UNPUBLISH"];
+    const validActions = ["APPROVE", "REJECT", "PUBLISH", "UNPUBLISH", "UPDATE_INSTALLMENTS"];
     if (!validActions.includes(action)) {
       return NextResponse.json(
         { success: false, message: "Invalid action" },
@@ -129,6 +131,45 @@ export async function PUT(
                 name: true,
                 email: true,
                 avatar: true,
+                bio: true,
+                phone: true,
+              },
+            },
+            _count: {
+              select: {
+                applications: true,
+                enrollments: true,
+              },
+            },
+          },
+        });
+        break;
+
+      case "UPDATE_INSTALLMENTS":
+        const { installmentEnabled, installmentPlan } = body;
+        
+        // Basic validation for installment plan
+        if (installmentEnabled && !installmentPlan) {
+           return NextResponse.json(
+            { success: false, message: "Installment plan is required when enabled" },
+            { status: 400 }
+          );
+        }
+
+        updatedCourse = await prisma.course.update({
+          where: { id: courseId },
+          data: {
+            installmentEnabled,
+            installmentPlan,
+            updatedAt: new Date(),
+          },
+          include: {
+            instructor: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
               },
             },
             _count: {
@@ -148,22 +189,48 @@ export async function PUT(
         );
     }
 
-    // Send notification email to instructor
+    // Send notification email to instructor (async, don't block response)
     if (action === "APPROVE") {
-      // TODO: Send approval email
-      console.log(
-        `Sending course approval email to ${updatedCourse.instructor.email}`
-      );
+      sendEmail({
+        to: updatedCourse.instructor.email,
+        ...emailTemplates.courseApproved({
+          instructorName: updatedCourse.instructor.name || "Instructor",
+          courseName: updatedCourse.title,
+          adminComments: comments,
+        }),
+      }).catch((error) => {
+        console.error(
+          `Failed to send course approval email to ${updatedCourse.instructor.email}:`,
+          error
+        );
+      });
     } else if (action === "REJECT") {
-      // TODO: Send rejection email
-      console.log(
-        `Sending course rejection email to ${updatedCourse.instructor.email}`
-      );
+      sendEmail({
+        to: updatedCourse.instructor.email,
+        ...extendedEmailTemplates.courseRejected({
+          instructorName: updatedCourse.instructor.name || "Instructor",
+          courseName: updatedCourse.title,
+          rejectionReason: comments,
+        }),
+      }).catch((error) => {
+        console.error(
+          `Failed to send course rejection email to ${updatedCourse.instructor.email}:`,
+          error
+        );
+      });
     } else if (action === "PUBLISH") {
-      // TODO: Send publish notification email
-      console.log(
-        `Sending course publish notification to ${updatedCourse.instructor.email}`
-      );
+      sendEmail({
+        to: updatedCourse.instructor.email,
+        ...extendedEmailTemplates.coursePublished({
+          instructorName: updatedCourse.instructor.name || "Instructor",
+          courseName: updatedCourse.title,
+        }),
+      }).catch((error) => {
+        console.error(
+          `Failed to send course publish notification to ${updatedCourse.instructor.email}:`,
+          error
+        );
+      });
     }
 
     return NextResponse.json({

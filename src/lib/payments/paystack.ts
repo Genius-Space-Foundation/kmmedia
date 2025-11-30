@@ -163,11 +163,11 @@ export function generatePaymentReference(): string {
 }
 
 // Convert amount to pesewas (Paystack expects amount in pesewas)
-export function convertToKobo(amount: number): number {
+export function convertToPesewas(amount: number): number {
   return Math.round(amount * 100);
 }
 
 // Convert amount from pesewas to cedis
-export function convertFromKobo(amount: number): number {
+export function convertFromPesewas(amount: number): number {
   return amount / 100;
 }

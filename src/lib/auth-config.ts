@@ -1,12 +1,14 @@
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import GitHubProvider from "next-auth/providers/github";
+import CredentialsProvider from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
-import { UserRole } from "@prisma/client";
+import { UserRole, UserStatus } from "@prisma/client";
+import { verifyPassword } from "@/lib/auth";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // adapter: PrismaAdapter(prisma), // Disabled for JWT sessions
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -15,6 +17,58 @@ export const authOptions: NextAuthOptions = {
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    }),
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Invalid credentials");
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            password: true,
+            role: true,
+            status: true,
+            image: true,
+          },
+        });
+
+        if (!user || !user.password) {
+          throw new Error("Invalid credentials");
+        }
+
+        if (user.status !== UserStatus.ACTIVE) {
+          throw new Error("Account is not active");
+        }
+
+        const isValidPassword = await verifyPassword(
+          credentials.password,
+          user.password
+        );
+
+        if (!isValidPassword) {
+          throw new Error("Invalid credentials");
+        }
+
+        // Return user object (password excluded)
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          status: user.status,
+          image: user.image,
+        };
+      },
     }),
   ],
   callbacks: {
@@ -33,8 +87,7 @@ export const authOptions: NextAuthOptions = {
                 email: user.email!,
                 name: user.name!,
                 role: UserRole.STUDENT,
-                status: "ACTIVE",
-                // Add provider-specific data if needed
+                status: UserStatus.ACTIVE,
                 image: user.image,
               },
             });
@@ -47,26 +100,22 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async session({ session, user }) {
-      if (session.user) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: session.user.email! },
-        });
-
-        if (dbUser) {
-          session.user.id = dbUser.id;
-          session.user.role = dbUser.role;
-          session.user.status = dbUser.status;
-        }
-      }
-      return session;
-    },
     async jwt({ token, user }) {
+      // Initial sign in
       if (user) {
+        token.id = user.id;
         token.role = user.role;
         token.status = user.status;
       }
       return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token) {
+        session.user.id = token.id as string;
+        session.user.role = token.role as any;
+        session.user.status = token.status as any;
+      }
+      return session;
     },
   },
   pages: {
@@ -75,6 +124,19 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
+
   secret: process.env.NEXTAUTH_SECRET,
 };

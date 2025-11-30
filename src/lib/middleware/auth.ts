@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken } from "../auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { UserRole } from "@prisma/client";
 
 export interface AuthenticatedRequest extends NextRequest {
@@ -19,42 +20,17 @@ export function withAdminAuth(
 ) {
   return async (req: NextRequest): Promise<NextResponse> => {
     try {
-      // First try to get user info from headers set by Next.js middleware
-      let userId = req.headers.get("x-user-id");
-      let userRole = req.headers.get("x-user-role") as UserRole;
-      let userEmail = req.headers.get("x-user-email");
+      const session = await getServerSession(authOptions);
 
-      // If not available from headers, try to verify JWT token directly
-      if (!userId || !userRole || !userEmail) {
-        const authHeader = req.headers.get("authorization");
-        const token = authHeader?.startsWith("Bearer ")
-          ? authHeader.substring(7)
-          : null;
-
-        if (!token) {
-          return NextResponse.json(
-            { success: false, message: "No authentication token provided" },
-            { status: 401 }
-          );
-        }
-
-        // Verify the JWT token
-        const payload = verifyToken(token);
-
-        if (!payload) {
-          return NextResponse.json(
-            { success: false, message: "Invalid token" },
-            { status: 401 }
-          );
-        }
-
-        userId = payload.userId;
-        userRole = payload.role;
-        userEmail = payload.email;
+      if (!session?.user?.id) {
+        return NextResponse.json(
+          { success: false, message: "Authentication required" },
+          { status: 401 }
+        );
       }
 
       // Check if user is admin
-      if (userRole !== UserRole.ADMIN) {
+      if (session.user.role !== UserRole.ADMIN) {
         return NextResponse.json(
           { success: false, message: "Admin access required" },
           { status: 403 }
@@ -64,10 +40,10 @@ export function withAdminAuth(
       // Create authenticated request
       const authenticatedReq = req as AuthenticatedRequest;
       authenticatedReq.user = {
-        userId,
-        email: userEmail,
-        role: userRole,
-        status: "ACTIVE",
+        userId: session.user.id,
+        email: session.user.email!,
+        role: session.user.role as UserRole,
+        status: session.user.status,
       };
 
       // Call the handler
@@ -91,29 +67,17 @@ export function withRoleAuth(
 ) {
   return async (req: NextRequest): Promise<NextResponse> => {
     try {
-      const authHeader = req.headers.get("authorization");
-      const token = authHeader?.startsWith("Bearer ")
-        ? authHeader.substring(7)
-        : null;
+      const session = await getServerSession(authOptions);
 
-      if (!token) {
+      if (!session?.user?.id) {
         return NextResponse.json(
-          { success: false, message: "No authentication token provided" },
-          { status: 401 }
-        );
-      }
-
-      const payload = verifyToken(token);
-
-      if (!payload) {
-        return NextResponse.json(
-          { success: false, message: "Invalid token" },
+          { success: false, message: "Authentication required" },
           { status: 401 }
         );
       }
 
       // Check if user role is allowed
-      if (!allowedRoles.includes(payload.role)) {
+      if (!allowedRoles.includes(session.user.role as UserRole)) {
         return NextResponse.json(
           { success: false, message: "Insufficient permissions" },
           { status: 403 }
@@ -123,10 +87,10 @@ export function withRoleAuth(
       // Create authenticated request
       const authenticatedReq = req as AuthenticatedRequest;
       authenticatedReq.user = {
-        userId: payload.userId,
-        email: payload.email,
-        role: payload.role,
-        status: "ACTIVE",
+        userId: session.user.id,
+        email: session.user.email!,
+        role: session.user.role as UserRole,
+        status: session.user.status,
       };
 
       return handler(authenticatedReq);

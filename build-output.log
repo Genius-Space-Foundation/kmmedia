@@ -1,0 +1,229 @@
+
+> kmmedia@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.3
+   - Environments: .env.local, .env
+   - Experiments (use with caution):
+     ✓ scrollRestoration
+
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled successfully in 53s
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+   Generating static pages (0/147) ...
+   Generating static pages (36/147) 
+   Generating static pages (73/147) 
+   Generating static pages (110/147) 
+ ✓ Generating static pages (147/147)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                                Size  First Load JS
+┌ ○ /                                                   9.46 kB         483 kB
+├ ○ /_not-found                                           190 B         468 kB
+├ ○ /about                                              3.56 kB         478 kB
+├ ƒ /api/admin/applications                               510 B         468 kB
+├ ƒ /api/admin/applications/[id]                          510 B         468 kB
+├ ƒ /api/admin/applications/bulk                          510 B         468 kB
+├ ƒ /api/admin/courses                                    510 B         468 kB
+├ ƒ /api/admin/courses/[id]                               510 B         468 kB
+├ ƒ /api/admin/courses/[id]/approve                       510 B         468 kB
+├ ƒ /api/admin/courses/bulk                               510 B         468 kB
+├ ƒ /api/admin/dashboard/comprehensive                    510 B         468 kB
+├ ƒ /api/admin/payments                                   510 B         468 kB
+├ ƒ /api/admin/payments/[id]/refund                       510 B         468 kB
+├ ƒ /api/admin/payments/manual                            510 B         468 kB
+├ ƒ /api/admin/search                                     510 B         468 kB
+├ ƒ /api/admin/stats                                      510 B         468 kB
+├ ƒ /api/admin/users                                      510 B         468 kB
+├ ƒ /api/admin/users/[id]                                 510 B         468 kB
+├ ƒ /api/admin/users/[id]/activity                        510 B         468 kB
+├ ƒ /api/admin/users/bulk                                 510 B         468 kB
+├ ƒ /api/admin/users/export                               510 B         468 kB
+├ ƒ /api/applications                                     510 B         468 kB
+├ ƒ /api/applications/[id]                                510 B         468 kB
+├ ƒ /api/applications/drafts                              510 B         468 kB
+├ ƒ /api/assignments                                      510 B         468 kB
+├ ƒ /api/assignments/[id]                                 510 B         468 kB
+├ ƒ /api/assignments/[id]/bulk-grade                      510 B         468 kB
+├ ƒ /api/assignments/[id]/extensions                      510 B         468 kB
+├ ƒ /api/assignments/[id]/publish                         510 B         468 kB
+├ ƒ /api/assignments/[id]/reminders                       510 B         468 kB
+├ ƒ /api/assignments/[id]/statistics                      510 B         468 kB
+├ ƒ /api/assignments/[id]/submissions                     510 B         468 kB
+├ ƒ /api/auth/[...nextauth]                               510 B         468 kB
+├ ƒ /api/auth/forgot-password                             510 B         468 kB
+├ ƒ /api/auth/login                                       510 B         468 kB
+├ ƒ /api/auth/logout                                      510 B         468 kB
+├ ƒ /api/auth/me                                          510 B         468 kB
+├ ƒ /api/auth/refresh                                     510 B         468 kB
+├ ƒ /api/auth/register                                    510 B         468 kB
+├ ƒ /api/auth/reset-password                              510 B         468 kB
+├ ƒ /api/courses                                          510 B         468 kB
+├ ƒ /api/courses/[id]                                     510 B         468 kB
+├ ƒ /api/courses/[id]/approve                             510 B         468 kB
+├ ƒ /api/courses/[id]/assignments                         510 B         468 kB
+├ ƒ /api/courses/cached                                   510 B         468 kB
+├ ƒ /api/courses/categories                               510 B         468 kB
+├ ƒ /api/courses/public                                   510 B         468 kB
+├ ƒ /api/csrf                                             510 B         468 kB
+├ ƒ /api/files/[id]                                       510 B         468 kB
+├ ƒ /api/files/[id]/download                              510 B         468 kB
+├ ƒ /api/files/[id]/stream                                510 B         468 kB
+├ ƒ /api/files/upload                                     510 B         468 kB
+├ ƒ /api/health                                           510 B         468 kB
+├ ƒ /api/health/db                                        510 B         468 kB
+├ ƒ /api/homepage/stats                                   510 B         468 kB
+├ ƒ /api/instructor/activity                              510 B         468 kB
+├ ƒ /api/instructor/ai-suggestions                        510 B         468 kB
+├ ƒ /api/instructor/analytics/overview                    510 B         468 kB
+├ ƒ /api/instructor/announcements                         510 B         468 kB
+├ ƒ /api/instructor/assessments                           510 B         468 kB
+├ ƒ /api/instructor/assessments/[id]                      510 B         468 kB
+├ ƒ /api/instructor/assessments/[id]/publish              510 B         468 kB
+├ ƒ /api/instructor/assessments/[id]/submissions          510 B         468 kB
+├ ƒ /api/instructor/assessments/grading-queue             510 B         468 kB
+├ ƒ /api/instructor/assessments/submissions               510 B         468 kB
+├ ƒ /api/instructor/assessments/submissions/[id]/grade    510 B         468 kB
+├ ƒ /api/instructor/attendance                            510 B         468 kB
+├ ƒ /api/instructor/collaboration/invite                  510 B         468 kB
+├ ƒ /api/instructor/collaboration/reviews                 510 B         468 kB
+├ ƒ /api/instructor/collaboration/sessions                510 B         468 kB
+├ ƒ /api/instructor/collaboration/stats                   510 B         468 kB
+├ ƒ /api/instructor/collaboration/team                    510 B         468 kB
+├ ƒ /api/instructor/communication-stats                   510 B         468 kB
+├ ƒ /api/instructor/courses                               510 B         468 kB
+├ ƒ /api/instructor/courses/[id]/assessments              510 B         468 kB
+├ ƒ /api/instructor/courses/[id]/duplicate                510 B         468 kB
+├ ƒ /api/instructor/courses/[id]/grades                   510 B         468 kB
+├ ƒ /api/instructor/courses/[id]/lessons                  510 B         468 kB
+├ ƒ /api/instructor/courses/[id]/lessons/reorder          510 B         468 kB
+├ ƒ /api/instructor/courses/[id]/progress                 510 B         468 kB
+├ ƒ /api/instructor/courses/[id]/rubrics                  510 B         468 kB
+├ ƒ /api/instructor/courses/[id]/submit                   510 B         468 kB
+├ ƒ /api/instructor/courses/create                        510 B         468 kB
+├ ƒ /api/instructor/deadlines                             510 B         468 kB
+├ ƒ /api/instructor/export/[format]                       510 B         468 kB
+├ ƒ /api/instructor/grades                                510 B         468 kB
+├ ƒ /api/instructor/grades/[gradeId]                      510 B         468 kB
+├ ƒ /api/instructor/integrations                          510 B         468 kB
+├ ƒ /api/instructor/integrations/stats                    510 B         468 kB
+├ ƒ /api/instructor/integrations/usage                    510 B         468 kB
+├ ƒ /api/instructor/lessons/[lessonId]                    510 B         468 kB
+├ ƒ /api/instructor/lessons/[lessonId]/publish            510 B         468 kB
+├ ƒ /api/instructor/live-sessions                         510 B         468 kB
+├ ƒ /api/instructor/messages                              510 B         468 kB
+├ ƒ /api/instructor/predictive-analytics/alerts           510 B         468 kB
+├ ƒ /api/instructor/predictive-analytics/courses          510 B         468 kB
+├ ƒ /api/instructor/predictive-analytics/insights         510 B         468 kB
+├ ƒ /api/instructor/predictive-analytics/students         510 B         468 kB
+├ ƒ /api/instructor/profile                               510 B         468 kB
+├ ƒ /api/instructor/profile/upload-image                  510 B         468 kB
+├ ƒ /api/instructor/reports                               510 B         468 kB
+├ ƒ /api/instructor/reports/custom                        510 B         468 kB
+├ ƒ /api/instructor/reports/generate                      510 B         468 kB
+├ ƒ /api/instructor/rubrics                               510 B         468 kB
+├ ƒ /api/instructor/stats                                 510 B         468 kB
+├ ƒ /api/instructor/student-metrics                       510 B         468 kB
+├ ƒ /api/instructor/students                              510 B         468 kB
+├ ƒ /api/instructor/templates                             510 B         468 kB
+├ ƒ /api/notifications                                    510 B         468 kB
+├ ƒ /api/notifications/[id]                               510 B         468 kB
+├ ƒ /api/notifications/[id]/read                          510 B         468 kB
+├ ƒ /api/notifications/mark-all-read                      510 B         468 kB
+├ ƒ /api/notifications/stream                             510 B         468 kB
+├ ƒ /api/payments/[id]/receipt                            510 B         468 kB
+├ ƒ /api/payments/application-fee/initialize              510 B         468 kB
+├ ƒ /api/payments/initialize                              510 B         468 kB
+├ ƒ /api/payments/installment/initialize                  510 B         468 kB
+├ ƒ /api/payments/tuition/initialize                      510 B         468 kB
+├ ƒ /api/payments/verify                                  510 B         468 kB
+├ ƒ /api/reminders/process                                510 B         468 kB
+├ ƒ /api/search                                           510 B         468 kB
+├ ƒ /api/student/achievements/user                        510 B         468 kB
+├ ƒ /api/student/analytics/user                           510 B         468 kB
+├ ƒ /api/student/applications                             510 B         468 kB
+├ ƒ /api/student/applications/draft                       510 B         468 kB
+├ ƒ /api/student/assessments                              510 B         468 kB
+├ ƒ /api/student/assessments/[id]/submit                  510 B         468 kB
+├ ƒ /api/student/assignments                              510 B         468 kB
+├ ƒ /api/student/assignments/progress                     510 B         468 kB
+├ ƒ /api/student/assignments/stats                        510 B         468 kB
+├ ƒ /api/student/assignments/upcoming                     510 B         468 kB
+├ ƒ /api/student/attendance                               510 B         468 kB
+├ ƒ /api/student/courses                                  510 B         468 kB
+├ ƒ /api/student/deadlines                                510 B         468 kB
+├ ƒ /api/student/enrollments                              510 B         468 kB
+├ ƒ /api/student/grades                                   510 B         468 kB
+├ ƒ /api/student/grades/recent                            510 B         468 kB
+├ ƒ /api/student/grades/stats                             510 B         468 kB
+├ ƒ /api/student/leaderboard                              510 B         468 kB
+├ ƒ /api/student/notifications/[notificationId]/read      510 B         468 kB
+├ ƒ /api/student/notifications/user                       510 B         468 kB
+├ ƒ /api/student/notifications/user/read-all              510 B         468 kB
+├ ƒ /api/student/offline-content/user                     510 B         468 kB
+├ ƒ /api/student/payment-plans                            510 B         468 kB
+├ ƒ /api/student/payment-reminders                        510 B         468 kB
+├ ƒ /api/student/payment-reminders/[reminderId]/remind    510 B         468 kB
+├ ƒ /api/student/payment-reminders/automated              510 B         468 kB
+├ ƒ /api/student/payments                                 510 B         468 kB
+├ ƒ /api/student/payments/demo                            510 B         468 kB
+├ ƒ /api/student/recommendations/user                     510 B         468 kB
+├ ƒ /api/student/reminders                                510 B         468 kB
+├ ƒ /api/student/stats/user                               510 B         468 kB
+├ ƒ /api/student/support-tickets                          510 B         468 kB
+├ ƒ /api/submissions                                      510 B         468 kB
+├ ƒ /api/submissions/[id]                                 510 B         468 kB
+├ ƒ /api/submissions/[id]/grade                           510 B         468 kB
+├ ƒ /api/submissions/[id]/history                         510 B         468 kB
+├ ƒ /api/submissions/bulk-grade                           510 B         468 kB
+├ ƒ /api/upload                                           510 B         468 kB
+├ ƒ /api/upload/avatar                                    510 B         468 kB
+├ ƒ /api/upload/cloudinary                                510 B         468 kB
+├ ƒ /api/upload/course-materials                          510 B         468 kB
+├ ƒ /api/user/application-data                            510 B         468 kB
+├ ƒ /api/user/learning-profile                            510 B         468 kB
+├ ƒ /api/user/password                                    510 B         468 kB
+├ ƒ /api/user/profile                                     510 B         468 kB
+├ ƒ /api/user/profile-completion                          510 B         468 kB
+├ ƒ /api/users/[id]/reminder-preferences                  510 B         468 kB
+├ ƒ /api/webhooks/paystack                                510 B         468 kB
+├ ○ /assignments                                        1.79 kB         472 kB
+├ ○ /assignments/create                                   692 B         484 kB
+├ ○ /assignments/manage                                 1.31 kB         484 kB
+├ ƒ /auth/login                                         5.56 kB         473 kB
+├ ○ /auth/onboarding                                    8.51 kB         481 kB
+├ ƒ /auth/register                                      9.19 kB         477 kB
+├ ○ /contact                                            4.62 kB         479 kB
+├ ○ /courses                                            13.7 kB         488 kB
+├ ƒ /courses/[id]                                       8.89 kB         476 kB
+├ ƒ /courses/[id]/apply                                 5.82 kB         478 kB
+├ ƒ /courses/[id]/apply/payment                         4.84 kB         472 kB
+├ ○ /dashboards/admin                                   18.7 kB         499 kB
+├ ƒ /dashboards/admin/enhanced                          16.8 kB         494 kB
+├ ○ /dashboards/instructor                              31.1 kB         516 kB
+├ ○ /dashboards/instructor/assessment-builder           8.82 kB         476 kB
+├ ○ /dashboards/instructor/course-creation              9.96 kB         478 kB
+├ ○ /dashboards/instructor/gradebook                    5.61 kB         477 kB
+├ ○ /dashboards/instructor/lesson-management             8.2 kB         476 kB
+├ ○ /dashboards/instructor/mobile                       2.54 kB         477 kB
+├ ○ /dashboards/instructor/profile                      3.22 kB         477 kB
+├ ○ /dashboards/instructor/progress-tracking            7.68 kB         475 kB
+├ ○ /dashboards/student                                 37.3 kB         524 kB
+├ ƒ /notifications                                      4.84 kB         472 kB
+├ ○ /search                                             2.57 kB         477 kB
+├ ○ /stories                                            6.67 kB         474 kB
+├ ○ /test-document-upload                                6.5 kB         478 kB
+├ ○ /test-mobile-dashboard                               8.9 kB         479 kB
+└ ○ /test-notifications                                 4.05 kB         479 kB
++ First Load JS shared by all                            468 kB
+  └ chunks/vendors-8c0290e94f346add.js                   466 kB
+  └ other shared chunks (total)                         1.95 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

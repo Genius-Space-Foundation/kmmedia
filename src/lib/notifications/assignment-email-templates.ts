@@ -1,4 +1,4 @@
-import { AssignmentNotificationType } from "./assignment-notification-service";
+import { AssignmentNotificationType } from "./types";
 
 export interface AssignmentEmailTemplateData {
   assignmentTitle: string;

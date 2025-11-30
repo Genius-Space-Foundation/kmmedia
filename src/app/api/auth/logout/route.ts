@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth-config";
 
 export async function POST(request: NextRequest) {
   try {
-    // Clear any server-side session data if needed
-    // For JWT-based auth, we mainly need to clear client-side tokens
+    const session = await getServerSession(authOptions);
 
+    if (!session) {
+      return NextResponse.json(
+        { success: false, message: "No active session" },
+        { status: 401 }
+      );
+    }
+
+    // Note: NextAuth handles session deletion automatically when signOut is called from client
+    // This endpoint is for server-side logout confirmation
     return NextResponse.json({
       success: true,
       message: "Logged out successfully",

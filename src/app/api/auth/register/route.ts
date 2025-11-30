@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createUser, generateTokens } from "@/lib/auth";
+import { createUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { UserRole } from "@prisma/client";
 import { z } from "zod";
@@ -43,15 +43,22 @@ export async function POST(request: NextRequest) {
       experience,
     });
 
-    // Generate tokens
-    const tokens = generateTokens({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
-      status: user.status,
-    });
+    // Send welcome email
+    try {
+      const { sendEmail, emailTemplates } = await import("@/lib/notifications/email");
+      const template = emailTemplates.welcome({ name: user.name });
+      await sendEmail({
+        to: user.email,
+        subject: template.subject,
+        html: template.html,
+      });
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError);
+      // Don't fail registration if email fails
+    }
 
-    const response = NextResponse.json({
+    // Return success - client should then call NextAuth signIn
+    return NextResponse.json({
       success: true,
       user: {
         id: user.id,
@@ -60,31 +67,14 @@ export async function POST(request: NextRequest) {
         role: user.role,
         status: user.status,
       },
-      message: "Registration successful",
+      message: "Registration successful. Please log in.",
     });
-
-    // Set HTTP-only cookies for tokens
-    response.cookies.set("accessToken", tokens.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 15 * 60, // 15 minutes
-    });
-
-    response.cookies.set("refreshToken", tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-    });
-
-    return response;
   } catch (error) {
     console.error("Registration error:", error);
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
+        { success: false, message: "Invalid input", errors: error.issues },
         { status: 400 }
       );
     }

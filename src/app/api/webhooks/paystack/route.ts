@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyPayment, updatePaymentStatus, convertFromKobo } from "@/lib/payments/paystack";
+import {
+  verifyPayment,
+  updatePaymentStatus,
+  convertFromPesewas,
+} from "@/lib/payments/paystack";
 import { prisma } from "@/lib/db";
-import { PaymentStatus, ApplicationStatus, EnrollmentStatus } from "@prisma/client";
+import {
+  PaymentStatus,
+  ApplicationStatus,
+  EnrollmentStatus,
+} from "@prisma/client";
 import crypto from "crypto";
+import { sendEmail } from "@/lib/notifications/email";
+import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || "";
 
@@ -69,7 +79,7 @@ export async function POST(req: NextRequest) {
 async function handleSuccessfulPayment(data: any) {
   try {
     const reference = data.reference;
-    const amount = convertFromKobo(data.amount);
+    const amount = convertFromPesewas(data.amount);
     const metadata = data.metadata;
 
     // Update payment status in database
@@ -100,8 +110,40 @@ async function handleSuccessfulPayment(data: any) {
         break;
     }
 
-    // Send confirmation email/SMS
-    console.log(`Payment successful: ${reference} - ${amount} for user ${payment.user.email}`);
+    // Fetch course details for email
+    let courseTitle = "Course";
+    if (payment.enrollment) {
+      const course = await prisma.course.findUnique({
+        where: { id: payment.enrollment.courseId },
+        select: { title: true },
+      });
+      if (course) courseTitle = course.title;
+    } else if (payment.application) {
+      const course = await prisma.course.findUnique({
+        where: { id: payment.application.courseId },
+        select: { title: true },
+      });
+      if (course) courseTitle = course.title;
+    }
+
+    // Send confirmation email (async)
+    sendEmail({
+      to: payment.user.email,
+      ...extendedEmailTemplates.paymentConfirmation({
+        studentName: payment.user.name || "Student",
+        courseName: courseTitle,
+        amount: amount,
+        paymentMethod: "Paystack",
+        reference: reference,
+        receiptUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/${payment.id}/receipt`,
+      }),
+    }).catch((error) => {
+      console.error(`Failed to send payment confirmation email to ${payment.user.email}:`, error);
+    });
+
+    console.log(
+      `Payment successful: ${reference} - ${amount} for user ${payment.user.email}`
+    );
   } catch (error) {
     console.error("Error handling successful payment:", error);
   }
@@ -141,7 +183,28 @@ async function handleTuitionPayment(payment: any) {
       },
     });
 
-    console.log(`Tuition paid - enrollment activated: ${payment.enrollment.id}`);
+    // Send enrollment confirmation email (async)
+    const course = await prisma.course.findUnique({
+      where: { id: payment.enrollment.courseId },
+      select: { title: true, id: true },
+    });
+
+    if (course) {
+      sendEmail({
+        to: payment.user.email,
+        ...extendedEmailTemplates.enrollmentConfirmation({
+          studentName: payment.user.name || "Student",
+          courseName: course.title,
+          courseUrl: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${course.id}/learn`,
+        }),
+      }).catch((error) => {
+        console.error(`Failed to send enrollment confirmation email to ${payment.user.email}:`, error);
+      });
+    }
+
+    console.log(
+      `Tuition paid - enrollment activated: ${payment.enrollment.id}`
+    );
   }
 }
 
@@ -156,7 +219,9 @@ async function handleInstallmentPayment(payment: any) {
       },
     });
 
-    const allPaid = allPayments.every(p => p.status === PaymentStatus.COMPLETED);
+    const allPaid = allPayments.every(
+      (p) => p.status === PaymentStatus.COMPLETED
+    );
 
     if (allPaid) {
       // All installments paid - activate enrollment
@@ -167,7 +232,28 @@ async function handleInstallmentPayment(payment: any) {
         },
       });
 
-      console.log(`All installments paid - enrollment activated: ${payment.enrollment.id}`);
+      // Send enrollment confirmation email (async)
+      const course = await prisma.course.findUnique({
+        where: { id: payment.enrollment.courseId },
+        select: { title: true, id: true },
+      });
+
+      if (course) {
+        sendEmail({
+          to: payment.user.email,
+          ...extendedEmailTemplates.enrollmentConfirmation({
+            studentName: payment.user.name || "Student",
+            courseName: course.title,
+            courseUrl: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${course.id}/learn`,
+          }),
+        }).catch((error) => {
+          console.error(`Failed to send enrollment confirmation email to ${payment.user.email}:`, error);
+        });
+      }
+
+      console.log(
+        `All installments paid - enrollment activated: ${payment.enrollment.id}`
+      );
     }
   }
 }
@@ -181,4 +267,3 @@ async function handleFailedTransfer(data: any) {
   // Handle failed transfer
   console.log(`Transfer failed: ${data.reference}`);
 }
-

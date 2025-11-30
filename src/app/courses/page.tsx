@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import EnhancedNavigation from "@/components/navigation/EnhancedNavigation";
+import Footer from "@/components/layout/Footer";
 import CourseFilters, {
   CourseFilter,
 } from "@/components/courses/CourseFilters";
@@ -264,19 +265,7 @@ export default function CoursesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-neutral-50 via-brand-neutral-100 to-brand-neutral-200 relative overflow-hidden">
-      {/* Modern Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-brand-primary/5 rounded-full blur-3xl animate-pulse"></div>
-        <div
-          className="absolute -bottom-40 -left-40 w-80 h-80 bg-brand-secondary/5 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-tertiary/3 rounded-full blur-3xl animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-      </div>
+    <div className="min-h-screen bg-brand-neutral-50 relative overflow-hidden">
 
       <div className="relative max-w-full mx-auto">
         {/* Enhanced Navigation */}
@@ -286,20 +275,12 @@ export default function CoursesPage() {
         <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden py-20">
           {/* Professional Background */}
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900"></div>
+            <div className="absolute inset-0 bg-neutral-900/70 z-10"></div>
             <img
               src="/images/3.jpeg"
               alt="KM Media Training Institute Courses"
               className="w-full h-full object-cover opacity-10"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"></div>
-
-            {/* Subtle animated elements */}
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse"></div>
-            <div
-              className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-indigo-500/5 rounded-full blur-3xl animate-pulse"
-              style={{ animationDelay: "2s" }}
-            ></div>
           </div>
 
           <div className="relative z-10 text-center text-white px-6 sm:px-8 lg:px-12 max-w-6xl mx-auto">
@@ -315,7 +296,7 @@ export default function CoursesPage() {
             {/* Main Heading */}
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
               <span className="block">Discover Your Perfect</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-accent to-brand-primary block mt-2">
+              <span className="text-brand-primary block mt-2">
                 Learning Path
               </span>
             </h1>
@@ -327,35 +308,7 @@ export default function CoursesPage() {
             </p>
 
             {/* Functional Search Bar */}
-            <div className="max-w-2xl mx-auto mb-12">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search courses by name or description..."
-                  value={filters.search}
-                  onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, search: e.target.value }))
-                  }
-                  className="w-full h-14 px-6 pr-16 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent/50 text-lg transition-all duration-300"
-                />
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  <svg
-                    className="w-6 h-6 text-white/70"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
+            {/* <div className="max-w-2xl mx-auto mb-12">
             {/* Dynamic Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 max-w-4xl mx-auto">
               <div className="text-center">
@@ -397,45 +350,21 @@ export default function CoursesPage() {
                 </div>
               </div>
             </div>
-
-            {/* Quick Action Buttons */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mt-12">
-              <Button
-                onClick={() =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    categories: ["Photography"],
-                  }))
-                }
-                className="btn-brand-primary px-6 py-3 rounded-xl hover:scale-105 transition-all duration-300"
-              >
-                Photography Courses
-              </Button>
-              <Button
-                onClick={() =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    categories: ["Video Production"],
-                  }))
-                }
-                className="bg-transparent border-2 border-white/30 hover:border-white/50 text-white px-6 py-3 rounded-xl hover:scale-105 transition-all duration-300 hover:bg-white/10"
-              >
-                Video Production
-              </Button>
-            </div>
           </div>
         </section>
 
         {/* Enhanced Filters */}
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <CourseFilters
-              filters={filters}
-              onFiltersChange={setFilters}
-              totalCourses={courses.length}
-              filteredCount={filteredCourses.length}
-              isLoading={loading}
-            />
+            <Suspense fallback={<div className="h-20 bg-gray-100 animate-pulse rounded-xl"></div>}>
+              <CourseFilters
+                filters={filters}
+                onFiltersChange={setFilters}
+                totalCourses={courses.length}
+                filteredCount={filteredCourses.length}
+                isLoading={loading}
+              />
+            </Suspense>
           </div>
         </section>
 
@@ -482,7 +411,7 @@ export default function CoursesPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {Array.from({ length: 6 }).map((_, index) => (
                   <Card key={index} className="animate-pulse">
-                    <div className="h-48 bg-gray-200 rounded-t-lg"></div>
+                    <div className="h-48 bg-gray-200 rounded-t-xl"></div>
                     <CardHeader>
                       <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
                       <div className="h-3 bg-gray-200 rounded w-1/2"></div>
@@ -522,7 +451,7 @@ export default function CoursesPage() {
                       sortOrder: "asc",
                     })
                   }
-                  className="btn-brand-secondary"
+                  className="btn-brand-secondary rounded-xl"
                 >
                   Clear All Filters
                 </Button>
@@ -547,7 +476,7 @@ export default function CoursesPage() {
         {/* CTA Section */}
         <section className="py-20">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-4xl font-bold text-brand-gradient-hero mb-6">
+            <h2 className="text-4xl font-bold text-neutral-900 mb-6">
               Ready to Start Your Media Career?
             </h2>
             <p className="text-xl text-brand-text-secondary mb-8">
@@ -558,7 +487,7 @@ export default function CoursesPage() {
               <Link href="/auth/register">
                 <Button
                   size="lg"
-                  className="btn-brand-primary px-8 py-4 text-lg"
+                  className="btn-brand-primary px-8 py-4 text-lg rounded-xl"
                 >
                   Get Started Today
                 </Button>
@@ -567,7 +496,7 @@ export default function CoursesPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="px-8 py-4 text-lg border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white transition-all duration-200"
+                  className="px-8 py-4 text-lg border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white transition-all duration-200 rounded-xl"
                 >
                   Learn More
                 </Button>
@@ -577,13 +506,8 @@ export default function CoursesPage() {
         </section>
 
         {/* Footer */}
-        <footer className="py-8 border-t border-brand-border">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="text-brand-text-secondary">
-              © 2024 KM Media Training Institute. All rights reserved.
-            </p>
-          </div>
-        </footer>
+        {/* Footer */}
+        <Footer />
       </div>
     </div>
   );

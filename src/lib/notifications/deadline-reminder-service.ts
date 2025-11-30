@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
-import { AssignmentNotificationService, AssignmentNotificationType } from "./assignment-notification-service";
+import { AssignmentNotificationService } from "./assignment-notification-service";
+import { AssignmentNotificationType } from "./types";
 
 export interface ReminderSchedule {
   assignmentId: string;

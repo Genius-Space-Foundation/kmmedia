@@ -1,24 +1,23 @@
 import { NextRequest } from "next/server";
-import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
-
-import { verifyToken } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 
 export async function GET(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get("userId");
-  const token = searchParams.get("token");
-
-  if (!token) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-
-  const payload = verifyToken(token);
-  if (!payload) {
-    return new Response("Unauthorized", { status: 401 });
-  }
+  const requestedUserId = searchParams.get("userId");
 
   // Ensure user can only access their own notification stream (unless admin)
-  if (userId !== payload.userId && payload.role !== "ADMIN") {
+  if (
+    requestedUserId &&
+    session.user.id !== requestedUserId &&
+    session.user.role !== "ADMIN"
+  ) {
     return new Response("Forbidden", { status: 403 });
   }
 

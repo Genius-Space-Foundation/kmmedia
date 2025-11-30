@@ -1,28 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/db";
-import { verifyToken } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   try {
-    const token = request.cookies.get("accessToken")?.value;
-    if (!token) {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
       return NextResponse.json(
         { success: false, message: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
-    }
-
     // Fetch user data with profile and learning profile
     const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
+      where: { id: session.user.id },
       include: {
         profile: true,
         learningProfile: true,

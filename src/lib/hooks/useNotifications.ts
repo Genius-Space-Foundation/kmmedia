@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { makeAuthenticatedRequest } from "@/lib/token-utils";
 
 interface Notification {
   id: string;
@@ -42,29 +43,38 @@ export function useNotifications({
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        // Silently skip if no token (user not logged in)
-        setLoading(false);
+      const hasTokens =
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("refreshToken");
+      if (!hasTokens) {
         return;
       }
 
-      const response = await fetch(
-        `/api/notifications?userId=${userId}&limit=${limit}`,
+      const response = await makeAuthenticatedRequest(
+        `/api/notifications?userId=${encodeURIComponent(userId)}&limit=${limit}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          method: "GET",
+          cache: "no-store",
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch notifications");
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || payload?.success === false) {
+        throw new Error(
+          (payload?.error as string) ||
+            (payload?.message as string) ||
+            "Failed to fetch notifications"
+        );
       }
 
-      const data = await response.json();
-      setNotifications(data.notifications || []);
-      setUnreadCount(data.unreadCount || 0);
+      const data = payload?.data ?? payload ?? {};
+      const notificationsData = Array.isArray(data.notifications)
+        ? (data.notifications as Notification[])
+        : [];
+      const unreadValue = Number(data.unreadCount);
+
+      setNotifications(notificationsData);
+      setUnreadCount(Number.isFinite(unreadValue) ? unreadValue : 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
       console.error("Error fetching notifications:", err);
@@ -76,23 +86,27 @@ export function useNotifications({
   // Mark notification as read
   const markAsRead = useCallback(async (notificationId: string) => {
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
+      const hasTokens =
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("refreshToken");
+      if (!hasTokens) {
         throw new Error("No authentication token");
       }
 
-      const response = await fetch(
+      const response = await makeAuthenticatedRequest(
         `/api/notifications/${notificationId}/read`,
         {
           method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }
       );
 
       if (!response.ok) {
-        throw new Error("Failed to mark notification as read");
+        const payload = await response.json().catch(() => null);
+        throw new Error(
+          (payload?.error as string) ||
+            (payload?.message as string) ||
+            "Failed to mark notification as read"
+        );
       }
 
       // Update local state
@@ -116,22 +130,28 @@ export function useNotifications({
   // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
+      const hasTokens =
+        localStorage.getItem("accessToken") ||
+        localStorage.getItem("refreshToken");
+      if (!hasTokens) {
         throw new Error("No authentication token");
       }
 
-      const response = await fetch("/api/notifications/mark-all-read", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ userId }),
-      });
+      const response = await makeAuthenticatedRequest(
+        "/api/notifications/mark-all-read",
+        {
+          method: "PATCH",
+          body: JSON.stringify({ userId }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error("Failed to mark all notifications as read");
+        const payload = await response.json().catch(() => null);
+        throw new Error(
+          (payload?.error as string) ||
+            (payload?.message as string) ||
+            "Failed to mark all notifications as read"
+        );
       }
 
       // Update local state
@@ -156,20 +176,27 @@ export function useNotifications({
   const deleteNotification = useCallback(
     async (notificationId: string) => {
       try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
+        const hasTokens =
+          localStorage.getItem("accessToken") ||
+          localStorage.getItem("refreshToken");
+        if (!hasTokens) {
           throw new Error("No authentication token");
         }
 
-        const response = await fetch(`/api/notifications/${notificationId}`, {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await makeAuthenticatedRequest(
+          `/api/notifications/${notificationId}`,
+          {
+            method: "DELETE",
+          }
+        );
 
         if (!response.ok) {
-          throw new Error("Failed to delete notification");
+          const payload = await response.json().catch(() => null);
+          throw new Error(
+            (payload?.error as string) ||
+              (payload?.message as string) ||
+              "Failed to delete notification"
+          );
         }
 
         // Update local state
@@ -203,22 +230,25 @@ export function useNotifications({
       actionText?: string;
     }) => {
       try {
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
+        const hasTokens =
+          localStorage.getItem("accessToken") ||
+          localStorage.getItem("refreshToken");
+        if (!hasTokens) {
           throw new Error("No authentication token");
         }
 
-        const response = await fetch("/api/notifications", {
+        const response = await makeAuthenticatedRequest("/api/notifications", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
           body: JSON.stringify(notificationData),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to create notification");
+          const payload = await response.json().catch(() => null);
+          throw new Error(
+            (payload?.error as string) ||
+              (payload?.message as string) ||
+              "Failed to create notification"
+          );
         }
 
         const newNotification = await response.json();
@@ -318,7 +348,9 @@ export function useRealTimeNotifications(userId: string) {
     // Create EventSource for real-time notifications
     // Note: EventSource doesn't support custom headers, so we pass the token as a query parameter
     const eventSource = new EventSource(
-      `/api/notifications/stream?userId=${userId}&token=${token}`
+      `/api/notifications/stream?userId=${encodeURIComponent(
+        userId
+      )}&token=${encodeURIComponent(token)}`
     );
 
     eventSource.onmessage = (event) => {

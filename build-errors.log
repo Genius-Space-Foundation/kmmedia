@@ -1,0 +1,52 @@
+
+> kmmedia@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.3
+   - Environments: .env.local, .env
+   - Experiments (use with caution):
+     ✓ scrollRestoration
+
+   Creating an optimized production build ...
+Failed to compile.
+
+./src/components/admin/layout/AdminLayout.tsx
+Module not found: Can't resolve '../theme/ThemeToggle'
+
+https://nextjs.org/docs/messages/module-not-found
+
+./src/components/assignments/AssignmentCreator.tsx
+Module not found: Can't resolve './InstructorFileAttachment'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/components/assignments/index.ts
+./src/app/assignments/create/page.tsx
+
+./src/components/assignments/index.ts
+Module not found: Can't resolve './InstructorFileAttachment'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/app/assignments/create/page.tsx
+
+./src/components/assignments/index.ts
+Module not found: Can't resolve './AssignmentList'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/app/assignments/create/page.tsx
+
+./src/components/assignments/index.ts
+Module not found: Can't resolve './AssignmentDetail'
+
+https://nextjs.org/docs/messages/module-not-found
+
+Import trace for requested module:
+./src/app/assignments/create/page.tsx
+
+
+> Build failed because of webpack errors

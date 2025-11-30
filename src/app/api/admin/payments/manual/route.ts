@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
-import { PaymentStatus, PaymentType, PaymentMethod } from "@prisma/client";
+import { PaymentStatus, PaymentType, PaymentMethod, EnrollmentStatus } from "@prisma/client";
 import { generatePaymentReference } from "@/lib/payments/paystack";
 import { z } from "zod";
+import { sendEmail } from "@/lib/notifications/email";
+import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
 const manualPaymentSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
@@ -139,6 +141,25 @@ async function recordManualPayment(req: AuthenticatedRequest) {
           status: EnrollmentStatus.ACTIVE,
         },
       });
+
+      // Send enrollment confirmation email (async)
+      const course = await prisma.course.findUnique({
+        where: { id: paymentData.courseId },
+        select: { title: true, id: true },
+      });
+
+      if (course) {
+        sendEmail({
+          to: user.email,
+          ...extendedEmailTemplates.enrollmentConfirmation({
+            studentName: user.name || "Student",
+            courseName: course.title,
+            courseUrl: `${process.env.NEXT_PUBLIC_APP_URL}/courses/${course.id}/learn`,
+          }),
+        }).catch((error) => {
+          console.error(`Failed to send enrollment confirmation email to ${user.email}:`, error);
+        });
+      }
     }
 
     // Log the manual payment action
@@ -158,6 +179,23 @@ async function recordManualPayment(req: AuthenticatedRequest) {
       },
     });
 
+    // Send confirmation email (async)
+    const courseTitle = payment.enrollment?.course?.title || payment.application?.course?.title || "Course";
+    
+    sendEmail({
+      to: payment.user.email,
+      ...extendedEmailTemplates.paymentConfirmation({
+        studentName: payment.user.name || "Student",
+        courseName: courseTitle,
+        amount: paymentData.amount,
+        paymentMethod: paymentData.method === "BANK_TRANSFER" ? "Bank Transfer" : "Manual Payment",
+        reference: reference,
+        receiptUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/${payment.id}/receipt`,
+      }),
+    }).catch((error) => {
+      console.error(`Failed to send manual payment confirmation email to ${payment.user.email}:`, error);
+    });
+
     return NextResponse.json({
       success: true,
       data: payment,
@@ -168,7 +206,7 @@ async function recordManualPayment(req: AuthenticatedRequest) {
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.errors },
+        { success: false, message: "Invalid input", errors: (error as z.ZodError).errors },
         { status: 400 }
       );
     }

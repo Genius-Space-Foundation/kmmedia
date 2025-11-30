@@ -92,14 +92,12 @@ async function handlePost(req: NextRequest, userId: string) {
           update: {
             completed: true,
             completedAt: attendanceDate,
-            notes,
           },
           create: {
             userId: studentId,
             lessonId,
             completed: true,
             completedAt: attendanceDate,
-            notes,
           },
         })
       )
@@ -155,7 +153,7 @@ async function handlePost(req: NextRequest, userId: string) {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: "Validation error", details: error.errors },
+        { error: "Validation error", details: error.issues },
         { status: 400 }
       );
     }
@@ -287,7 +285,6 @@ async function handleGet(req: NextRequest, userId: string) {
           courseId: r.lesson.course.id,
           courseTitle: r.lesson.course.title,
           completedAt: r.completedAt,
-          notes: r.notes,
         })),
         summary: Object.values(summaryByLesson),
         totalRecords: attendanceRecords.length,

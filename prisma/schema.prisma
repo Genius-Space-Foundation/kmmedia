@@ -10,7 +10,7 @@ datasource db {
 model User {
   id            String     @id @default(cuid())
   email         String     @unique
-  password      String?    // Make password optional for social auth
+  password      String? // Make password optional for social auth
   name          String
   phone         String?
   role          UserRole   @default(STUDENT)
@@ -18,7 +18,7 @@ model User {
   emailVerified DateTime?
   lastLogin     DateTime?
   refreshToken  String?
-  image         String?    // For social auth profile images
+  image         String? // For social auth profile images
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
@@ -60,10 +60,15 @@ model User {
   participatedSessions LiveSession[] @relation("LiveSessionParticipants")
 
   // New relations for enhanced features
-  applicationDrafts    ApplicationDraft[]
-  learningProfile      LearningProfile?
-  achievements         UserAchievement[]
-  notificationSettings UserNotificationSettings?
+  applicationDrafts     ApplicationDraft[]
+  learningProfile       LearningProfile?
+  achievements          UserAchievement[]
+  notificationSettings  UserNotificationSettings?
+  learningStreak        LearningStreak?
+  bookmarks             Bookmark[]
+  dashboardActivities   DashboardActivity[]
+  courseRecommendations CourseRecommendation[]
+  dashboardPreferences  DashboardPreferences?
 
   // Assignment relations
   instructorAssignments Assignment[]           @relation("InstructorAssignments")
@@ -131,8 +136,16 @@ model LearningProfile {
   experience          String? // Experience description
   careerGoals         String? // Career goals description
   onboardingCompleted Boolean  @default(false)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+
+  // Weekly goal tracking
+  weeklyGoalTarget    Int       @default(0)
+  weeklyGoalCurrent   Int       @default(0)
+  weeklyGoalUnit      String    @default("hours") // hours, lessons, assignments
+  weeklyGoalStartDate DateTime?
+  weeklyGoalEndDate   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   userId String @unique
@@ -217,6 +230,92 @@ model UserNotificationSettings {
   @@map("user_notification_settings")
 }
 
+model LearningStreak {
+  id             String   @id @default(cuid())
+  currentStreak  Int      @default(0)
+  longestStreak  Int      @default(0)
+  lastActivityAt DateTime @default(now())
+  streakHistory  Json     @default("[]") // Array of {date, activitiesCompleted}
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("learning_streaks")
+}
+
+model Bookmark {
+  id          String   @id @default(cuid())
+  lessonId    String
+  lessonTitle String
+  courseId    String
+  courseName  String
+  metadata    Json? // Additional bookmark metadata
+  createdAt   DateTime @default(now())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("bookmarks")
+}
+
+model DashboardActivity {
+  id          String   @id @default(cuid())
+  type        String // lesson_completed, assignment_submitted, quiz_taken, course_enrolled, achievement_earned
+  title       String
+  description String
+  courseId    String?
+  courseName  String?
+  metadata    Json? // Additional activity metadata
+  timestamp   DateTime @default(now())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, timestamp])
+  @@map("dashboard_activities")
+}
+
+model CourseRecommendation {
+  id               String    @id @default(cuid())
+  courseId         String
+  relevanceScore   Float // 0-100
+  reason           String
+  matchedInterests String[]
+  matchedSkills    String[]
+  dismissedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId, dismissedAt])
+  @@map("course_recommendations")
+}
+
+model DashboardPreferences {
+  id              String   @id @default(cuid())
+  widgetOrder     String[] // Array of widget IDs in order
+  visibleSections Json     @default("{}") // Record of section visibility
+  customSettings  Json     @default("{}") // Additional custom settings
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("dashboard_preferences")
+}
+
 // Remove old profile models - replaced by unified UserProfile
 
 model Course {
@@ -268,90 +367,90 @@ model Course {
 }
 
 model Assignment {
-  id                String            @id @default(cuid())
-  title             String
-  description       String
-  instructions      String?           // Rich text instructions
-  dueDate           DateTime
-  maxFileSize       Int               @default(52428800) // 50MB in bytes
-  allowedFormats    String[]          // ["pdf", "doc", "docx", "mp4", "mov", "avi"]
-  maxFiles          Int               @default(5)
-  allowLateSubmission Boolean         @default(false)
-  latePenalty       Float?            // Percentage penalty per day
-  totalPoints       Int               @default(100)
-  isPublished       Boolean           @default(false)
-  attachments       Json?             // Instructor-provided files
-  submissionCount   Int               @default(0)
-  gradedCount       Int               @default(0)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
+  id                  String   @id @default(cuid())
+  title               String
+  description         String
+  instructions        String? // Rich text instructions
+  dueDate             DateTime
+  maxFileSize         Int      @default(52428800) // 50MB in bytes
+  allowedFormats      String[] // ["pdf", "doc", "docx", "mp4", "mov", "avi"]
+  maxFiles            Int      @default(5)
+  allowLateSubmission Boolean  @default(false)
+  latePenalty         Float? // Percentage penalty per day
+  totalPoints         Int      @default(100)
+  isPublished         Boolean  @default(false)
+  attachments         Json? // Instructor-provided files
+  submissionCount     Int      @default(0)
+  gradedCount         Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 
   // Relations
-  courseId          String
-  course            Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  instructorId      String
-  instructor        User              @relation("InstructorAssignments", fields: [instructorId], references: [id])
-  submissions       AssignmentSubmission[]
-  extensions        AssignmentExtension[]
-  reminders         AssignmentReminder[]
+  courseId     String
+  course       Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  instructorId String
+  instructor   User                   @relation("InstructorAssignments", fields: [instructorId], references: [id])
+  submissions  AssignmentSubmission[]
+  extensions   AssignmentExtension[]
+  reminders    AssignmentReminder[]
 
   @@map("assignments")
 }
 
 model AssignmentSubmission {
-  id                String            @id @default(cuid())
-  files             Json              // Array of file metadata
-  submissionText    String?           // Optional text submission
-  submittedAt       DateTime          @default(now())
-  isLate            Boolean           @default(false)
-  daysLate          Int               @default(0)
-  status            SubmissionStatus  @default(SUBMITTED)
+  id                String           @id @default(cuid())
+  files             Json // Array of file metadata
+  submissionText    String? // Optional text submission
+  submittedAt       DateTime         @default(now())
+  isLate            Boolean          @default(false)
+  daysLate          Int              @default(0)
+  status            SubmissionStatus @default(SUBMITTED)
   grade             Float?
   feedback          String?
   gradedAt          DateTime?
-  gradedBy          String?           // Instructor ID
-  originalScore     Float?            // Before late penalty
-  finalScore        Float?            // After late penalty
-  resubmissionCount Int               @default(0)
+  gradedBy          String? // Instructor ID
+  originalScore     Float? // Before late penalty
+  finalScore        Float? // After late penalty
+  resubmissionCount Int              @default(0)
   lastResubmittedAt DateTime?
 
   // Relations
-  assignmentId      String
-  assignment        Assignment        @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  studentId         String
-  student           User              @relation("StudentSubmissions", fields: [studentId], references: [id])
-  gradingHistory    GradingHistory[]
+  assignmentId   String
+  assignment     Assignment       @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        User             @relation("StudentSubmissions", fields: [studentId], references: [id])
+  gradingHistory GradingHistory[]
 
   @@unique([assignmentId, studentId])
   @@map("assignment_submissions")
 }
 
 model AssignmentExtension {
-  id                String            @id @default(cuid())
-  newDueDate        DateTime
-  reason            String
-  grantedAt         DateTime          @default(now())
-  grantedBy         String            // Instructor ID
+  id         String   @id @default(cuid())
+  newDueDate DateTime
+  reason     String
+  grantedAt  DateTime @default(now())
+  grantedBy  String // Instructor ID
 
   // Relations
-  assignmentId      String
-  assignment        Assignment        @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
-  studentId         String
-  student           User              @relation("AssignmentExtensions", fields: [studentId], references: [id])
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User       @relation("AssignmentExtensions", fields: [studentId], references: [id])
 
   @@unique([assignmentId, studentId])
   @@map("assignment_extensions")
 }
 
 model GradingHistory {
-  id               String    @id @default(cuid())
+  id               String   @id @default(cuid())
   submissionId     String
   previousGrade    Float?
   newGrade         Float
   previousFeedback String?
   newFeedback      String?
   reason           String?
-  gradedAt         DateTime  @default(now())
+  gradedAt         DateTime @default(now())
 
   // Relations
   submission AssignmentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
@@ -362,13 +461,13 @@ model GradingHistory {
 }
 
 model AssignmentReminder {
-  id           String                @id @default(cuid())
+  id           String                 @id @default(cuid())
   assignmentId String
   reminderType AssignmentReminderType
   scheduledFor DateTime
-  processed    Boolean               @default(false)
-  createdAt    DateTime              @default(now())
-  updatedAt    DateTime              @updatedAt
+  processed    Boolean                @default(false)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
 
   // Relations
   assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)

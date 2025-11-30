@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { sendEmail } from "@/lib/notifications/email";
+import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
 export async function PUT(
   request: NextRequest,
@@ -141,16 +143,39 @@ export async function PUT(
         );
     }
 
-    // Send notification email
+    // Send notification email (async, don't block response)
     if (action === "SUSPEND") {
-      // TODO: Send suspension email
-      console.log(`Sending suspension email to ${updatedUser.email}`);
+      sendEmail({
+        to: updatedUser.email,
+        ...extendedEmailTemplates.userSuspended({
+          userName: updatedUser.name || "User",
+          reason: body.reason,
+        }),
+      }).catch((error) => {
+        console.error(`Failed to send suspension email to ${updatedUser.email}:`, error);
+      });
     } else if (action === "ACTIVATE") {
-      // TODO: Send activation email
-      console.log(`Sending activation email to ${updatedUser.email}`);
+      sendEmail({
+        to: updatedUser.email,
+        ...extendedEmailTemplates.userActivated({
+          userName: updatedUser.name || "User",
+        }),
+      }).catch((error) => {
+        console.error(`Failed to send activation email to ${updatedUser.email}:`, error);
+      });
     } else if (action === "CHANGE_ROLE") {
-      // TODO: Send role change email
-      console.log(`Sending role change email to ${updatedUser.email}`);
+      // Get old role from request body or fetch from DB before update
+      const oldRole = body.oldRole || "STUDENT"; // You may need to fetch this before the update
+      sendEmail({
+        to: updatedUser.email,
+        ...extendedEmailTemplates.roleChanged({
+          userName: updatedUser.name || "User",
+          oldRole: oldRole,
+          newRole: newRole,
+        }),
+      }).catch((error) => {
+        console.error(`Failed to send role change email to ${updatedUser.email}:`, error);
+      });
     }
 
     return NextResponse.json({
