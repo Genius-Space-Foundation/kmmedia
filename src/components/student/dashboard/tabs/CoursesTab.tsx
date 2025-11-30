@@ -51,11 +51,11 @@ export default function CoursesTab({
   });
 
   return (
-    <Card className="shadow-lg border-0 rounded-xl bg-white">
+    <Card className="shadow-sm border border-neutral-200 rounded-xl bg-white">
       <CardHeader className="pb-6">
         <div className="flex items-center space-x-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-            <span className="text-white text-lg">🎯</span>
+          <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center">
+            <span className="text-brand-primary text-lg">🎯</span>
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-gray-900">
@@ -133,17 +133,17 @@ export default function CoursesTab({
             filteredCourses.map((course) => (
               <div
                 key={course.id}
-                className="bg-gradient-to-br from-gray-50 to-blue-50 border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 group"
+                className="bg-white border border-neutral-200 rounded-xl p-6 hover:shadow-md hover:border-brand-primary transition-all duration-300 group"
               >
                 <div className="space-y-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-2">
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                        <span className="px-2 py-1 bg-brand-primary/10 text-brand-primary text-xs font-semibold rounded-full">
                           {course.category}
                         </span>
                       </div>
-                      <h3 className="font-bold text-xl text-gray-900 group-hover:text-blue-600 transition-colors">
+                      <h3 className="font-bold text-xl text-neutral-900 group-hover:text-brand-primary transition-colors">
                         {course.title}
                       </h3>
                       <p className="text-gray-600 text-sm mb-3 line-clamp-2">

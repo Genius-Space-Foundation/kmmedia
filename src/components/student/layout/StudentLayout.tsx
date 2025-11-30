@@ -80,18 +80,16 @@ export default function StudentLayout({
 
   const navigationItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard, badge: null },
-    { id: "learning", label: "My Learning", icon: BookOpen, badge: null },
-    { id: "courses", label: "Course Catalog", icon: Target, badge: null },
-    { id: "deadlines", label: "Deadlines", icon: Calendar, badge: null },
-    { id: "achievements", label: "Achievements", icon: Award, badge: null },
-    {
-      id: "recommendations",
-      label: "Recommendations",
-      icon: Target,
-      badge: null,
-    },
-    { id: "analytics", label: "Analytics", icon: LayoutDashboard, badge: null },
+    { id: "courses", label: "Courses", icon: BookOpen, badge: null },
     { id: "assessments", label: "Assessments", icon: FileText, badge: null },
+    { id: "achievements", label: "Achievements", icon: Award, badge: null },
+    // {
+    //   id: "recommendations",
+    //   label: "Recommendations",
+    //   icon: Target,
+    //   badge: null,
+    // },
+    // { id: "analytics", label: "Analytics", icon: LayoutDashboard, badge: null },
     { id: "payments", label: "Payments", icon: CreditCard, badge: null },
     {
       id: "notifications",
@@ -104,7 +102,7 @@ export default function StudentLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 flex">
+    <div className="min-h-screen bg-neutral-50 flex">
       {/* Modern Sidebar */}
       <ModernSidebar
         isOpen={sidebarOpen}

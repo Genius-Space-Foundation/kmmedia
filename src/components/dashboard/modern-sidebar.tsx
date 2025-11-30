@@ -45,10 +45,12 @@ export function ModernSidebar({
       <div className="h-20 flex items-center justify-between px-6 border-b border-gray-200">
         {isOpen && (
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-sm">
-                {brandInitials}
-              </span>
+            <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center overflow-hidden">
+              <img 
+                src="/images/logo.jpeg" 
+                alt={brandName} 
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
               <h2 className="text-lg font-black text-gray-900">{brandName}</h2>
@@ -83,8 +85,8 @@ export function ModernSidebar({
               className={cn(
                 "w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all group font-medium",
                 isActive
-                  ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105"
-                  : "text-gray-700 hover:bg-gray-100"
+                  ? "bg-brand-primary text-white shadow-sm"
+                  : "text-neutral-700 hover:bg-neutral-100"
               )}
             >
               <Icon
