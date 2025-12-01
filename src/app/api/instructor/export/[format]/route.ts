@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const exportSchema = z.object({
   dateRange: z.string().optional(),
   metrics: z.array(z.string()).optional(),
@@ -9,12 +13,12 @@ const exportSchema = z.object({
 
 async function exportData(
   req: AuthenticatedRequest,
-  { params }: { params: { format: string } }
+  { params }: { params: Promise<{ format: string }> }
 ) {
   try {
     const body = await req.json();
     const { dateRange = "30d", metrics = [] } = exportSchema.parse(body);
-    const format = params.format;
+    const format = (await params).format;
 
     if (!["pdf", "excel", "csv"].includes(format)) {
       return NextResponse.json(
@@ -122,3 +126,10 @@ Metrics included: ${metrics.join(", ")}`;
 
 export const POST = withInstructorAuth(exportData);
 
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405 }
+  );
+}

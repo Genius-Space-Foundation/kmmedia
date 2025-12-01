@@ -3,6 +3,10 @@ import { db } from "@/lib/db";
 import { withInstructorAuth } from "@/lib/middleware";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Validation schemas
 const recordAttendanceSchema = z.object({
   lessonId: z.string().min(1, "Lesson ID is required"),

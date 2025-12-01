@@ -4,9 +4,13 @@ import { authOptions } from "@/lib/auth-config";
 import { GradingService } from "@/lib/assignments/grading-service";
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,7 +22,7 @@ export async function POST(
       );
     }
 
-    const submissionId = params.id;
+    const submissionId = (await params).id;
     const body = await request.json();
 
     // Use the GradingService to handle validation and grading
@@ -46,7 +50,7 @@ export async function POST(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -58,7 +62,7 @@ export async function GET(
       );
     }
 
-    const submissionId = params.id;
+    const submissionId = (await params).id;
 
     // Get submission with all details
     const submission = await prisma.assignmentSubmission.findUnique({

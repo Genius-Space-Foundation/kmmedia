@@ -6,15 +6,19 @@ import { z } from "zod";
 import { sendEmail } from "@/lib/notifications/email";
 import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const refundSchema = z.object({
   reason: z.string().min(10, "Reason must be at least 10 characters"),
   amount: z.number().positive().optional(),
 });
 
 // Process refund (Admin only)
-async function processRefund(req: AuthenticatedRequest, { params }: { params: { id: string } }) {
+async function processRefund(req: AuthenticatedRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id  } = await params;
     const body = await req.json();
     const { reason, amount } = refundSchema.parse(body);
     const adminId = req.user!.userId;
@@ -177,3 +181,10 @@ async function processRefund(req: AuthenticatedRequest, { params }: { params: { 
 }
 
 export const POST = withAdminAuth(processRefund);
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405 }
+  );
+}

@@ -4,8 +4,16 @@ import { prisma } from "@/lib/db";
 import { CourseStatus } from "@prisma/client";
 import { z } from "zod";
 
-// Get all courses for admin with enhanced filtering
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 async function getAdminCourses(req: NextRequest) {
+  // Skip during build
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return NextResponse.json({ building: true });
+  }
+
   try {
     const { searchParams } = new URL(req.url);
     const status = searchParams.get("status");
@@ -84,5 +92,5 @@ async function getAdminCourses(req: NextRequest) {
   }
 }
 
-// Temporarily bypass auth for testing
-export const GET = getAdminCourses;
+export const GET = withAdminAuth(getAdminCourses);
+

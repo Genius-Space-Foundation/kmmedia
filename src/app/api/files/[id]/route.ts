@@ -3,6 +3,10 @@ import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { deleteCourseMaterial, getFileById } from "@/lib/storage/file-manager";
 import { fileService } from "@/lib/assignments/file-service";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Get file details
 async function getFile(req: AuthenticatedRequest) {
   try {

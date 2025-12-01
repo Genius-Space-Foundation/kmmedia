@@ -3,12 +3,16 @@ import { prisma } from "@/lib/db";
 import { sendEmail } from "@/lib/notifications/email";
 import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = params.id;
+    const userId = (await params).id;
     const body = await request.json();
     const { action, newRole } = body;
 
@@ -194,10 +198,10 @@ export async function PUT(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const userId = params.id;
+    const userId = (await params).id;
 
     const user = await prisma.user.findUnique({
       where: { id: userId },

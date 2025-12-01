@@ -3,6 +3,10 @@ import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { AssignmentService } from "@/lib/assignments/assignment-service";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 interface RouteParams {
   params: {
     id: string;
@@ -21,7 +25,7 @@ async function grantExtension(
   { params }: RouteParams
 ) {
   try {
-    const assignmentId = params.id;
+    const assignmentId = (await params).id;
     const instructorId = req.user!.userId;
     const body = await req.json();
 
@@ -66,3 +70,10 @@ async function grantExtension(
 }
 
 export const POST = withInstructorAuth(grantExtension);
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405 }
+  );
+}

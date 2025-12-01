@@ -2,14 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { withInstructorAuth } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Toggle lesson publish status
 async function togglePublish(
   req: NextRequest,
-  { params }: { params: { lessonId: string } }
+  { params }: { params: Promise<{ lessonId: string }> }
 ) {
   try {
     const instructorId = req.user!.userId;
-    const { lessonId } = params;
+    const { lessonId  } = await params;
     const { isPublished } = await req.json();
 
     // Verify instructor owns the lesson
@@ -51,3 +55,10 @@ async function togglePublish(
 }
 
 export const PATCH = withInstructorAuth(togglePublish);
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405 }
+  );
+}

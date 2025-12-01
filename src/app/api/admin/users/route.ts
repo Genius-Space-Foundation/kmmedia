@@ -6,6 +6,10 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { sendEmail, emailTemplates } from "@/lib/notifications/email";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const createUserSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),

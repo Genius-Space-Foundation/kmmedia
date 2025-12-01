@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 async function getReports(req: AuthenticatedRequest) {
   try {
     const instructorId = req.user.id;

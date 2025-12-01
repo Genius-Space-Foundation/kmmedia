@@ -2,14 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { withInstructorAuth } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Get assessments for a course
 async function getAssessments(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const instructorId = req.user!.userId;
-    const { id: courseId } = params;
+    const { id: courseId  } = await params;
 
     // Verify instructor owns the course
     const course = await prisma.course.findFirst({
@@ -64,11 +68,11 @@ async function getAssessments(
 // Create a new assessment
 async function createAssessment(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const instructorId = req.user!.userId;
-    const { id: courseId } = params;
+    const { id: courseId  } = await params;
     const body = await req.json();
 
     // Verify instructor owns the course

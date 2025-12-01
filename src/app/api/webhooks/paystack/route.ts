@@ -14,6 +14,10 @@ import crypto from "crypto";
 import { sendEmail } from "@/lib/notifications/email";
 import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || "";
 
 // Verify Paystack webhook signature

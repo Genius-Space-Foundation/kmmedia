@@ -3,6 +3,10 @@ import { withStudentAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { getStudentSubmissions } from "@/lib/assessments/assessment-manager";
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Get student's assessment submissions
 async function getStudentSubmissionsHandler(req: AuthenticatedRequest) {
   try {

@@ -4,6 +4,10 @@ import { prisma } from "@/lib/db";
 import { TicketStatus, TicketPriority } from "@prisma/client";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const createTicketSchema = z.object({
   subject: z.string().min(1, "Subject is required"),
   message: z.string().min(10, "Message must be at least 10 characters"),

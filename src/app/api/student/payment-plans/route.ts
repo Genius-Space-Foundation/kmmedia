@@ -3,6 +3,10 @@ import { prisma } from "@/lib/db";
 import { smsService } from "@/lib/notifications/sms";
 import { withStudentAuth } from "@/lib/middleware";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export const GET = withStudentAuth(async (request: NextRequest) => {
   try {
     const userId = request.user!.id;

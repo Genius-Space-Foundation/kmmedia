@@ -10,6 +10,10 @@ import { z } from "zod";
 import { sendEmail } from "@/lib/notifications/email";
 import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const verifyPaymentSchema = z.object({
   reference: z.string().min(1, "Reference is required"),
 });

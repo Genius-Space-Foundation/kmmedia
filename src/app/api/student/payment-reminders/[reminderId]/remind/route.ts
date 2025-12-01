@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { smsService } from "@/lib/notifications/sms";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export async function POST(
   request: NextRequest,
-  { params }: { params: { reminderId: string } }
+  { params }: { params: Promise<{ reminderId: string }> }
 ) {
   try {
-    const { reminderId } = params;
+    const { reminderId  } = await params;
     const body = await request.json();
     const { userId, reminderMessage } = body;
 
@@ -161,4 +165,11 @@ export async function POST(
       { status: 500 }
     );
   }
+}
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405 }
+  );
 }

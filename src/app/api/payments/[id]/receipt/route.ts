@@ -3,6 +3,10 @@ import { db } from "@/lib/db";
 import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { generateReceiptForPayment } from "@/lib/payments/receipt-generator";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 /**
  * GET /api/payments/[id]/receipt
  * Generate and stream payment receipt PDF

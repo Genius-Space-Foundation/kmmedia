@@ -2,14 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { withInstructorAuth } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Get student progress for a course
 async function getStudentProgress(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const instructorId = req.user!.userId;
-    const { id: courseId } = params;
+    const { id: courseId  } = await params;
 
     // Verify instructor owns the course
     const course = await prisma.course.findFirst({

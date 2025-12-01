@@ -2,7 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { withAdminAuth } from "@/lib/middleware/auth";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 async function bulkHandler(request: NextRequest) {
+  // Skip during build
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return NextResponse.json({ building: true });
+  }
+
   try {
     const body = await request.json();
     const { courseIds, action, comments } = body;
@@ -50,7 +59,6 @@ async function bulkHandler(request: NextRequest) {
         break;
 
       case "PUBLISH":
-        // Only publish approved courses
         result = await prisma.course.updateMany({
           where: {
             id: { in: courseIds },
@@ -91,7 +99,6 @@ async function bulkHandler(request: NextRequest) {
         );
     }
 
-    // Send notifications to instructors (TODO: Implement)
     console.log(`Bulk ${action}: ${result.count} courses updated`);
 
     return NextResponse.json({
@@ -109,3 +116,10 @@ async function bulkHandler(request: NextRequest) {
 }
 
 export const PUT = withAdminAuth(bulkHandler);
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405 }
+  );
+}

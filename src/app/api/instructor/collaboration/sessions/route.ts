@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const sessionSchema = z.object({
   title: z.string().min(1, "Session title is required"),
   type: z.enum([

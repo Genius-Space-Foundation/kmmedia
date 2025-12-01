@@ -4,6 +4,10 @@ import { prisma } from "@/lib/db";
 import { LessonType } from "@prisma/client";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const createLessonSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),
@@ -16,10 +20,10 @@ const createLessonSchema = z.object({
 // Create lesson (Instructor only)
 async function createLesson(
   req: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const courseId = params.id;
+    const courseId = (await params).id;
     const instructorId = req.user!.userId;
     const body = await req.json();
     const lessonData = createLessonSchema.parse(body);
@@ -98,10 +102,10 @@ async function createLesson(
 // Get course lessons (Instructor only)
 async function getCourseLessons(
   req: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const courseId = params.id;
+    const courseId = (await params).id;
     const instructorId = req.user!.userId;
 
     // Verify course ownership

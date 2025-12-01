@@ -4,9 +4,13 @@ import { authOptions } from "@/lib/auth-config";
 import { submissionService } from "@/lib/assignments/submission-service";
 import { AssignmentService } from "@/lib/assignments/assignment-service";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -18,7 +22,7 @@ export async function GET(
       );
     }
 
-    const assignmentId = params.id;
+    const assignmentId = (await params).id;
     const { searchParams } = new URL(request.url);
 
     // Query parameters for filtering and pagination

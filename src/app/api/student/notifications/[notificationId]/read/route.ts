@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { withStudentAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export async function PUT(
   request: AuthenticatedRequest,
   { params }: { params: Promise<{ notificationId: string }> }
@@ -55,4 +59,11 @@ export async function PUT(
       { status: 500 }
     );
   }
+}
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405 }
+  );
 }

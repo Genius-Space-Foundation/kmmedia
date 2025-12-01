@@ -5,12 +5,16 @@ import { CourseStatus } from "@prisma/client";
 import { sendEmail } from "@/lib/notifications/email";
 import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 async function submitCourse(
   req: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const courseId = params.id;
+    const courseId = (await params).id;
     const instructorId = req.user!.userId;
 
     // 1. Check if course exists and belongs to instructor
@@ -105,3 +109,10 @@ async function submitCourse(
 }
 
 export const POST = withInstructorAuth(submitCourse);
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405 }
+  );
+}

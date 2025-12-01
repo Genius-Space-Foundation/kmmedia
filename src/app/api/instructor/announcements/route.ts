@@ -3,6 +3,10 @@ import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const createAnnouncementSchema = z.object({
   title: z.string().min(1, "Title is required"),
   content: z.string().min(1, "Content is required"),

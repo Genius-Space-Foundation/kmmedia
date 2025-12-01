@@ -7,6 +7,10 @@ import {
 } from "@/lib/assessments/assessment-manager";
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Get assessment details
 async function getAssessmentHandler(req: AuthenticatedRequest) {
   try {

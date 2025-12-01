@@ -3,6 +3,10 @@ import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const saveDraftSchema = z.object({
   courseId: z.string().min(1, "Course ID is required"),
   currentStep: z.number().min(1).max(10).default(1),

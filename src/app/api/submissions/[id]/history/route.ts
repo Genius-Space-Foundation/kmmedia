@@ -3,9 +3,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { GradingService } from "@/lib/assignments/grading-service";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,7 +21,7 @@ export async function GET(
       );
     }
 
-    const submissionId = params.id;
+    const submissionId = (await params).id;
 
     // Get grading history
     const history = await GradingService.getGradingHistory(submissionId);

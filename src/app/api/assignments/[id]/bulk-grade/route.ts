@@ -4,6 +4,10 @@ import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Validation schema for bulk grading
 const bulkGradeSchema = z.object({
   grades: z
@@ -20,7 +24,7 @@ const bulkGradeSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -32,7 +36,7 @@ export async function POST(
       );
     }
 
-    const assignmentId = params.id;
+    const assignmentId = (await params).id;
     const body = await request.json();
 
     // Validate input
@@ -226,7 +230,7 @@ export async function POST(
 // Get bulk grading template/export
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -238,7 +242,7 @@ export async function GET(
       );
     }
 
-    const assignmentId = params.id;
+    const assignmentId = (await params).id;
     const { searchParams } = new URL(request.url);
     const format = searchParams.get("format") || "json"; // json or csv
 

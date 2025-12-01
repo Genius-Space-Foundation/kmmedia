@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { withStudentAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export async function PUT(
   request: AuthenticatedRequest,
   { params }: { params: { userId: string } }

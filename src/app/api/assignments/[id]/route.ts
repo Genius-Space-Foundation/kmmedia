@@ -8,6 +8,10 @@ import { AssignmentService } from "@/lib/assignments/assignment-service";
 import { UserRole } from "@prisma/client";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 interface RouteParams {
   params: {
     id: string;
@@ -20,7 +24,7 @@ async function getAssignment(
   { params }: RouteParams
 ) {
   try {
-    const assignmentId = params.id;
+    const assignmentId = (await params).id;
     const userId = req.user!.userId;
     const userRole = req.user!.role;
 
@@ -75,7 +79,7 @@ async function updateAssignment(
   { params }: RouteParams
 ) {
   try {
-    const assignmentId = params.id;
+    const assignmentId = (await params).id;
     const instructorId = req.user!.userId;
     const body = await req.json();
 
@@ -126,7 +130,7 @@ async function deleteAssignment(
   { params }: RouteParams
 ) {
   try {
-    const assignmentId = params.id;
+    const assignmentId = (await params).id;
     const instructorId = req.user!.userId;
 
     await AssignmentService.deleteAssignment(assignmentId, instructorId);

@@ -4,6 +4,10 @@ import { prisma } from "@/lib/db";
 import { CourseStatus, CourseMode } from "@prisma/client";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const createCourseSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().optional(),

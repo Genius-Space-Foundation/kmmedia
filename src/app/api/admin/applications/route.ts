@@ -3,6 +3,10 @@ import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { ApplicationStatus } from "@prisma/client";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Get all applications for admin with enhanced filtering
 async function getAdminApplications(req: NextRequest) {
   try {
@@ -91,5 +95,5 @@ async function getAdminApplications(req: NextRequest) {
   }
 }
 
-// Temporarily bypass auth for testing
-export const GET = getAdminApplications;
+export const GET = withAdminAuth(getAdminApplications);
+

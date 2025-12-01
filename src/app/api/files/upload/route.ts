@@ -9,6 +9,10 @@ import {
 import { createAssignmentValidator } from "@/lib/assignments/file-validator";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Request validation schema
 const uploadRequestSchema = z.object({
   assignmentId: z.string().optional(),

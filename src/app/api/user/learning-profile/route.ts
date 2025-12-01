@@ -4,6 +4,10 @@ import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/db";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const learningProfileSchema = z.object({
   interests: z.array(z.string()).optional(),
   skillLevel: z.enum(["beginner", "intermediate", "advanced"]).optional(),

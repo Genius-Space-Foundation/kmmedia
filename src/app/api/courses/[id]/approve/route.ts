@@ -4,6 +4,10 @@ import { prisma } from "@/lib/db";
 import { CourseStatus } from "@prisma/client";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const approveCourseSchema = z.object({
   action: z.enum(["approve", "reject"]),
   notes: z.string().optional(),
@@ -11,7 +15,7 @@ const approveCourseSchema = z.object({
 
 async function approveCourse(
   req: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     console.log("Course approval request:", {
@@ -20,7 +24,7 @@ async function approveCourse(
     });
     const body = await req.json();
     const { action, notes } = approveCourseSchema.parse(body);
-    const courseId = params.id;
+    const courseId = (await params).id;
     const adminId = req.user!.userId;
 
     // Check if course exists
@@ -90,3 +94,10 @@ async function approveCourse(
 }
 
 export const POST = withAdminAuth(approveCourse);
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405 }
+  );
+}

@@ -4,6 +4,10 @@ import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const updatePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, "Current password is required"),

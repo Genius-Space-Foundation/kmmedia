@@ -8,13 +8,17 @@ import { prisma } from "@/lib/db";
 import { ApplicationStatus } from "@prisma/client";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Get single application
 async function getApplication(
   req: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const applicationId = params.id;
+    const applicationId = (await params).id;
     const userId = req.user!.userId;
     const userRole = req.user!.role;
 
@@ -89,11 +93,11 @@ async function getApplication(
 // Update application (Admin only - for approval/rejection)
 async function updateApplication(
   req: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const body = await req.json();
-    const applicationId = params.id;
+    const applicationId = (await params).id;
     const adminId = req.user!.userId;
 
     const updateSchema = z.object({

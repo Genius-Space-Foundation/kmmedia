@@ -2,14 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { withInstructorAuth } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Update a grade
 async function updateGrade(
   req: NextRequest,
-  { params }: { params: { gradeId: string } }
+  { params }: { params: Promise<{ gradeId: string }> }
 ) {
   try {
     const instructorId = req.user!.userId;
-    const { gradeId } = params;
+    const { gradeId  } = await params;
     const body = await req.json();
 
     // Verify instructor owns the grade
@@ -58,11 +62,11 @@ async function updateGrade(
 // Delete a grade
 async function deleteGrade(
   req: NextRequest,
-  { params }: { params: { gradeId: string } }
+  { params }: { params: Promise<{ gradeId: string }> }
 ) {
   try {
     const instructorId = req.user!.userId;
-    const { gradeId } = params;
+    const { gradeId  } = await params;
 
     // Verify instructor owns the grade
     const grade = await prisma.grade.findFirst({
@@ -100,3 +104,10 @@ async function deleteGrade(
 
 export const PUT = withInstructorAuth(updateGrade);
 export const DELETE = withInstructorAuth(deleteGrade);
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405 }
+  );
+}

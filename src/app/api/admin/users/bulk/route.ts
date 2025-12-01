@@ -4,6 +4,10 @@ import { prisma } from "@/lib/db";
 import { UserStatus } from "@prisma/client";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const bulkUserActionSchema = z.object({
   action: z.enum(["ACTIVATE", "SUSPEND", "DELETE", "SEND_EMAIL"]),
   userIds: z.array(z.string()).min(1, "At least one user ID is required"),

@@ -10,6 +10,10 @@ import { prisma } from "@/lib/db";
 import { PaymentType } from "@prisma/client";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const initializePaymentSchema = z.object({
   type: z.enum(["APPLICATION_FEE", "TUITION", "INSTALLMENT"]),
   courseId: z.string().optional(),

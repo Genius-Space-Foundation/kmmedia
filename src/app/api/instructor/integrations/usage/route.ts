@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 async function getIntegrationUsage(req: AuthenticatedRequest) {
   try {
     const instructorId = req.user!.userId;

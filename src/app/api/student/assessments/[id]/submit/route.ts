@@ -3,6 +3,10 @@ import { withStudentAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { submitAssessment } from "@/lib/assessments/assessment-manager";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const submitAssessmentSchema = z.object({
   answers: z
     .array(
@@ -67,3 +71,10 @@ async function submitAssessmentHandler(req: AuthenticatedRequest) {
 }
 
 export const POST = withStudentAuth(submitAssessmentHandler);
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405 }
+  );
+}

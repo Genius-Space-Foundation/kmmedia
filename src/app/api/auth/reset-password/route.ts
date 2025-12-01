@@ -3,6 +3,10 @@ import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
 import { z } from "zod";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const resetPasswordSchema = z
   .object({
     token: z.string().min(1, "Token is required"),

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DeadlineReminderService } from "@/lib/notifications/deadline-reminder-service";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // POST /api/reminders/process - Process pending reminders (for cron job)
 export async function POST(request: NextRequest) {
   try {

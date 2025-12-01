@@ -3,13 +3,17 @@ import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { AssignmentService } from "@/lib/assignments/assignment-service";
 import { handleAssignmentError } from "@/lib/assignments/assignment-errors";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Get assignments for a course (for students)
 async function getCourseAssignments(
   req: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const courseId = params.id;
+    const courseId = (await params).id;
     const userId = req.user!.userId;
     const userRole = req.user!.role;
 

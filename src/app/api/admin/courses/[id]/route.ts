@@ -3,16 +3,28 @@ import { prisma } from "@/lib/db";
 import { sendEmail, emailTemplates } from "@/lib/notifications/email";
 import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
+// Helper to detect build-time execution
+function isBuildTime() {
+  return process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL;
+}
+
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  if (isBuildTime()) {
+    return NextResponse.json({ success: true, building: true });
+  }
+
   try {
-    const courseId = params.id;
+    const { id: courseId } = await params;
     const body = await request.json();
     const { action, comments, updatedAt } = body;
 
-    // Validate action
     const validActions = ["APPROVE", "REJECT", "PUBLISH", "UNPUBLISH", "UPDATE_INSTALLMENTS"];
     if (!validActions.includes(action)) {
       return NextResponse.json(
@@ -82,7 +94,7 @@ export async function PUT(
         updatedCourse = await prisma.course.update({
           where: {
             id: courseId,
-            status: "APPROVED", // Only allow publishing approved courses
+            status: "APPROVED",
           },
           data: {
             status: "PUBLISHED",
@@ -121,7 +133,7 @@ export async function PUT(
         updatedCourse = await prisma.course.update({
           where: { id: courseId },
           data: {
-            status: "APPROVED", // Move back to approved status
+            status: "APPROVED",
             updatedAt: updatedAt ? new Date(updatedAt) : new Date(),
           },
           include: {
@@ -148,7 +160,6 @@ export async function PUT(
       case "UPDATE_INSTALLMENTS":
         const { installmentEnabled, installmentPlan } = body;
         
-        // Basic validation for installment plan
         if (installmentEnabled && !installmentPlan) {
            return NextResponse.json(
             { success: false, message: "Installment plan is required when enabled" },
@@ -189,7 +200,6 @@ export async function PUT(
         );
     }
 
-    // Send notification email to instructor (async, don't block response)
     if (action === "APPROVE") {
       sendEmail({
         to: updatedCourse.instructor.email,
@@ -249,10 +259,14 @@ export async function PUT(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  if (isBuildTime()) {
+    return NextResponse.json({ success: true, building: true });
+  }
+
   try {
-    const courseId = params.id;
+    const { id: courseId } = await params;
 
     const course = await prisma.course.findUnique({
       where: { id: courseId },
@@ -271,6 +285,7 @@ export async function GET(
           select: {
             applications: true,
             enrollments: true,
+            lessons: true,
           },
         },
         lessons: {

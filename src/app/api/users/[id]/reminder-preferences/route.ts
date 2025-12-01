@@ -3,10 +3,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { DeadlineReminderService } from "@/lib/notifications/deadline-reminder-service";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // GET /api/users/[id]/reminder-preferences - Get user reminder preferences
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +18,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = params.id;
+    const userId = (await params).id;
 
     // Users can only access their own preferences, unless they're admin
     if (session.user.id !== userId && session.user.role !== "ADMIN") {
@@ -37,7 +41,7 @@ export async function GET(
 // PUT /api/users/[id]/reminder-preferences - Update user reminder preferences
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -45,7 +49,7 @@ export async function PUT(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = params.id;
+    const userId = (await params).id;
 
     // Users can only update their own preferences, unless they're admin
     if (session.user.id !== userId && session.user.role !== "ADMIN") {

@@ -3,6 +3,10 @@ import { withInstructorAuth } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { uploadFile } from "@/lib/storage/cloudinary";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Create a new course
 async function createCourse(req: NextRequest) {
   try {

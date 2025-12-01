@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { uploadCourseMaterial } from "@/lib/storage/file-manager";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 async function uploadFile(req: AuthenticatedRequest) {
   try {
     const formData = await req.formData();

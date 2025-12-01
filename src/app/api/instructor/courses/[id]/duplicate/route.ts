@@ -3,13 +3,17 @@ import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { CourseStatus } from "@prisma/client";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Duplicate course (Instructor only)
 async function duplicateCourse(
   req: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id  } = await params;
     const instructorId = req.user!.userId;
 
     // Get the original course
@@ -104,3 +108,10 @@ async function duplicateCourse(
 
 export const POST = withInstructorAuth(duplicateCourse);
 
+
+export async function GET() {
+  return NextResponse.json(
+    { success: false, message: "Method not allowed" },
+    { status: 405 }
+  );
+}

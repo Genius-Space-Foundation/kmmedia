@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Get admin dashboard statistics
 async function getAdminStats(req: AuthenticatedRequest) {
   try {

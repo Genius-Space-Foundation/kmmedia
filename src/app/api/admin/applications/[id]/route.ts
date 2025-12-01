@@ -5,16 +5,24 @@ import {
   notifyApplicationRejected,
 } from "@/lib/notifications/notification-triggers";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  // Skip during build
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return NextResponse.json({ building: true });
+  }
+
   try {
-    const applicationId = params.id;
+    const applicationId = (await params).id;
     const body = await request.json();
     const { status, comments, reviewedAt } = body;
 
-    // Validate status
     const validStatuses = ["PENDING", "APPROVED", "REJECTED", "UNDER_REVIEW"];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
@@ -23,7 +31,6 @@ export async function PUT(
       );
     }
 
-    // Update application
     const updatedApplication = await prisma.application.update({
       where: { id: applicationId },
       data: {
@@ -59,7 +66,6 @@ export async function PUT(
       },
     });
 
-    // Send notification to user
     if (status === "APPROVED") {
       await notifyApplicationApproved(applicationId).catch((error) =>
         console.error("Failed to send approval notification:", error)
@@ -86,10 +92,15 @@ export async function PUT(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  // Skip during build
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return NextResponse.json({ building: true });
+  }
+
   try {
-    const applicationId = params.id;
+    const applicationId = (await params).id;
 
     const application = await prisma.application.findUnique({
       where: { id: applicationId },

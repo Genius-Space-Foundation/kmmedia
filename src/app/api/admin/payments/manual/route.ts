@@ -7,6 +7,10 @@ import { z } from "zod";
 import { sendEmail } from "@/lib/notifications/email";
 import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 const manualPaymentSchema = z.object({
   userId: z.string().min(1, "User ID is required"),
   courseId: z.string().optional(),

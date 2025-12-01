@@ -3,6 +3,10 @@ import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { PaymentStatus, PaymentType } from "@prisma/client";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 // Get all payments for admin with enhanced filtering
 async function getAdminPayments(req: NextRequest) {
   try {
