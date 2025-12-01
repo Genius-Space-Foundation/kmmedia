@@ -5,38 +5,32 @@ export const dynamic = "force-dynamic";
 
 export default function RegisterPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background Image */}
-      <div className="absolute inset-0">
-        <img
-          src="/images/2.jpeg"
-          alt="KM Media Training Institute Register"
-          className="w-full h-full object-cover opacity-20"
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 to-blue-700/80"></div>
-      </div>
-
-      <div className="max-w-2xl w-full space-y-8 relative z-10">
+    <div className="min-h-screen bg-neutral-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl w-full space-y-8">
         {/* Logo and Brand Header */}
         <div className="text-center">
-          <div className="flex flex-col items-center justify-center space-y-6 mb-10">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-2xl">
-              <span className="text-2xl font-bold text-blue-600">KM</span>
+          <div className="flex flex-col items-center justify-center space-y-4 mb-8">
+            <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden">
+              <img
+                src="/images/logo.jpeg"
+                alt="KM Media Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
-            <div className="space-y-3">
-              <h1 className="text-4xl font-bold text-white">KM Media</h1>
-              <p className="text-blue-100 text-sm font-medium">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-bold text-neutral-900">KM Media</h1>
+              <p className="text-neutral-600 text-sm font-medium">
                 Training Institute
               </p>
             </div>
           </div>
 
           {/* Welcome Section */}
-          <div className="mb-10 bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 shadow-xl">
-            <div className="flex items-center justify-center mb-4">
-              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
+          <div className="mb-8 bg-white rounded-xl p-6 border border-neutral-200 shadow-sm">
+            <div className="flex items-center justify-center mb-3">
+              <div className="w-10 h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 text-white"
+                  className="w-5 h-5 text-brand-primary"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -50,10 +44,10 @@ export default function RegisterPage() {
                 </svg>
               </div>
             </div>
-            <h2 className="text-3xl font-bold text-white mb-4 text-center">
+            <h2 className="text-2xl font-bold text-neutral-900 mb-3 text-center">
               Start Your Journey
             </h2>
-            <p className="text-blue-100/90 leading-relaxed text-base text-center">
+            <p className="text-neutral-600 leading-relaxed text-sm text-center">
               Create your account to access world-class training and join a
               network of 10,000+ media professionals.
             </p>
@@ -65,11 +59,11 @@ export default function RegisterPage() {
 
         {/* Login Link */}
         <div className="text-center pt-6">
-          <div className="inline-flex items-center justify-center space-x-2 bg-white/10 backdrop-blur-sm px-6 py-3 rounded-xl border border-white/20">
-            <p className="text-blue-100/90 text-sm">Already have an account?</p>
+          <div className="inline-flex items-center justify-center space-x-2 bg-white px-6 py-3 rounded-xl border border-neutral-200 shadow-sm">
+            <p className="text-neutral-600 text-sm">Already have an account?</p>
             <a
               href="/auth/login"
-              className="font-bold text-white hover:text-blue-300 transition-colors"
+              className="font-semibold text-brand-primary hover:text-brand-secondary transition-colors"
             >
               Sign in here
             </a>
@@ -77,22 +71,30 @@ export default function RegisterPage() {
         </div>
 
         {/* Trust Badges */}
-        <div className="text-center pt-8">
-          <div className="flex flex-wrap items-center justify-center gap-6 text-blue-200/60">
+        <div className="text-center pt-6">
+          <div className="flex flex-wrap items-center justify-center gap-6 text-neutral-500">
             <div className="flex items-center space-x-2">
-              <span className="text-green-400">🆓</span>
+              <svg className="w-4 h-4 text-success" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
               <span className="text-xs font-medium">Free to Join</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-blue-400">✅</span>
+              <svg className="w-4 h-4 text-brand-primary" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
               <span className="text-xs font-medium">Verified Courses</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-purple-400">👨‍🏫</span>
+              <svg className="w-4 h-4 text-info" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z" />
+              </svg>
               <span className="text-xs font-medium">Expert Instructors</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-cyan-400">♾️</span>
+              <svg className="w-4 h-4 text-warning" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
               <span className="text-xs font-medium">Lifetime Access</span>
             </div>
           </div>

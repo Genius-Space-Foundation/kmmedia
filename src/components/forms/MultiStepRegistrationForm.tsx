@@ -335,7 +335,7 @@ export function MultiStepRegistrationForm() {
       case 4:
         return "bg-green-500";
       case 5:
-        return "bg-emerald-500";
+        return "bg-brand-primary";
       default:
         return "bg-slate-200";
     }
@@ -389,12 +389,12 @@ export function MultiStepRegistrationForm() {
                     id="name"
                     type="text"
                     placeholder="Enter your full name"
-                    className="h-12 pl-11 pr-4 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 rounded-xl transition-all duration-200 font-medium group-hover:border-gray-400"
+                    className="h-12 pl-11 pr-4 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/20 rounded-xl transition-all duration-200 font-medium group-hover:border-gray-400"
                     {...register("name")}
                   />
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
-                      className="w-5 h-5 text-gray-500 group-focus-within:text-emerald-500 transition-colors"
+                      className="w-5 h-5 text-gray-500 group-focus-within:text-brand-primary transition-colors"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -451,12 +451,12 @@ export function MultiStepRegistrationForm() {
                     id="email"
                     type="email"
                     placeholder="Enter your email address"
-                    className="h-12 pl-11 pr-4 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 rounded-xl transition-all duration-200 font-medium group-hover:border-gray-400"
+                    className="h-12 pl-11 pr-4 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/20 rounded-xl transition-all duration-200 font-medium group-hover:border-gray-400"
                     {...register("email")}
                   />
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
-                      className="w-5 h-5 text-gray-500 group-focus-within:text-emerald-500 transition-colors"
+                      className="w-5 h-5 text-gray-500 group-focus-within:text-brand-primary transition-colors"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -519,12 +519,12 @@ export function MultiStepRegistrationForm() {
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Create a strong password"
-                    className="h-12 pl-11 pr-12 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 rounded-xl transition-all duration-200 font-medium group-hover:border-gray-400"
+                    className="h-12 pl-11 pr-12 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/20 rounded-xl transition-all duration-200 font-medium group-hover:border-gray-400"
                     {...register("password")}
                   />
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
-                      className="w-5 h-5 text-gray-500 group-focus-within:text-emerald-500 transition-colors"
+                      className="w-5 h-5 text-gray-500 group-focus-within:text-brand-primary transition-colors"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -595,7 +595,7 @@ export function MultiStepRegistrationForm() {
                             ? "text-yellow-600"
                             : passwordStrength === 4
                             ? "text-green-600"
-                            : "text-emerald-600"
+                            : "text-brand-primary"
                         }`}
                       >
                         {getPasswordStrengthText()}
@@ -696,12 +696,12 @@ export function MultiStepRegistrationForm() {
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Re-enter your password"
-                    className="h-12 pl-11 pr-12 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 rounded-xl transition-all duration-200 font-medium group-hover:border-gray-400"
+                    className="h-12 pl-11 pr-12 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/20 rounded-xl transition-all duration-200 font-medium group-hover:border-gray-400"
                     {...register("confirmPassword")}
                   />
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
-                      className="w-5 h-5 text-gray-500 group-focus-within:text-emerald-500 transition-colors"
+                      className="w-5 h-5 text-gray-500 group-focus-within:text-brand-primary transition-colors"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -802,12 +802,12 @@ export function MultiStepRegistrationForm() {
                     id="phone"
                     type="tel"
                     placeholder="+1 (555) 000-0000"
-                    className="h-12 pl-11 pr-4 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 rounded-xl transition-all duration-200 font-medium group-hover:border-gray-400"
+                    className="h-12 pl-11 pr-4 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/20 rounded-xl transition-all duration-200 font-medium group-hover:border-gray-400"
                     {...register("phone")}
                   />
                   <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                     <svg
-                      className="w-5 h-5 text-gray-500 group-focus-within:text-emerald-500 transition-colors"
+                      className="w-5 h-5 text-gray-500 group-focus-within:text-brand-primary transition-colors"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -871,7 +871,7 @@ export function MultiStepRegistrationForm() {
                   }
                   defaultValue="STUDENT"
                 >
-                  <SelectTrigger className="h-12 pl-11 bg-gray-50 border-2 border-gray-300 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 rounded-xl">
+                  <SelectTrigger className="h-12 pl-11 bg-gray-50 border-2 border-gray-300 focus:bg-white focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/20 rounded-xl">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
                       <svg
                         className="w-5 h-5 text-gray-500"
@@ -943,7 +943,7 @@ export function MultiStepRegistrationForm() {
                         onClick={() => toggleInterest(interest)}
                         className={`p-3 rounded-lg border-2 transition-all duration-200 text-sm font-medium touch-manipulation ${
                           selectedInterests.includes(interest)
-                            ? "border-emerald-500 bg-emerald-50 text-emerald-900"
+                            ? "border-brand-primary bg-emerald-50 text-emerald-900"
                             : "border-gray-200 hover:border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100"
                         }`}
                       >
@@ -985,7 +985,7 @@ export function MultiStepRegistrationForm() {
                   <textarea
                     id="experience"
                     placeholder="Describe your teaching experience, expertise, and qualifications..."
-                    className="w-full h-24 p-4 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 rounded-xl transition-all duration-200 font-medium resize-none"
+                    className="w-full h-24 p-4 bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder-gray-500 focus:bg-white focus:border-brand-primary focus:ring-4 focus:ring-brand-primary/20 rounded-xl transition-all duration-200 font-medium resize-none"
                     {...register("experience")}
                   />
                   {errors.experience && (
@@ -1021,8 +1021,8 @@ export function MultiStepRegistrationForm() {
     <Card className="w-full max-w-2xl mx-auto bg-white backdrop-blur-2xl border border-gray-200 shadow-2xl rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-3xl">
       <CardHeader className="text-center pb-8 pt-10 px-8 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 border-b border-gray-200">
         <div className="relative inline-block mb-6">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl blur opacity-50 animate-pulse"></div>
-          <div className="relative w-14 h-14 mx-auto bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-xl">
+          <div className="absolute inset-0 bg-gradient-to-br from-brand-primary to-teal-600 rounded-2xl blur opacity-50 animate-pulse"></div>
+          <div className="relative w-14 h-14 mx-auto bg-gradient-to-br from-brand-primary via-teal-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-xl">
             <span className="text-white text-2xl font-bold">{currentStep}</span>
           </div>
         </div>
@@ -1074,7 +1074,7 @@ export function MultiStepRegistrationForm() {
               <input
                 type="checkbox"
                 id="terms"
-                className="w-5 h-5 text-emerald-600 border-gray-400 rounded focus:ring-emerald-500 focus:ring-offset-0 mt-0.5 cursor-pointer"
+                className="w-5 h-5 text-brand-primary border-gray-400 rounded focus:ring-brand-primary focus:ring-offset-0 mt-0.5 cursor-pointer"
                 required
               />
               <label
@@ -1084,14 +1084,14 @@ export function MultiStepRegistrationForm() {
                 I agree to the{" "}
                 <a
                   href="/terms"
-                  className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors hover:underline underline-offset-2"
+                  className="text-brand-primary hover:text-emerald-700 font-semibold transition-colors hover:underline underline-offset-2"
                 >
                   Terms of Service
                 </a>{" "}
                 and{" "}
                 <a
                   href="/privacy"
-                  className="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors hover:underline underline-offset-2"
+                  className="text-brand-primary hover:text-emerald-700 font-semibold transition-colors hover:underline underline-offset-2"
                 >
                   Privacy Policy
                 </a>
@@ -1115,7 +1115,7 @@ export function MultiStepRegistrationForm() {
               type="button"
               onClick={handleNext}
               disabled={isLoading}
-              className="px-8 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-700 hover:via-teal-700 hover:to-cyan-700 text-white font-semibold rounded-xl shadow-xl shadow-emerald-500/25 hover:shadow-2xl hover:shadow-emerald-600/40 transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+              className="px-8 bg-brand-primary hover:bg-brand-secondary text-white font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
             >
               {isLoading ? (
                 <div className="flex items-center space-x-2">
@@ -1144,12 +1144,12 @@ export function MultiStepRegistrationForm() {
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mt-6">
               <button
                 type="button"
                 onClick={() => handleSocialSignIn("google")}
                 disabled={isLoading}
-                className="group flex items-center justify-center px-4 py-3 min-h-[48px] border-2 border-gray-300 rounded-xl hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 touch-manipulation"
+                className="w-full flex items-center justify-center px-4 py-2.5 border border-neutral-300 rounded-lg hover:border-neutral-400 hover:bg-neutral-50 transition-all duration-200"
               >
                 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
                   <path
@@ -1169,12 +1169,13 @@ export function MultiStepRegistrationForm() {
                     d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                   />
                 </svg>
-                <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-gray-900">
+                <span className="ml-3 text-sm font-semibold text-neutral-700">
                   Continue with Google
                 </span>
               </button>
 
-              <button
+              {/* GitHub login commented out as requested */}
+              {/* <button
                 type="button"
                 onClick={() => handleSocialSignIn("github")}
                 disabled={isLoading}
@@ -1190,7 +1191,7 @@ export function MultiStepRegistrationForm() {
                 <span className="ml-3 text-sm font-semibold text-gray-800 group-hover:text-gray-900">
                   Continue with GitHub
                 </span>
-              </button>
+              </button> */}
             </div>
           </div>
         )}
