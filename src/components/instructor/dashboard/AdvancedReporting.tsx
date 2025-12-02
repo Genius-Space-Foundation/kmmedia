@@ -38,7 +38,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+
 
 interface ReportData {
   id: string;
@@ -92,39 +92,31 @@ export default function AdvancedReporting() {
 
   const fetchReportingData = async () => {
     try {
-      // Check if we're on the client side
-      if (typeof window === "undefined") {
-        return;
-      }
+      if (typeof window === "undefined") return;
 
       setLoading(true);
 
-      // Fetch analytics data
-      const analyticsResponse = await makeAuthenticatedRequest(
-        "/api/instructor/analytics/overview"
-      );
-      if (analyticsResponse.ok) {
-        const analyticsData = await analyticsResponse.json();
+      const [analyticsRes, reportsRes, customReportsRes] = await Promise.all([
+        fetch("/api/instructor/analytics/overview", { credentials: "include" }),
+        fetch("/api/instructor/reports", { credentials: "include" }),
+        fetch("/api/instructor/reports/custom", { credentials: "include" }),
+      ]);
+
+      const analyticsData = await analyticsRes.json();
+      const reportsData = await reportsRes.json();
+      // const customReportsData = await customReportsRes.json(); // Endpoint might not exist yet
+
+      if (analyticsRes.ok) {
         setAnalytics(analyticsData);
       }
 
-      // Fetch reports
-      const reportsResponse = await makeAuthenticatedRequest(
-        "/api/instructor/reports"
-      );
-      if (reportsResponse.ok) {
-        const reportsData = await reportsResponse.json();
+      if (reportsRes.ok) {
         setReports(reportsData);
       }
 
-      // Fetch custom reports
-      const customReportsResponse = await makeAuthenticatedRequest(
-        "/api/instructor/reports/custom"
-      );
-      if (customReportsResponse.ok) {
-        const customReportsData = await customReportsResponse.json();
-        setCustomReports(customReportsData);
-      }
+      // if (customReportsRes.ok) {
+      //   setCustomReports(customReportsData);
+      // }
     } catch (error) {
       console.error("Error fetching reporting data:", error);
     } finally {
@@ -134,7 +126,7 @@ export default function AdvancedReporting() {
 
   const handleGenerateReport = async (type: string) => {
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/reports/generate",
         {
           method: "POST",
@@ -163,7 +155,7 @@ export default function AdvancedReporting() {
 
   const handleExportData = async (format: string) => {
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/export/${format}`,
         {
           method: "POST",

@@ -20,7 +20,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+
 import {
   Sparkles,
   BookOpen,
@@ -81,7 +81,7 @@ export default function AIContentAssistant() {
 
     setLoading(true);
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/ai-suggestions",
         {
           method: "POST",

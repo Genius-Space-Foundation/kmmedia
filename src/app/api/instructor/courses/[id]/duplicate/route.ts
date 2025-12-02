@@ -1,30 +1,27 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
-import { CourseStatus } from "@prisma/client";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-// Duplicate course (Instructor only)
 async function duplicateCourse(
   req: AuthenticatedRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id  } = await params;
     const instructorId = req.user!.userId;
+    const courseId = params.id;
 
-    // Get the original course
-    const originalCourse = await prisma.course.findUnique({
-      where: { id },
+    // 1. Fetch original course with lessons
+    const originalCourse = await prisma.course.findFirst({
+      where: {
+        id: courseId,
+        instructorId,
+      },
       include: {
-        lessons: {
-          include: {
-            resources: true,
-          },
-        },
+        lessons: true,
       },
     });
 
@@ -35,18 +32,10 @@ async function duplicateCourse(
       );
     }
 
-    // Check if instructor owns the course
-    if (originalCourse.instructorId !== instructorId) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 403 }
-      );
-    }
-
-    // Create duplicate course
-    const duplicatedCourse = await prisma.course.create({
+    // 2. Create new course
+    const newCourse = await prisma.course.create({
       data: {
-        title: `${originalCourse.title} (Copy)`,
+        title: `Copy of ${originalCourse.title}`,
         description: originalCourse.description,
         category: originalCourse.category,
         duration: originalCourse.duration,
@@ -55,25 +44,19 @@ async function duplicateCourse(
         applicationFee: originalCourse.applicationFee,
         prerequisites: originalCourse.prerequisites,
         learningObjectives: originalCourse.learningObjectives,
-        status: CourseStatus.DRAFT,
+        status: "DRAFT", // Always draft
         instructorId,
+        // Duplicate lessons
         lessons: {
-          create: originalCourse.lessons.map((lesson, index) => ({
+          create: originalCourse.lessons.map((lesson) => ({
             title: lesson.title,
             description: lesson.description,
-            type: lesson.type,
             content: lesson.content,
-            duration: lesson.duration,
+            videoUrl: lesson.videoUrl,
             order: lesson.order,
-            isPublished: false, // Reset to unpublished
-            resources: {
-              create: lesson.resources.map((resource) => ({
-                name: resource.name,
-                type: resource.type,
-                url: resource.url,
-                size: resource.size,
-              })),
-            },
+            type: lesson.type,
+            duration: lesson.duration,
+            isPublished: false, // Reset publication status
           })),
         },
       },
@@ -85,33 +68,22 @@ async function duplicateCourse(
             lessons: true,
           },
         },
+        lessons: true,
       },
     });
 
     return NextResponse.json({
       success: true,
-      data: duplicatedCourse,
+      data: newCourse,
       message: "Course duplicated successfully",
     });
   } catch (error) {
     console.error("Duplicate course error:", error);
     return NextResponse.json(
-      {
-        success: false,
-        message:
-          error instanceof Error ? error.message : "Course duplication failed",
-      },
+      { success: false, message: "Failed to duplicate course" },
       { status: 500 }
     );
   }
 }
 
 export const POST = withInstructorAuth(duplicateCourse);
-
-
-export async function GET() {
-  return NextResponse.json(
-    { success: false, message: "Method not allowed" },
-    { status: 405 }
-  );
-}

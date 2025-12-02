@@ -57,7 +57,6 @@ import {
   Calendar,
   BarChart3,
 } from "lucide-react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
 
 interface Lesson {
   id: string;
@@ -185,7 +184,7 @@ export default function LessonManagement() {
     try {
       if (typeof window === "undefined") return;
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/courses"
       );
       if (response.ok) {
@@ -203,7 +202,7 @@ export default function LessonManagement() {
     try {
       if (typeof window === "undefined") return;
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/courses/${courseId}/lessons`
       );
       if (response.ok) {
@@ -219,7 +218,7 @@ export default function LessonManagement() {
     if (!selectedCourse || !newLesson.title.trim()) return;
 
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/courses/${selectedCourse}/lessons`,
         {
           method: "POST",
@@ -248,7 +247,7 @@ export default function LessonManagement() {
     if (!editingLesson) return;
 
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/lessons/${editingLesson.id}`,
         {
           method: "PUT",
@@ -278,7 +277,7 @@ export default function LessonManagement() {
     if (!confirm("Are you sure you want to delete this lesson?")) return;
 
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/lessons/${lessonId}`,
         {
           method: "DELETE",
@@ -295,7 +294,7 @@ export default function LessonManagement() {
 
   const handleTogglePublish = async (lesson: Lesson) => {
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/lessons/${lesson.id}/publish`,
         {
           method: "PATCH",
@@ -356,7 +355,7 @@ export default function LessonManagement() {
 
     // Update on server
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/courses/${selectedCourse}/lessons/reorder`,
         {
           method: "PUT",

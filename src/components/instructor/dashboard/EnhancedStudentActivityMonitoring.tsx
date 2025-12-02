@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -24,7 +30,20 @@ import {
   BarChart3,
   PieChart,
   Zap,
+  ArrowLeft,
+  Mail,
+  Phone,
+  MapPin,
+  FileText,
+  MoreVertical,
 } from "lucide-react";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
 
 interface StudentActivity {
   id: string;
@@ -32,7 +51,10 @@ interface StudentActivity {
     id: string;
     name: string;
     email: string;
+    phone?: string;
+    location?: string;
     avatar?: string;
+    joinedAt: string;
   };
   course: {
     id: string;
@@ -44,7 +66,7 @@ interface StudentActivity {
   progress: number;
   engagementScore: number;
   status: "active" | "at_risk" | "inactive" | "excelling";
-  recentActivities: Activity[];
+  recentActivities: ActivityItem[];
   performanceMetrics: {
     averageScore: number;
     completionRate: number;
@@ -54,9 +76,10 @@ interface StudentActivity {
   };
   riskFactors: string[];
   strengths: string[];
+  notes?: string[];
 }
 
-interface Activity {
+interface ActivityItem {
   id: string;
   type:
     | "lesson_completed"
@@ -113,6 +136,7 @@ export default function EnhancedStudentActivityMonitoring({
     "engagement" | "progress" | "lastActivity" | "risk"
   >("engagement");
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchStudentActivities();
@@ -120,174 +144,84 @@ export default function EnhancedStudentActivityMonitoring({
 
   const fetchStudentActivities = async () => {
     try {
-      // Mock data - in real implementation, this would be an API call
-      const mockActivities: StudentActivity[] = [
-        {
-          id: "1",
-          student: {
-            id: "s1",
-            name: "Sarah Johnson",
-            email: "sarah.j@email.com",
-            avatar: "/avatars/sarah.jpg",
-          },
-          course: {
-            id: "c1",
-            title: "Digital Photography Basics",
-          },
-          lastActivity: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          totalTimeSpent: 1240,
-          weeklyTimeSpent: 180,
-          progress: 78,
-          engagementScore: 92,
-          status: "excelling",
-          recentActivities: [
-            {
-              id: "a1",
-              type: "assignment_submitted",
-              title: "Portrait Photography Assignment",
-              timestamp: new Date(
-                Date.now() - 2 * 60 * 60 * 1000
-              ).toISOString(),
-              score: 95,
-            },
-            {
-              id: "a2",
-              type: "lesson_completed",
-              title: "Advanced Lighting Techniques",
-              timestamp: new Date(
-                Date.now() - 4 * 60 * 60 * 1000
-              ).toISOString(),
-              duration: 45,
-            },
-          ],
-          performanceMetrics: {
-            averageScore: 89,
-            completionRate: 95,
-            participationRate: 88,
-            assignmentsSubmitted: 8,
-            assignmentsPending: 1,
-          },
-          riskFactors: [],
-          strengths: [
-            "Consistent engagement",
-            "High-quality submissions",
-            "Active participation",
-          ],
-        },
-        {
-          id: "2",
-          student: {
-            id: "s2",
-            name: "Michael Chen",
-            email: "m.chen@email.com",
-            avatar: "/avatars/michael.jpg",
-          },
-          course: {
-            id: "c2",
-            title: "Video Production Mastery",
-          },
-          lastActivity: new Date(
-            Date.now() - 5 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-          totalTimeSpent: 680,
-          weeklyTimeSpent: 45,
-          progress: 34,
-          engagementScore: 45,
-          status: "at_risk",
-          recentActivities: [
-            {
-              id: "a3",
-              type: "resource_accessed",
-              title: "Video Editing Software Guide",
-              timestamp: new Date(
-                Date.now() - 5 * 24 * 60 * 60 * 1000
-              ).toISOString(),
-            },
-          ],
-          performanceMetrics: {
-            averageScore: 72,
-            completionRate: 60,
-            participationRate: 40,
-            assignmentsSubmitted: 3,
-            assignmentsPending: 4,
-          },
-          riskFactors: [
-            "Low engagement",
-            "Missing assignments",
-            "Infrequent login",
-          ],
-          strengths: ["Good technical understanding"],
-        },
-        {
-          id: "3",
-          student: {
-            id: "s3",
-            name: "Emma Rodriguez",
-            email: "emma.r@email.com",
-            avatar: "/avatars/emma.jpg",
-          },
-          course: {
-            id: "c1",
-            title: "Digital Photography Basics",
-          },
-          lastActivity: new Date(
-            Date.now() - 1 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-          totalTimeSpent: 920,
-          weeklyTimeSpent: 120,
-          progress: 65,
-          engagementScore: 78,
-          status: "active",
-          recentActivities: [
-            {
-              id: "a4",
-              type: "quiz_taken",
-              title: "Composition Fundamentals Quiz",
-              timestamp: new Date(
-                Date.now() - 1 * 24 * 60 * 60 * 1000
-              ).toISOString(),
-              score: 85,
-            },
-            {
-              id: "a5",
-              type: "discussion_posted",
-              title: "Weekly Photography Challenge",
-              timestamp: new Date(
-                Date.now() - 2 * 24 * 60 * 60 * 1000
-              ).toISOString(),
-            },
-          ],
-          performanceMetrics: {
-            averageScore: 82,
-            completionRate: 78,
-            participationRate: 75,
-            assignmentsSubmitted: 6,
-            assignmentsPending: 2,
-          },
-          riskFactors: [],
-          strengths: ["Regular participation", "Steady progress"],
-        },
-      ];
-
-      const mockMetrics: ActivityMetrics = {
-        totalStudents: 45,
-        activeStudents: 32,
-        atRiskStudents: 8,
-        excellingStudents: 12,
-        averageEngagement: 74,
-        averageProgress: 68,
-        weeklyActiveHours: 1240,
-        completionTrend: 5.2,
-      };
-
-      setStudentActivities(mockActivities);
-      setMetrics(mockMetrics);
+      setLoading(true);
+      const response = await fetch(`/api/instructor/students?status=${statusFilter}&search=${searchTerm}`, {
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: `HTTP ${response.status}` }));
+        throw new Error(errorData.message || "Failed to fetch students");
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setStudentActivities(data.data.students || []);
+        
+        // Calculate aggregate metrics from the fetched data
+        const students = data.data.students || [];
+        const metrics: ActivityMetrics = {
+          totalStudents: students.length,
+          activeStudents: students.filter((s: any) => s.status === 'active').length,
+          atRiskStudents: students.filter((s: any) => s.status === 'at_risk').length,
+          excellingStudents: students.filter((s: any) => s.status === 'excelling').length,
+          averageEngagement: students.length > 0 ? Math.round(students.reduce((acc: number, s: any) => acc + (s.engagementScore || 0), 0) / students.length) : 0,
+          averageProgress: students.length > 0 ? Math.round(students.reduce((acc: number, s: any) => acc + (s.progress || 0), 0) / students.length) : 0,
+          weeklyActiveHours: students.length > 0 ? Math.round(students.reduce((acc: number, s: any) => acc + (s.weeklyTimeSpent || 0), 0) / 60) : 0,
+          completionTrend: 0, // Need historical data for this
+        };
+        setMetrics(metrics);
+      }
     } catch (error) {
       console.error("Error fetching student activities:", error);
+      // Set empty state on error
+      setStudentActivities([]);
+      setMetrics({
+        totalStudents: 0,
+        activeStudents: 0,
+        atRiskStudents: 0,
+        excellingStudents: 0,
+        averageEngagement: 0,
+        averageProgress: 0,
+        weeklyActiveHours: 0,
+        completionTrend: 0,
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  const fetchStudentDetails = async (studentId: string) => {
+    try {
+      const response = await fetch(`/api/instructor/students/${studentId}/progress`, {
+        credentials: "include",
+      });
+      
+      if (!response.ok) throw new Error("Failed to fetch student details");
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Update the specific student in the list with detailed data
+        setStudentActivities(prev => prev.map(s => 
+          s.student.id === studentId ? { ...s, ...data.data } : s
+        ));
+      }
+    } catch (error) {
+      console.error("Error fetching student details:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedStudentId) {
+      fetchStudentDetails(selectedStudentId);
+    }
+  }, [selectedStudentId]);
+
+  useEffect(() => {
+    fetchStudentActivities();
+  }, [statusFilter, searchTerm]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -388,6 +322,8 @@ export default function EnhancedStudentActivityMonitoring({
     }
   });
 
+  const selectedStudent = studentActivities.find(s => s.student.id === selectedStudentId);
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -405,11 +341,243 @@ export default function EnhancedStudentActivityMonitoring({
     );
   }
 
+  // Detail View
+  if (selectedStudent) {
+    return (
+      <div className="space-y-6">
+        <Button 
+          variant="ghost" 
+          onClick={() => setSelectedStudentId(null)}
+          className="mb-4 pl-0 hover:pl-2 transition-all"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Student List
+        </Button>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Sidebar Profile Card */}
+          <Card className="lg:col-span-1 h-fit">
+            <CardContent className="p-6">
+              <div className="flex flex-col items-center text-center mb-6">
+                <Avatar className="w-24 h-24 mb-4 border-4 border-white shadow-lg">
+                  <AvatarImage src={selectedStudent.student.avatar} />
+                  <AvatarFallback className="text-2xl">
+                    {selectedStudent.student.name.split(" ").map(n => n[0]).join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <h2 className="text-xl font-bold text-gray-900">{selectedStudent.student.name}</h2>
+                <p className="text-sm text-gray-500 mb-2">{selectedStudent.course.title}</p>
+                <Badge className={getStatusColor(selectedStudent.status)}>
+                  {getStatusIcon(selectedStudent.status)}
+                  <span className="ml-1 capitalize">{selectedStudent.status.replace("_", " ")}</span>
+                </Badge>
+              </div>
+
+              <Separator className="my-6" />
+
+              <div className="space-y-4">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Mail className="h-4 w-4 mr-3 text-gray-400" />
+                  {selectedStudent.student.email}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Phone className="h-4 w-4 mr-3 text-gray-400" />
+                  {selectedStudent.student.phone || "N/A"}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <MapPin className="h-4 w-4 mr-3 text-gray-400" />
+                  {selectedStudent.student.location || "N/A"}
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <Calendar className="h-4 w-4 mr-3 text-gray-400" />
+                  Joined {new Date(selectedStudent.student.joinedAt).toLocaleDateString()}
+                </div>
+              </div>
+
+              <Separator className="my-6" />
+
+              <div className="space-y-3">
+                <Button className="w-full" onClick={() => onSendMessage(selectedStudent.student.id)}>
+                  <MessageSquare className="h-4 w-4 mr-2" /> Send Message
+                </Button>
+                <Button variant="outline" className="w-full" onClick={() => onCreateIntervention(selectedStudent.student.id)}>
+                  <Zap className="h-4 w-4 mr-2" /> Create Intervention
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Main Content Area */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm text-gray-500 mb-1">Overall Progress</p>
+                  <div className="flex items-end justify-between">
+                    <span className="text-2xl font-bold">{selectedStudent.progress}%</span>
+                    <TrendingUp className="h-4 w-4 text-green-500 mb-1" />
+                  </div>
+                  <Progress value={selectedStudent.progress} className="h-2 mt-2" />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm text-gray-500 mb-1">Engagement Score</p>
+                  <div className="flex items-end justify-between">
+                    <span className="text-2xl font-bold">{selectedStudent.engagementScore}</span>
+                    <Activity className="h-4 w-4 text-blue-500 mb-1" />
+                  </div>
+                  <Progress value={selectedStudent.engagementScore} className="h-2 mt-2" />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <p className="text-sm text-gray-500 mb-1">Avg. Quiz Score</p>
+                  <div className="flex items-end justify-between">
+                    <span className="text-2xl font-bold">{selectedStudent.performanceMetrics.averageScore}%</span>
+                    <Target className="h-4 w-4 text-purple-500 mb-1" />
+                  </div>
+                  <Progress value={selectedStudent.performanceMetrics.averageScore} className="h-2 mt-2" />
+                </CardContent>
+              </Card>
+            </div>
+
+            <Tabs defaultValue="activity" className="w-full">
+              <TabsList className="w-full justify-start">
+                <TabsTrigger value="activity">Activity History</TabsTrigger>
+                <TabsTrigger value="performance">Performance</TabsTrigger>
+                <TabsTrigger value="notes">Notes & Risks</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="activity" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Recent Activity</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {selectedStudent.recentActivities.map((activity, index) => (
+                        <div key={index} className="flex gap-4">
+                          <div className="flex flex-col items-center">
+                            <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-lg z-10">
+                              {getActivityIcon(activity.type)}
+                            </div>
+                            {index !== selectedStudent.recentActivities.length - 1 && (
+                              <div className="w-0.5 h-full bg-gray-100 -my-1" />
+                            )}
+                          </div>
+                          <div className="flex-1 pb-6">
+                            <p className="font-medium text-gray-900">{activity.title}</p>
+                            <div className="flex items-center text-sm text-gray-500 mt-1">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {new Date(activity.timestamp).toLocaleString()}
+                              {activity.score && (
+                                <Badge variant="secondary" className="ml-2">
+                                  Score: {activity.score}%
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="performance" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Detailed Metrics</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                          <p className="text-sm text-gray-500">Assignments Submitted</p>
+                          <p className="text-2xl font-bold">{selectedStudent.performanceMetrics.assignmentsSubmitted}</p>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                          <p className="text-sm text-gray-500">Pending Assignments</p>
+                          <p className="text-2xl font-bold">{selectedStudent.performanceMetrics.assignmentsPending}</p>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                          <p className="text-sm text-gray-500">Participation Rate</p>
+                          <p className="text-2xl font-bold">{selectedStudent.performanceMetrics.participationRate}%</p>
+                        </div>
+                        <div className="p-4 bg-gray-50 rounded-lg">
+                          <p className="text-sm text-gray-500">Completion Rate</p>
+                          <p className="text-2xl font-bold">{selectedStudent.performanceMetrics.completionRate}%</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="notes" className="mt-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Risk Factors & Notes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-6">
+                      {selectedStudent.riskFactors.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-red-700 mb-2 flex items-center">
+                            <AlertTriangle className="h-4 w-4 mr-2" /> Risk Factors
+                          </h4>
+                          <div className="flex flex-wrap gap-2">
+                            {selectedStudent.riskFactors.map((factor, i) => (
+                              <Badge key={i} variant="destructive" className="bg-red-100 text-red-800 hover:bg-red-200 border-0">
+                                {factor}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                          <CheckCircle className="h-4 w-4 mr-2 text-green-600" /> Strengths
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedStudent.strengths.map((strength, i) => (
+                            <Badge key={i} variant="secondary" className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200">
+                              {strength}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                          <FileText className="h-4 w-4 mr-2 text-blue-600" /> Instructor Notes
+                        </h4>
+                        <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-100 text-sm text-yellow-900">
+                          {selectedStudent.notes?.map((note, i) => (
+                            <p key={i} className="mb-2 last:mb-0">• {note}</p>
+                          )) || "No notes added yet."}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // List/Grid View
   return (
     <div className="space-y-6">
       {/* Metrics Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+        <Card className="bg-white border-neutral-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -425,7 +593,7 @@ export default function EnhancedStudentActivityMonitoring({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <Card className="bg-white border-neutral-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -441,7 +609,7 @@ export default function EnhancedStudentActivityMonitoring({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
+        <Card className="bg-white border-neutral-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -457,7 +625,7 @@ export default function EnhancedStudentActivityMonitoring({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+        <Card className="bg-white border-neutral-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -686,9 +854,7 @@ export default function EnhancedStudentActivityMonitoring({
                       {/* Action Buttons */}
                       <div className="flex space-x-2">
                         <Button
-                          onClick={() =>
-                            onViewStudent(studentActivity.student.id)
-                          }
+                          onClick={() => setSelectedStudentId(studentActivity.student.id)}
                           size="sm"
                           variant="outline"
                           className="flex-1"

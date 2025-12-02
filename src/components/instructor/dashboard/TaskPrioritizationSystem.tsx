@@ -223,11 +223,11 @@ export default function TaskPrioritizationSystem({
       case "urgent":
         return "bg-red-100 text-red-800 border-red-200";
       case "high":
-        return "bg-orange-100 text-orange-800 border-orange-200";
+        return "bg-orange-100 text-orange-800 border-neutral-200";
       case "medium":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "low":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-100 text-green-800 border-neutral-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
@@ -315,7 +315,7 @@ export default function TaskPrioritizationSystem({
     <div className="space-y-6">
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-red-200">
+        <Card className="bg-white border-neutral-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
@@ -329,7 +329,7 @@ export default function TaskPrioritizationSystem({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-200">
+        <Card className="bg-white border-neutral-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -345,7 +345,7 @@ export default function TaskPrioritizationSystem({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+        <Card className="bg-white border-neutral-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -361,7 +361,7 @@ export default function TaskPrioritizationSystem({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <Card className="bg-white border-neutral-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -539,7 +539,7 @@ export default function TaskPrioritizationSystem({
                       <Button
                         onClick={() => onTaskClick(task.id)}
                         size="sm"
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                        className="bg-brand-primary hover:bg-brand-primary/90"
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         View

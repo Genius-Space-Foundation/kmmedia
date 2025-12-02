@@ -25,6 +25,7 @@ import {
   Activity,
   Zap,
   Brain,
+  MessageSquare,
 } from "lucide-react";
 
 interface CourseAnalytics {
@@ -115,222 +116,22 @@ export default function CourseAnalyticsInsights({
 
   const fetchCourseAnalytics = async () => {
     try {
-      // Mock data - in real implementation, this would be an API call
-      const mockAnalytics: CourseAnalytics[] = [
-        {
-          id: "1",
-          title: "Digital Photography Basics",
-          category: "Photography",
-          enrolledStudents: 156,
-          activeStudents: 134,
-          completionRate: 78,
-          averageRating: 4.6,
-          totalRatings: 89,
-          averageProgress: 65,
-          totalTimeSpent: 2340,
-          engagementScore: 82,
-          dropoutRate: 12,
-          revenueGenerated: 15600,
-          performanceMetrics: {
-            lessonCompletionRate: 85,
-            assignmentSubmissionRate: 72,
-            quizAverageScore: 84,
-            discussionParticipation: 68,
-            resourceAccessRate: 91,
-          },
-          contentAnalytics: {
-            mostEngagingLessons: [
-              {
-                id: "l1",
-                title: "Portrait Photography Techniques",
-                type: "video",
-                completionRate: 95,
-                averageTimeSpent: 45,
-                engagementScore: 92,
-                dropoffRate: 5,
-              },
-              {
-                id: "l2",
-                title: "Hands-on Camera Settings",
-                type: "interactive",
-                completionRate: 88,
-                averageTimeSpent: 38,
-                engagementScore: 87,
-                dropoffRate: 8,
-              },
-            ],
-            leastEngagingLessons: [
-              {
-                id: "l3",
-                title: "Camera History Overview",
-                type: "text",
-                completionRate: 62,
-                averageTimeSpent: 12,
-                engagementScore: 45,
-                dropoffRate: 35,
-              },
-            ],
-            difficultTopics: [
-              "Manual Camera Settings",
-              "Color Theory",
-              "Advanced Composition",
-            ],
-            popularResources: [
-              "Camera Settings Cheat Sheet",
-              "Composition Guide PDF",
-              "Lighting Setup Videos",
-            ],
-          },
-          studentFeedback: {
-            positiveComments: [
-              "Great practical examples",
-              "Clear explanations",
-              "Love the hands-on approach",
-            ],
-            improvementSuggestions: [
-              "More advanced techniques",
-              "Additional practice exercises",
-              "Live Q&A sessions",
-            ],
-            commonIssues: [
-              "Technical difficulties with camera settings",
-              "Need more feedback on assignments",
-            ],
-          },
-          trends: {
-            enrollmentTrend: 15,
-            completionTrend: 8,
-            engagementTrend: 5,
-            ratingTrend: 0.2,
-          },
-          recommendations: [
-            {
-              id: "r1",
-              type: "content",
-              priority: "high",
-              title: "Add Interactive Camera Settings Module",
-              description:
-                "Create an interactive module to help students practice camera settings",
-              impact: "High - Could improve completion rate by 15%",
-              effort: "Medium - 2-3 weeks development",
-            },
-            {
-              id: "r2",
-              type: "engagement",
-              priority: "medium",
-              title: "Weekly Live Q&A Sessions",
-              description:
-                "Host weekly live sessions to address common questions",
-              impact: "Medium - Could improve engagement by 20%",
-              effort: "Low - 1 hour per week",
-            },
-          ],
-        },
-        {
-          id: "2",
-          title: "Video Production Mastery",
-          category: "Video",
-          enrolledStudents: 89,
-          activeStudents: 67,
-          completionRate: 65,
-          averageRating: 4.3,
-          totalRatings: 45,
-          averageProgress: 52,
-          totalTimeSpent: 1560,
-          engagementScore: 71,
-          dropoutRate: 18,
-          revenueGenerated: 8900,
-          performanceMetrics: {
-            lessonCompletionRate: 78,
-            assignmentSubmissionRate: 65,
-            quizAverageScore: 79,
-            discussionParticipation: 55,
-            resourceAccessRate: 83,
-          },
-          contentAnalytics: {
-            mostEngagingLessons: [
-              {
-                id: "l4",
-                title: "Video Editing Workflow",
-                type: "video",
-                completionRate: 89,
-                averageTimeSpent: 52,
-                engagementScore: 85,
-                dropoffRate: 11,
-              },
-            ],
-            leastEngagingLessons: [
-              {
-                id: "l5",
-                title: "Video Formats and Codecs",
-                type: "text",
-                completionRate: 45,
-                averageTimeSpent: 8,
-                engagementScore: 38,
-                dropoffRate: 52,
-              },
-            ],
-            difficultTopics: [
-              "Color Grading",
-              "Audio Synchronization",
-              "Export Settings",
-            ],
-            popularResources: [
-              "Editing Shortcuts Guide",
-              "Color Grading LUTs",
-              "Audio Mixing Templates",
-            ],
-          },
-          studentFeedback: {
-            positiveComments: [
-              "Comprehensive coverage",
-              "Professional techniques",
-              "Good project examples",
-            ],
-            improvementSuggestions: [
-              "More beginner-friendly content",
-              "Step-by-step tutorials",
-              "Better audio quality",
-            ],
-            commonIssues: [
-              "Complex technical concepts",
-              "Software compatibility issues",
-            ],
-          },
-          trends: {
-            enrollmentTrend: 8,
-            completionTrend: -5,
-            engagementTrend: -2,
-            ratingTrend: -0.1,
-          },
-          recommendations: [
-            {
-              id: "r3",
-              type: "content",
-              priority: "high",
-              title: "Simplify Technical Lessons",
-              description:
-                "Break down complex technical concepts into smaller, digestible parts",
-              impact: "High - Could reduce dropout rate by 25%",
-              effort: "High - 4-6 weeks restructuring",
-            },
-            {
-              id: "r4",
-              type: "support",
-              priority: "high",
-              title: "Technical Support Resources",
-              description:
-                "Create troubleshooting guides for common software issues",
-              impact: "Medium - Could improve satisfaction by 30%",
-              effort: "Medium - 2 weeks documentation",
-            },
-          ],
-        },
-      ];
+      setLoading(true);
+      const response = await fetch(`/api/instructor/courses/analytics?timeRange=${timeRange}`, {
+        credentials: "include",
+      });
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch analytics");
+      }
 
-      setCourseAnalytics(mockAnalytics);
-      if (mockAnalytics.length > 0) {
-        setSelectedCourse(mockAnalytics[0]);
+      const data = await response.json();
+      
+      if (data.success) {
+        setCourseAnalytics(data.data);
+        if (data.data.length > 0 && !selectedCourse) {
+          setSelectedCourse(data.data[0]);
+        }
       }
     } catch (error) {
       console.error("Error fetching course analytics:", error);
@@ -358,7 +159,7 @@ export default function CourseAnalyticsInsights({
       case "medium":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "low":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-100 text-green-800 border-neutral-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
@@ -460,7 +261,7 @@ export default function CourseAnalyticsInsights({
         <>
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+            <Card className="bg-white border-neutral-200">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -489,7 +290,7 @@ export default function CourseAnalyticsInsights({
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+            <Card className="bg-white border-neutral-200">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -518,7 +319,7 @@ export default function CourseAnalyticsInsights({
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-200">
+            <Card className="bg-white border-neutral-200">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -547,7 +348,7 @@ export default function CourseAnalyticsInsights({
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+            <Card className="bg-white border-neutral-200">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>

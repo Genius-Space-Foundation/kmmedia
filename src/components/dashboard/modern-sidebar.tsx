@@ -21,7 +21,8 @@ interface ModernSidebarProps {
   navigationItems: NavItem[];
   brandName: string;
   brandSubtitle: string;
-  brandInitials: string;
+  brandInitials?: string;
+  brandLogo?: string;
 }
 
 export function ModernSidebar({
@@ -33,6 +34,7 @@ export function ModernSidebar({
   brandName,
   brandSubtitle,
   brandInitials,
+  brandLogo,
 }: ModernSidebarProps) {
   return (
     <aside
@@ -45,12 +47,16 @@ export function ModernSidebar({
       <div className="h-20 flex items-center justify-between px-6 border-b border-gray-200">
         {isOpen && (
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center overflow-hidden">
-              <img 
-                src="/images/logo.jpeg" 
-                alt={brandName} 
-                className="w-full h-full object-cover"
-              />
+            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center overflow-hidden shadow-sm">
+              {brandLogo ? (
+                <img 
+                  src={brandLogo} 
+                  alt={brandName} 
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <span className="text-lg font-bold text-brand-primary">{brandInitials}</span>
+              )}
             </div>
             <div>
               <h2 className="text-lg font-black text-gray-900">{brandName}</h2>

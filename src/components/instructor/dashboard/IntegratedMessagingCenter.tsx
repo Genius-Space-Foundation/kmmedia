@@ -131,117 +131,40 @@ export default function IntegratedMessagingCenter({
 
   const fetchMessages = async () => {
     try {
-      // Mock data - in real implementation, this would be an API call
-      const mockMessages: Message[] = [
-        {
-          id: "1",
-          sender: {
-            id: "s1",
-            name: "Sarah Johnson",
-            email: "sarah.j@email.com",
-            avatar: "/avatars/sarah.jpg",
-            role: "student",
-          },
-          recipient: {
-            id: "i1",
-            name: "John Instructor",
-            email: "john@instructor.com",
-            avatar: "/avatars/john.jpg",
-            role: "instructor",
-          },
-          subject: "Question about Assignment 3",
-          content:
-            "Hi Professor, I'm having trouble understanding the lighting setup for Assignment 3. Could you provide some additional guidance on the three-point lighting technique?",
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          isRead: false,
-          priority: "medium",
-          category: "question",
-          course: {
-            id: "c1",
-            title: "Digital Photography Basics",
-          },
-          attachments: [],
-          thread: [],
-          tags: ["assignment", "lighting"],
-          status: "new",
-        },
-        {
-          id: "2",
-          sender: {
-            id: "s2",
-            name: "Michael Chen",
-            email: "m.chen@email.com",
-            avatar: "/avatars/michael.jpg",
-            role: "student",
-          },
-          recipient: {
-            id: "i1",
-            name: "John Instructor",
-            email: "john@instructor.com",
-            avatar: "/avatars/john.jpg",
-            role: "instructor",
-          },
-          subject: "Technical Issue with Video Upload",
-          content:
-            "I'm unable to upload my video assignment. The file seems too large. What's the maximum file size allowed?",
-          timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-          isRead: false,
-          priority: "high",
-          category: "technical",
-          course: {
-            id: "c2",
-            title: "Video Production Mastery",
-          },
-          attachments: [
-            {
-              id: "a1",
-              name: "error_screenshot.png",
-              type: "image/png",
-              size: 245760,
-              url: "/attachments/error_screenshot.png",
-            },
-          ],
-          thread: [],
-          tags: ["technical", "upload"],
-          status: "new",
-        },
-        {
-          id: "3",
-          sender: {
-            id: "s3",
-            name: "Emma Rodriguez",
-            email: "emma.r@email.com",
-            avatar: "/avatars/emma.jpg",
-            role: "student",
-          },
-          recipient: {
-            id: "i1",
-            name: "John Instructor",
-            email: "john@instructor.com",
-            avatar: "/avatars/john.jpg",
-            role: "instructor",
-          },
-          subject: "Great Course Feedback",
-          content:
-            "I wanted to thank you for the excellent photography course. The hands-on approach really helped me understand the concepts better. Looking forward to the advanced course!",
-          timestamp: new Date(
-            Date.now() - 1 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-          isRead: true,
-          priority: "low",
-          category: "feedback",
-          course: {
-            id: "c1",
-            title: "Digital Photography Basics",
-          },
-          attachments: [],
-          thread: [],
-          tags: ["feedback", "positive"],
-          status: "resolved",
-        },
-      ];
+      const response = await fetch("/api/instructor/messages", { credentials: "include" });
+      const data = await response.json();
 
-      setMessages(mockMessages);
+      if (data.success) {
+        // Transform API data to match component interface
+        const transformedMessages = data.data.messages.map((msg: any) => ({
+          id: msg.id,
+          sender: {
+            id: msg.sender.id,
+            name: msg.sender.name,
+            email: msg.sender.email,
+            avatar: msg.sender.profile?.avatar,
+            role: "student", // Defaulting for now, backend should provide
+          },
+          recipient: {
+            id: msg.recipient.id,
+            name: msg.recipient.name,
+            email: msg.recipient.email,
+            avatar: msg.recipient.profile?.avatar,
+            role: "instructor",
+          },
+          subject: msg.subject,
+          content: msg.content,
+          timestamp: msg.createdAt,
+          isRead: msg.isRead || false,
+          priority: msg.priority?.toLowerCase() || "medium",
+          category: "general", // Default
+          attachments: [],
+          thread: [],
+          tags: [],
+          status: msg.status?.toLowerCase() || "new",
+        }));
+        setMessages(transformedMessages);
+      }
     } catch (error) {
       console.error("Error fetching messages:", error);
     } finally {
@@ -358,11 +281,11 @@ export default function IntegratedMessagingCenter({
       case "urgent":
         return "bg-red-100 text-red-800 border-red-200";
       case "high":
-        return "bg-orange-100 text-orange-800 border-orange-200";
+        return "bg-orange-100 text-orange-800 border-neutral-200";
       case "medium":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
       case "low":
-        return "bg-green-100 text-green-800 border-green-200";
+        return "bg-green-100 text-green-800 border-neutral-200";
       default:
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
@@ -445,7 +368,7 @@ export default function IntegratedMessagingCenter({
     <div className="space-y-6">
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+        <Card className="bg-white border-neutral-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -461,7 +384,7 @@ export default function IntegratedMessagingCenter({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-orange-200">
+        <Card className="bg-white border-neutral-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -477,7 +400,7 @@ export default function IntegratedMessagingCenter({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-50 to-pink-50 border-red-200">
+        <Card className="bg-white border-neutral-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
@@ -491,7 +414,7 @@ export default function IntegratedMessagingCenter({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+        <Card className="bg-white border-neutral-200">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -586,7 +509,7 @@ export default function IntegratedMessagingCenter({
                         key={conversation.id}
                         className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
                           selectedConversation?.id === conversation.id
-                            ? "bg-blue-50 border-blue-200"
+                            ? "bg-blue-50 border-neutral-200"
                             : "bg-gray-50 border-gray-200 hover:bg-gray-100"
                         }`}
                         onClick={() => setSelectedConversation(conversation)}
@@ -609,7 +532,7 @@ export default function IntegratedMessagingCenter({
                                 {conversation.participants[0]?.name}
                               </p>
                               {conversation.unreadCount > 0 && (
-                                <Badge className="bg-blue-600 text-white text-xs">
+                                <Badge className="bg-brand-primary text-white text-xs">
                                   {conversation.unreadCount}
                                 </Badge>
                               )}
@@ -629,7 +552,7 @@ export default function IntegratedMessagingCenter({
                         key={message.id}
                         className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
                           !message.isRead
-                            ? "bg-blue-50 border-blue-200"
+                            ? "bg-blue-50 border-neutral-200"
                             : "bg-gray-50 border-gray-200 hover:bg-gray-100"
                         }`}
                         onClick={() => onMarkAsRead(message.id)}
@@ -682,7 +605,7 @@ export default function IntegratedMessagingCenter({
 
               <Button
                 onClick={() => setShowCompose(true)}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                className="w-full bg-brand-primary hover:bg-brand-primary/90"
               >
                 <Send className="h-4 w-4 mr-2" />
                 Compose Message
@@ -817,7 +740,7 @@ export default function IntegratedMessagingCenter({
                           category: "general",
                         });
                       }}
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                      className="bg-brand-primary hover:bg-brand-primary/90"
                     >
                       <Send className="h-4 w-4 mr-2" />
                       Send Message
@@ -928,7 +851,7 @@ export default function IntegratedMessagingCenter({
                     </Button>
                     <Button
                       size="sm"
-                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                      className="bg-brand-primary hover:bg-brand-primary/90"
                     >
                       <Send className="h-4 w-4 mr-2" />
                       Reply

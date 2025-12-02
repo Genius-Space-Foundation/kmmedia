@@ -59,7 +59,6 @@ import {
   ArrowDownRight,
   Minus,
 } from "lucide-react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
 
 interface StudentProgress {
   id: string;
@@ -163,7 +162,7 @@ export default function StudentProgressTracking() {
     try {
       if (typeof window === "undefined") return;
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/courses"
       );
       if (response.ok) {
@@ -181,7 +180,7 @@ export default function StudentProgressTracking() {
     try {
       if (typeof window === "undefined") return;
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/courses/${courseId}/progress`
       );
       if (response.ok) {

@@ -30,7 +30,7 @@ import {
   AlertCircle,
   Play,
 } from "lucide-react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+
 
 interface Course {
   id: string;
@@ -68,7 +68,7 @@ export default function MobileCourseManagement() {
       }
 
       setLoading(true);
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/courses"
       );
       if (response.ok) {

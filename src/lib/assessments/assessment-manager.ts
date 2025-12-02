@@ -338,7 +338,7 @@ function calculateScore(questions: any[], answers: AnswerData[]): number {
 }
 
 export async function getInstructorAssessments(instructorId: string) {
-  return await prisma.assessment.findMany({
+  const assessments = await prisma.assessment.findMany({
     where: { instructorId },
     include: {
       course: {
@@ -349,9 +349,44 @@ export async function getInstructorAssessments(instructorId: string) {
       _count: {
         select: {
           submissions: true,
+          questions: true,
+        },
+      },
+      submissions: {
+        select: {
+          score: true,
+          passed: true,
         },
       },
     },
     orderBy: { createdAt: "desc" },
+  });
+
+  return assessments.map((assessment) => {
+    const totalSubmissions = assessment.submissions.length;
+    const averageScore =
+      totalSubmissions > 0
+        ? Math.round(
+            assessment.submissions.reduce((sum, s) => sum + (s.score || 0), 0) /
+              totalSubmissions
+          )
+        : 0;
+    
+    // Calculate completion rate (passed / total submissions) * 100
+    // Or if completion means "submitted", then it depends on enrollment count which we don't have here easily.
+    // For now, let's assume completionRate is pass rate for the assessment.
+    const passCount = assessment.submissions.filter(s => s.passed).length;
+    const completionRate = totalSubmissions > 0 
+      ? Math.round((passCount / totalSubmissions) * 100) 
+      : 0;
+
+    // Remove submissions array from result to keep payload small
+    const { submissions, ...rest } = assessment;
+    
+    return {
+      ...rest,
+      averageScore,
+      completionRate,
+    };
   });
 }

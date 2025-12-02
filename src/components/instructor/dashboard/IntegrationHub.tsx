@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+
 import {
   Zap,
   Video,
@@ -99,9 +99,9 @@ export default function IntegrationHub() {
 
       const [integrationsResponse, usageResponse, statsResponse] =
         await Promise.all([
-          makeAuthenticatedRequest("/api/instructor/integrations"),
-          makeAuthenticatedRequest("/api/instructor/integrations/usage"),
-          makeAuthenticatedRequest("/api/instructor/integrations/stats"),
+          fetch("/api/instructor/integrations", { credentials: "include" }),
+          fetch("/api/instructor/integrations/usage", { credentials: "include" }),
+          fetch("/api/instructor/integrations/stats", { credentials: "include" }),
         ]);
 
       if (integrationsResponse.success)
@@ -117,7 +117,7 @@ export default function IntegrationHub() {
 
   const handleConnectIntegration = async (integrationId: string) => {
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/integrations/${integrationId}/connect`,
         {
           method: "POST",
@@ -138,7 +138,7 @@ export default function IntegrationHub() {
 
   const handleDisconnectIntegration = async (integrationId: string) => {
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/integrations/${integrationId}/disconnect`,
         {
           method: "POST",
@@ -155,7 +155,7 @@ export default function IntegrationHub() {
 
   const handleSyncIntegration = async (integrationId: string) => {
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/integrations/${integrationId}/sync`,
         {
           method: "POST",

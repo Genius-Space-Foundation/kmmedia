@@ -21,7 +21,7 @@ import {
   Calendar,
   ArrowRight,
 } from "lucide-react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+
 
 interface PendingSubmission {
   id: string;
@@ -68,8 +68,8 @@ export default function PendingGradingNotifications() {
 
   const fetchPendingGrading = async () => {
     try {
-      const response = await makeAuthenticatedRequest(
-        "/api/assignments/pending-grading"
+      const response = await fetch(
+        "/api/assignments/pending-grading", { credentials: "include" }
       );
       const result = await response.json();
 

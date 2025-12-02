@@ -26,12 +26,17 @@ export function StatCard({
   className,
 }: StatCardProps) {
   const colorClasses = {
-    blue: "from-blue-500 to-blue-600",
-    purple: "from-purple-500 to-purple-600",
-    green: "from-green-500 to-green-600",
-    orange: "from-orange-500 to-orange-600",
-    red: "from-red-500 to-red-600",
-    indigo: "from-indigo-500 to-indigo-600",
+    "brand-primary": "bg-brand-primary",
+    blue: "bg-blue-500",
+    purple: "bg-purple-500",
+    green: "bg-green-500",
+    success: "bg-success",
+    orange: "bg-orange-500",
+    warning: "bg-warning",
+    red: "bg-red-500",
+    error: "bg-error",
+    indigo: "bg-indigo-500",
+    info: "bg-info",
   };
 
   const trendColors = {
@@ -47,21 +52,12 @@ export function StatCard({
         className
       )}
     >
-      {/* Background Gradient Glow */}
-      <div
-        className={cn(
-          "absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br rounded-full blur-3xl opacity-0 group-hover:opacity-10 transition-opacity duration-500",
-          colorClasses[iconColor as keyof typeof colorClasses] ||
-            colorClasses.blue
-        )}
-      />
-
       <div className="relative z-10">
         {/* Header with Icon */}
         <div className="flex items-start justify-between mb-4">
           <div
             className={cn(
-              "flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-300",
+              "flex items-center justify-center w-14 h-14 rounded-xl shadow-sm group-hover:scale-105 transition-all duration-300",
               colorClasses[iconColor as keyof typeof colorClasses] ||
                 colorClasses.blue
             )}

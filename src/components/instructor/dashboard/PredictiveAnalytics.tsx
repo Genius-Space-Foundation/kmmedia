@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+
 import {
   TrendingUp,
   AlertTriangle,
@@ -109,14 +109,14 @@ export default function PredictiveAnalytics() {
         alertsResponse,
         insightsResponse,
       ] = await Promise.all([
-        makeAuthenticatedRequest(
+        fetch(
           "/api/instructor/predictive-analytics/students"
         ),
-        makeAuthenticatedRequest(
+        fetch(
           "/api/instructor/predictive-analytics/courses"
         ),
-        makeAuthenticatedRequest("/api/instructor/predictive-analytics/alerts"),
-        makeAuthenticatedRequest(
+        fetch("/api/instructor/predictive-analytics/alerts", { credentials: "include" }),
+        fetch(
           "/api/instructor/predictive-analytics/insights"
         ),
       ]);

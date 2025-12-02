@@ -67,7 +67,6 @@ import {
   ThumbsUp,
   ThumbsDown,
 } from "lucide-react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
 
 interface Grade {
   id: string;
@@ -239,7 +238,7 @@ export default function GradebookSystem() {
     try {
       if (typeof window === "undefined") return;
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/courses"
       );
       if (response.ok) {
@@ -257,7 +256,7 @@ export default function GradebookSystem() {
     try {
       if (typeof window === "undefined") return;
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/courses/${courseId}/assessments`
       );
       if (response.ok) {
@@ -273,7 +272,7 @@ export default function GradebookSystem() {
     try {
       if (typeof window === "undefined") return;
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/courses/${courseId}/grades`
       );
       if (response.ok) {
@@ -289,7 +288,7 @@ export default function GradebookSystem() {
     try {
       if (typeof window === "undefined") return;
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/courses/${courseId}/rubrics`
       );
       if (response.ok) {
@@ -305,7 +304,7 @@ export default function GradebookSystem() {
     if (!newGrade.studentId || !newGrade.assessmentId) return;
 
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/grades`,
         {
           method: "POST",
@@ -337,7 +336,7 @@ export default function GradebookSystem() {
     if (!editingGrade) return;
 
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/grades/${editingGrade.id}`,
         {
           method: "PUT",
@@ -372,7 +371,7 @@ export default function GradebookSystem() {
         0
       );
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/rubrics`,
         {
           method: "POST",

@@ -44,7 +44,6 @@ import {
   AlertCircle,
   Info,
 } from "lucide-react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
 
 interface CourseData {
   // Basic Information
@@ -446,7 +445,7 @@ export default function CourseCreationWizard() {
         }
       });
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/courses/create",
         {
           method: "POST",

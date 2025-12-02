@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 
@@ -6,98 +6,66 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-// Get student metrics and analytics
 async function getStudentMetrics(req: AuthenticatedRequest) {
   try {
     const instructorId = req.user!.userId;
 
-    const [
-      totalStudents,
-      activeStudents,
-      averageProgress,
-      averageEngagement,
-      completionRate,
-      atRiskStudents,
-    ] = await Promise.all([
-      // Total students across all courses
-      prisma.enrollment.count({
-        where: {
-          course: { instructorId },
+    // Get all enrollments for instructor's courses
+    const enrollments = await prisma.enrollment.findMany({
+      where: {
+        course: { instructorId },
+      },
+      include: {
+        lessonCompletions: true,
+        course: {
+          include: {
+            lessons: true,
+          },
         },
-      }),
-
-      // Active students (enrolled and not completed)
-      prisma.enrollment.count({
-        where: {
-          course: { instructorId },
-          status: "ACTIVE",
-        },
-      }),
-
-      // Average progress across all enrollments
-      prisma.enrollment.aggregate({
-        where: {
-          course: { instructorId },
-        },
-        _avg: {
-          progress: true,
-        },
-      }),
-
-      // Average engagement (based on time spent and activity)
-      prisma.enrollment.aggregate({
-        where: {
-          course: { instructorId },
-        },
-        _avg: {
-          timeSpent: true,
-        },
-      }),
-
-      // Completion rate (completed enrollments / total enrollments)
-      prisma.enrollment.count({
-        where: {
-          course: { instructorId },
-          status: "COMPLETED",
-        },
-      }),
-
-      // At-risk students (low progress or engagement)
-      prisma.enrollment.count({
-        where: {
-          course: { instructorId },
-          OR: [
-            { progress: { lt: 30 } },
-            { timeSpent: { lt: 60 } }, // Less than 1 hour total time
-          ],
-        },
-      }),
-    ]);
-
-    const totalEnrollments = await prisma.enrollment.count({
-      where: { course: { instructorId } },
+      },
     });
 
-    const metrics = {
-      totalStudents,
-      activeStudents,
-      averageProgress: Math.round(averageProgress._avg.progress || 0),
-      averageEngagement: Math.round(
-        (averageEngagement._avg.timeSpent || 0) / 60
-      ), // Convert to hours
-      completionRate:
-        totalEnrollments > 0
-          ? Math.round((completionRate / totalEnrollments) * 100)
-          : 0,
-      atRiskStudents,
-    };
+    const totalStudents = enrollments.length;
+    const activeStudents = enrollments.filter(e => e.status === "ACTIVE").length;
+    const completedStudents = enrollments.filter(e => e.status === "COMPLETED").length;
+
+    // Calculate averages
+    let totalProgress = 0;
+    let totalEngagement = 0;
+    let atRiskCount = 0;
+
+    enrollments.forEach(enrollment => {
+      totalProgress += enrollment.progress || 0;
+      
+      // Calculate engagement
+      const totalLessons = enrollment.course.lessons.length || 1;
+      const completedLessons = enrollment.lessonCompletions.length;
+      const engagement = (completedLessons / totalLessons) * 100;
+      totalEngagement += engagement;
+
+      // Identify at-risk
+      if (engagement < 30 || (enrollment.progress || 0) < 20) {
+        atRiskCount++;
+      }
+    });
+
+    const averageProgress = totalStudents > 0 ? Math.round(totalProgress / totalStudents) : 0;
+    const averageEngagement = totalStudents > 0 ? Math.round(totalEngagement / totalStudents) : 0;
+    const completionRate = totalStudents > 0 ? Math.round((completedStudents / totalStudents) * 100) : 0;
 
     return NextResponse.json({
       success: true,
-      data: metrics,
+      data: {
+        totalStudents,
+        activeStudents,
+        averageProgress,
+        averageEngagement,
+        completionRate,
+        atRiskStudents: atRiskCount,
+      },
     });
   } catch (error) {
-    console.error("Get student metrics error:", error);
+    console.error("Error fetching student metrics:", error);
     return NextResponse.json(
       { success: false, message: "Failed to fetch student metrics" },
       { status: 500 }
@@ -106,4 +74,3 @@ async function getStudentMetrics(req: AuthenticatedRequest) {
 }
 
 export const GET = withInstructorAuth(getStudentMetrics);
-

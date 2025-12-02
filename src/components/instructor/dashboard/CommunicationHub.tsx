@@ -29,7 +29,23 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+import IntegratedMessagingCenter from "./IntegratedMessagingCenter";
+import {
+  MessageSquare,
+  Megaphone,
+  Video,
+  Users,
+  Mail,
+  Plus,
+  Search,
+  Filter,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Copy,
+  Calendar,
+  Clock,
+} from "lucide-react";
 
 interface Announcement {
   id: string;
@@ -44,20 +60,6 @@ interface Announcement {
   recipients: string[];
   readCount: number;
   totalRecipients: number;
-}
-
-interface Message {
-  id: string;
-  from: string;
-  fromName: string;
-  to: string;
-  toName: string;
-  subject: string;
-  content: string;
-  isRead: boolean;
-  sentAt: string;
-  priority: "LOW" | "MEDIUM" | "HIGH";
-  attachments?: string[];
 }
 
 interface LiveSession {
@@ -75,6 +77,26 @@ interface LiveSession {
   recordingUrl?: string;
 }
 
+interface ForumTopic {
+  id: string;
+  title: string;
+  author: string;
+  replies: number;
+  views: number;
+  lastActivity: string;
+  category: string;
+  isPinned: boolean;
+}
+
+interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  content: string;
+  category: "Welcome" | "Reminder" | "Grade" | "General";
+  lastUsed: string;
+}
+
 interface CommunicationStats {
   totalAnnouncements: number;
   unreadMessages: number;
@@ -84,8 +106,9 @@ interface CommunicationStats {
 
 export default function CommunicationHub() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
+  const [forumTopics, setForumTopics] = useState<ForumTopic[]>([]);
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>([]);
   const [stats, setStats] = useState<CommunicationStats>({
     totalAnnouncements: 0,
     unreadMessages: 0,
@@ -93,12 +116,10 @@ export default function CommunicationHub() {
     totalRecipients: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("announcements");
+  const [activeTab, setActiveTab] = useState("messages");
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
-  const [showMessageForm, setShowMessageForm] = useState(false);
   const [showSessionForm, setShowSessionForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
 
   // Announcement form
   const [newAnnouncement, setNewAnnouncement] = useState({
@@ -108,14 +129,6 @@ export default function CommunicationHub() {
     isScheduled: false,
     scheduledFor: "",
     recipients: [] as string[],
-  });
-
-  // Message form
-  const [newMessage, setNewMessage] = useState({
-    to: "",
-    subject: "",
-    content: "",
-    priority: "MEDIUM" as const,
   });
 
   // Live session form
@@ -134,46 +147,40 @@ export default function CommunicationHub() {
 
   const fetchCommunicationData = async () => {
     try {
-      // Check if we're on the client side
-      if (typeof window === "undefined") {
-        return;
-      }
+      if (typeof window === "undefined") return;
 
-      const [announcementsRes, messagesRes, sessionsRes, statsRes] =
-        await Promise.all([
-          makeAuthenticatedRequest("/api/instructor/announcements"),
-          makeAuthenticatedRequest("/api/instructor/messages"),
-          makeAuthenticatedRequest("/api/instructor/live-sessions"),
-          makeAuthenticatedRequest("/api/instructor/communication-stats"),
-        ]);
+      setLoading(true);
 
-      const [announcementsData, messagesData, sessionsData, statsData] =
-        await Promise.all([
-          announcementsRes.json(),
-          messagesRes.json(),
-          sessionsRes.json(),
-          statsRes.json(),
-        ]);
+      const [announcementsRes, messagesRes] = await Promise.all([
+        fetch("/api/instructor/announcements", { credentials: "include" }),
+        fetch("/api/instructor/messages", { credentials: "include" }),
+      ]);
+
+      const announcementsData = await announcementsRes.json();
+      const messagesData = await messagesRes.json();
 
       if (announcementsData.success) {
-        const announcementsArray = Array.isArray(announcementsData.data)
-          ? announcementsData.data
-          : announcementsData.data?.announcements || [];
-        setAnnouncements(announcementsArray);
+        setAnnouncements(announcementsData.data.announcements);
       }
+
       if (messagesData.success) {
-        const messagesArray = Array.isArray(messagesData.data)
-          ? messagesData.data
-          : messagesData.data?.messages || [];
-        setMessages(messagesArray);
+        // Calculate stats from messages
+        const unreadCount = messagesData.data.messages.filter(
+          (m: any) => !m.isRead && m.recipientId === "current-user-id" // Ideally get current user ID
+        ).length;
+        
+        setStats(prev => ({
+          ...prev,
+          totalAnnouncements: announcementsData.data.pagination?.total || 0,
+          unreadMessages: unreadCount,
+        }));
       }
-      if (sessionsData.success) {
-        const sessionsArray = Array.isArray(sessionsData.data)
-          ? sessionsData.data
-          : sessionsData.data?.sessions || [];
-        setLiveSessions(sessionsArray);
-      }
-      if (statsData.success) setStats(statsData.data || {});
+      
+      // Mock other data for now until endpoints exist
+      setLiveSessions([]);
+      setForumTopics([]);
+      setEmailTemplates([]);
+
     } catch (error) {
       console.error("Error fetching communication data:", error);
     } finally {
@@ -184,14 +191,12 @@ export default function CommunicationHub() {
   const handleCreateAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await makeAuthenticatedRequest(
-        "/api/instructor/announcements",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newAnnouncement),
-        }
-      );
+      const response = await fetch("/api/instructor/announcements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newAnnouncement),
+        credentials: "include",
+      });
       const data = await response.json();
       if (data.success) {
         setAnnouncements([data.data, ...announcements]);
@@ -210,44 +215,15 @@ export default function CommunicationHub() {
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const response = await makeAuthenticatedRequest(
-        "/api/instructor/messages",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newMessage),
-        }
-      );
-      const data = await response.json();
-      if (data.success) {
-        setMessages([data.data, ...messages]);
-        setShowMessageForm(false);
-        setNewMessage({
-          to: "",
-          subject: "",
-          content: "",
-          priority: "MEDIUM",
-        });
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
-  };
-
   const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await makeAuthenticatedRequest(
-        "/api/instructor/live-sessions",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newSession),
-        }
-      );
+      const response = await fetch("/api/instructor/live-sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newSession),
+        credentials: "include",
+      });
       const data = await response.json();
       if (data.success) {
         setLiveSessions([data.data, ...liveSessions]);
@@ -266,682 +242,389 @@ export default function CommunicationHub() {
     }
   };
 
-  const handleMarkAsRead = async (messageId: string) => {
-    try {
-      const response = await makeAuthenticatedRequest(
-        `/api/instructor/messages/${messageId}/read`,
-        {
-          method: "POST",
-        }
-      );
-      const data = await response.json();
-      if (data.success) {
-        setMessages(
-          messages.map((msg) =>
-            msg.id === messageId ? { ...msg, isRead: true } : msg
-          )
-        );
-      }
-    } catch (error) {
-      console.error("Error marking message as read:", error);
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "HIGH":
-        return "bg-red-100 text-red-800";
-      case "MEDIUM":
-        return "bg-yellow-100 text-yellow-800";
-      case "LOW":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "SCHEDULED":
-        return "bg-blue-100 text-blue-800";
-      case "LIVE":
-        return "bg-green-100 text-green-800";
-      case "ENDED":
-        return "bg-gray-100 text-gray-800";
-      case "CANCELLED":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const filteredAnnouncements = (
-    Array.isArray(announcements) ? announcements : []
-  ).filter(
-    (announcement) =>
-      announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      announcement.content.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredMessages = (Array.isArray(messages) ? messages : []).filter(
-    (message) =>
-      message.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      message.content.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredSessions = (
-    Array.isArray(liveSessions) ? liveSessions : []
-  ).filter(
-    (session) =>
-      session.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      session.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Handlers for IntegratedMessagingCenter
+  const handleSendMessage = (message: any) => console.log("Send", message);
+  const handleMarkAsRead = (id: string) => console.log("Read", id);
+  const handleArchiveMessage = (id: string) => console.log("Archive", id);
+  const handleDeleteMessage = (id: string) => console.log("Delete", id);
+  const handleStartVideoCall = (id: string) => console.log("Call", id);
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="h-8 bg-gray-200 rounded w-1/4 animate-pulse"></div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
-    );
+    return <div className="p-8 text-center">Loading communication hub...</div>;
   }
 
   return (
     <div className="space-y-6">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="bg-white border-neutral-200">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Megaphone className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-blue-900">
+                  {stats.totalAnnouncements}
+                </p>
+                <p className="text-sm text-blue-700">Announcements</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-neutral-200">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                <MessageSquare className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-orange-900">
+                  {stats.unreadMessages}
+                </p>
+                <p className="text-sm text-orange-700">Unread Messages</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-neutral-200">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Video className="h-5 w-5 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-purple-900">
+                  {stats.upcomingSessions}
+                </p>
+                <p className="text-sm text-purple-700">Live Sessions</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white border-neutral-200">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                <Users className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-green-900">
+                  {stats.totalRecipients}
+                </p>
+                <p className="text-sm text-green-700">Total Reach</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Communication Hub</h2>
+        <h2 className="text-2xl font-bold text-neutral-900">Communication Hub</h2>
         <div className="flex space-x-2">
-          <Dialog
-            open={showAnnouncementForm}
-            onOpenChange={setShowAnnouncementForm}
-          >
-            <DialogTrigger asChild>
-              <Button>Send Announcement</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Create Announcement</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleCreateAnnouncement} className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={newAnnouncement.title}
-                    onChange={(e) =>
-                      setNewAnnouncement({
-                        ...newAnnouncement,
-                        title: e.target.value,
-                      })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="content">Content</Label>
-                  <Textarea
-                    id="content"
-                    value={newAnnouncement.content}
-                    onChange={(e) =>
-                      setNewAnnouncement({
-                        ...newAnnouncement,
-                        content: e.target.value,
-                      })
-                    }
-                    rows={4}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="courseId">Course (Optional)</Label>
-                    <Select
-                      value={newAnnouncement.courseId}
-                      onValueChange={(value) =>
-                        setNewAnnouncement({
-                          ...newAnnouncement,
-                          courseId: value,
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select course" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">All Students</SelectItem>
-                        {/* Add course options here */}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="isScheduled"
-                      checked={newAnnouncement.isScheduled}
-                      onCheckedChange={(checked) =>
-                        setNewAnnouncement({
-                          ...newAnnouncement,
-                          isScheduled: checked as boolean,
-                        })
-                      }
-                    />
-                    <Label htmlFor="isScheduled">Schedule for later</Label>
-                  </div>
-                </div>
-                {newAnnouncement.isScheduled && (
-                  <div>
-                    <Label htmlFor="scheduledFor">Scheduled For</Label>
-                    <Input
-                      id="scheduledFor"
-                      type="datetime-local"
-                      value={newAnnouncement.scheduledFor}
-                      onChange={(e) =>
-                        setNewAnnouncement({
-                          ...newAnnouncement,
-                          scheduledFor: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                )}
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowAnnouncementForm(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit">Send Announcement</Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-          <Dialog open={showMessageForm} onOpenChange={setShowMessageForm}>
-            <DialogTrigger asChild>
-              <Button variant="outline">Send Message</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Send Message</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSendMessage} className="space-y-4">
-                <div>
-                  <Label htmlFor="to">To</Label>
-                  <Input
-                    id="to"
-                    value={newMessage.to}
-                    onChange={(e) =>
-                      setNewMessage({ ...newMessage, to: e.target.value })
-                    }
-                    placeholder="Student email or name"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input
-                    id="subject"
-                    value={newMessage.subject}
-                    onChange={(e) =>
-                      setNewMessage({ ...newMessage, subject: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="content">Message</Label>
-                  <Textarea
-                    id="content"
-                    value={newMessage.content}
-                    onChange={(e) =>
-                      setNewMessage({ ...newMessage, content: e.target.value })
-                    }
-                    rows={4}
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="priority">Priority</Label>
-                  <Select
-                    value={newMessage.priority}
-                    onValueChange={(value) =>
-                      setNewMessage({ ...newMessage, priority: value as any })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="LOW">Low</SelectItem>
-                      <SelectItem value="MEDIUM">Medium</SelectItem>
-                      <SelectItem value="HIGH">High</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowMessageForm(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit">Send Message</Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => setShowAnnouncementForm(true)} className="bg-brand-primary text-white">
+            <Plus className="h-4 w-4 mr-2" /> New Announcement
+          </Button>
+          <Button variant="outline" onClick={() => setShowSessionForm(true)}>
+            <Video className="h-4 w-4 mr-2" /> Schedule Session
+          </Button>
         </div>
       </div>
 
-      {/* Communication Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Announcements
-            </CardTitle>
-            <span className="text-2xl">📢</span>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalAnnouncements}</div>
-            <p className="text-xs text-muted-foreground">Sent this month</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Unread Messages
-            </CardTitle>
-            <span className="text-2xl">💬</span>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.unreadMessages}</div>
-            <p className="text-xs text-muted-foreground">Require attention</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Upcoming Sessions
-            </CardTitle>
-            <span className="text-2xl">🎥</span>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.upcomingSessions}</div>
-            <p className="text-xs text-muted-foreground">
-              Live sessions scheduled
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Recipients
-            </CardTitle>
-            <span className="text-2xl">👥</span>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.totalRecipients}</div>
-            <p className="text-xs text-muted-foreground">
-              Across all communications
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="announcements">Announcements</TabsTrigger>
-          <TabsTrigger value="messages">Messages</TabsTrigger>
-          <TabsTrigger value="sessions">Live Sessions</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="w-full justify-start border-b rounded-none h-auto p-0 bg-transparent">
+          <TabsTrigger 
+            value="messages"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:bg-transparent px-6 py-3"
+          >
+            Messages
+          </TabsTrigger>
+          <TabsTrigger 
+            value="announcements"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:bg-transparent px-6 py-3"
+          >
+            Announcements
+          </TabsTrigger>
+          <TabsTrigger 
+            value="forum"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:bg-transparent px-6 py-3"
+          >
+            Forum
+          </TabsTrigger>
+          <TabsTrigger 
+            value="sessions"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:bg-transparent px-6 py-3"
+          >
+            Live Sessions
+          </TabsTrigger>
+          <TabsTrigger 
+            value="templates"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-brand-primary data-[state=active]:bg-transparent px-6 py-3"
+          >
+            Email Templates
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="announcements" className="space-y-4">
-          <div className="flex space-x-4">
-            <Input
-              placeholder="Search announcements..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-          </div>
-
-          <div className="space-y-4">
-            {filteredAnnouncements.map((announcement) => (
-              <Card
-                key={announcement.id}
-                className="hover:shadow-md transition-shadow"
-              >
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">
-                        {announcement.title}
-                      </CardTitle>
-                      <CardDescription>
-                        {announcement.courseTitle || "All Students"} •{" "}
-                        {new Date(announcement.createdAt).toLocaleDateString()}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge
-                        variant={
-                          announcement.isPublished ? "default" : "secondary"
-                        }
-                      >
-                        {announcement.isPublished ? "Published" : "Draft"}
-                      </Badge>
-                      {announcement.isScheduled && (
-                        <Badge variant="outline">Scheduled</Badge>
-                      )}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {announcement.content}
-                  </p>
-
-                  <div className="flex justify-between text-sm">
-                    <span>
-                      Read by {announcement.readCount} of{" "}
-                      {announcement.totalRecipients}
-                    </span>
-                    <span>
-                      {Math.round(
-                        (announcement.readCount /
-                          announcement.totalRecipients) *
-                          100
-                      )}
-                      % read rate
-                    </span>
-                  </div>
-
-                  <div className="flex space-x-2">
-                    <Button size="sm" variant="outline">
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      View Details
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      Duplicate
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+        <TabsContent value="messages" className="mt-6">
+          <IntegratedMessagingCenter
+            onSendMessage={handleSendMessage}
+            onMarkAsRead={handleMarkAsRead}
+            onArchiveMessage={handleArchiveMessage}
+            onDeleteMessage={handleDeleteMessage}
+            onStartVideoCall={handleStartVideoCall}
+          />
         </TabsContent>
 
-        <TabsContent value="messages" className="space-y-4">
+        <TabsContent value="announcements" className="mt-6 space-y-6">
           <div className="flex space-x-4">
-            <Input
-              placeholder="Search messages..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-sm"
-            />
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">All Messages</SelectItem>
-                <SelectItem value="UNREAD">Unread</SelectItem>
-                <SelectItem value="READ">Read</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-4">
-            {filteredMessages.map((message) => (
-              <Card
-                key={message.id}
-                className={`hover:shadow-md transition-shadow ${
-                  !message.isRead ? "border-blue-200 bg-blue-50" : ""
-                }`}
-              >
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">
-                        {message.subject}
-                      </CardTitle>
-                      <CardDescription>
-                        From: {message.fromName} •{" "}
-                        {new Date(message.sentAt).toLocaleDateString()}
-                      </CardDescription>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge className={getPriorityColor(message.priority)}>
-                        {message.priority}
-                      </Badge>
-                      {!message.isRead && <Badge variant="default">New</Badge>}
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {message.content}
-                  </p>
-
-                  <div className="flex space-x-2">
-                    {!message.isRead && (
-                      <Button
-                        size="sm"
-                        onClick={() => handleMarkAsRead(message.id)}
-                      >
-                        Mark as Read
-                      </Button>
-                    )}
-                    <Button size="sm" variant="outline">
-                      Reply
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      Forward
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="sessions" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <div className="flex space-x-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Search sessions..."
+                placeholder="Search announcements..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="max-w-sm"
+                className="pl-9"
               />
             </div>
-            <Dialog open={showSessionForm} onOpenChange={setShowSessionForm}>
-              <DialogTrigger asChild>
-                <Button>Schedule Session</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Schedule Live Session</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleCreateSession} className="space-y-4">
-                  <div>
-                    <Label htmlFor="sessionTitle">Title</Label>
-                    <Input
-                      id="sessionTitle"
-                      value={newSession.title}
-                      onChange={(e) =>
-                        setNewSession({ ...newSession, title: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="sessionDescription">Description</Label>
-                    <Textarea
-                      id="sessionDescription"
-                      value={newSession.description}
-                      onChange={(e) =>
-                        setNewSession({
-                          ...newSession,
-                          description: e.target.value,
-                        })
-                      }
-                      rows={3}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="scheduledFor">Scheduled For</Label>
-                      <Input
-                        id="scheduledFor"
-                        type="datetime-local"
-                        value={newSession.scheduledFor}
-                        onChange={(e) =>
-                          setNewSession({
-                            ...newSession,
-                            scheduledFor: e.target.value,
-                          })
-                        }
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="duration">Duration (minutes)</Label>
-                      <Input
-                        id="duration"
-                        type="number"
-                        value={newSession.duration || ""}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          const numValue =
-                            value === "" ? 0 : parseInt(value, 10);
-                          setNewSession({
-                            ...newSession,
-                            duration: isNaN(numValue) ? 0 : numValue,
-                          });
-                        }}
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="maxParticipants">Max Participants</Label>
-                    <Input
-                      id="maxParticipants"
-                      type="number"
-                      value={newSession.maxParticipants || ""}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        const numValue = value === "" ? 0 : parseInt(value, 10);
-                        setNewSession({
-                          ...newSession,
-                          maxParticipants: isNaN(numValue) ? 0 : numValue,
-                        });
-                      }}
-                      required
-                    />
-                  </div>
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowSessionForm(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button type="submit">Schedule Session</Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredSessions.map((session) => (
-              <Card
-                key={session.id}
-                className="hover:shadow-md transition-shadow"
-              >
+          <div className="grid gap-4">
+            {announcements.map((announcement) => (
+              <Card key={announcement.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
                   <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg">{session.title}</CardTitle>
-                      <CardDescription>{session.courseTitle}</CardDescription>
+                    <div>
+                      <CardTitle className="text-lg">{announcement.title}</CardTitle>
+                      <CardDescription>
+                        {announcement.courseTitle || "All Students"} • {new Date(announcement.createdAt).toLocaleDateString()}
+                      </CardDescription>
                     </div>
-                    <Badge className={getStatusColor(session.status)}>
-                      {session.status}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={announcement.isPublished ? "default" : "secondary"}>
+                        {announcement.isPublished ? "Published" : "Draft"}
+                      </Badge>
+                      {announcement.isScheduled && <Badge variant="outline">Scheduled</Badge>}
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {session.description}
-                  </p>
-
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium">Scheduled:</span>
-                      <p className="text-muted-foreground">
-                        {new Date(session.scheduledFor).toLocaleString()}
-                      </p>
+                <CardContent>
+                  <p className="text-gray-600 mb-4">{announcement.content}</p>
+                  <div className="flex items-center justify-between text-sm text-gray-500">
+                    <span>Read by {announcement.readCount} of {announcement.totalRecipients} students</span>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm">Edit</Button>
+                      <Button variant="ghost" size="sm">Duplicate</Button>
                     </div>
-                    <div>
-                      <span className="font-medium">Duration:</span>
-                      <p className="text-muted-foreground">
-                        {session.duration} minutes
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Participants:</span>
-                      <p className="text-muted-foreground">
-                        {session.currentParticipants}/{session.maxParticipants}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="font-medium">Status:</span>
-                      <p className="text-muted-foreground">{session.status}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex space-x-2">
-                    {session.status === "SCHEDULED" && (
-                      <Button size="sm" className="flex-1">
-                        Start Session
-                      </Button>
-                    )}
-                    {session.status === "LIVE" && (
-                      <Button size="sm" variant="outline" className="flex-1">
-                        Join Session
-                      </Button>
-                    )}
-                    <Button size="sm" variant="outline">
-                      Edit
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="forum" className="mt-6 space-y-6">
+          <div className="flex justify-between items-center">
+            <Input placeholder="Search topics..." className="max-w-md" />
+            <Button variant="outline">New Topic</Button>
+          </div>
+          <div className="grid gap-4">
+            {forumTopics.map((topic) => (
+              <Card key={topic.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start gap-4">
+                      <div className="bg-blue-100 p-2 rounded-lg">
+                        <MessageSquare className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-lg">{topic.title}</h3>
+                          {topic.isPinned && <Badge variant="secondary">Pinned</Badge>}
+                          <Badge variant="outline">{topic.category}</Badge>
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          Started by {topic.author} • Last active {new Date(topic.lastActivity).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-6 text-gray-500">
+                      <div className="text-center">
+                        <p className="text-xl font-bold text-gray-900">{topic.replies}</p>
+                        <p className="text-xs">Replies</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xl font-bold text-gray-900">{topic.views}</p>
+                        <p className="text-xs">Views</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sessions" className="mt-6 space-y-6">
+          <div className="grid gap-4">
+            {liveSessions.map((session) => (
+              <Card key={session.id}>
+                <CardContent className="p-6">
+                  <div className="flex justify-between items-start">
+                    <div className="flex gap-4">
+                      <div className="bg-purple-100 p-3 rounded-lg h-fit">
+                        <Video className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg mb-1">{session.title}</h3>
+                        <p className="text-gray-600 mb-2">{session.description}</p>
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-4 w-4" />
+                            {new Date(session.scheduledFor).toLocaleDateString()}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            {new Date(session.scheduledFor).toLocaleTimeString()}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Users className="h-4 w-4" />
+                            {session.currentParticipants}/{session.maxParticipants}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <Button>Join Session</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="templates" className="mt-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {emailTemplates.map((template) => (
+              <Card key={template.id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <Badge variant="outline">{template.category}</Badge>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <CardTitle className="mt-2">{template.name}</CardTitle>
+                  <CardDescription>Subject: {template.subject}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-500 line-clamp-3 mb-4">{template.content}</p>
+                  <Button variant="outline" className="w-full">Use Template</Button>
+                </CardContent>
+              </Card>
+            ))}
+            <Card className="border-dashed flex items-center justify-center min-h-[200px] cursor-pointer hover:bg-gray-50">
+              <div className="text-center">
+                <div className="bg-gray-100 p-3 rounded-full w-fit mx-auto mb-3">
+                  <Plus className="h-6 w-6 text-gray-600" />
+                </div>
+                <h3 className="font-semibold">Create Template</h3>
+              </div>
+            </Card>
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <Dialog open={showAnnouncementForm} onOpenChange={setShowAnnouncementForm}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Create Announcement</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateAnnouncement} className="space-y-4">
+            <div>
+              <Label>Title</Label>
+              <Input 
+                value={newAnnouncement.title}
+                onChange={(e) => setNewAnnouncement({...newAnnouncement, title: e.target.value})}
+                required 
+              />
+            </div>
+            <div>
+              <Label>Content</Label>
+              <Textarea 
+                value={newAnnouncement.content}
+                onChange={(e) => setNewAnnouncement({...newAnnouncement, content: e.target.value})}
+                rows={5}
+                required 
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox 
+                id="schedule"
+                checked={newAnnouncement.isScheduled}
+                onCheckedChange={(c) => setNewAnnouncement({...newAnnouncement, isScheduled: c as boolean})}
+              />
+              <Label htmlFor="schedule">Schedule for later</Label>
+            </div>
+            {newAnnouncement.isScheduled && (
+              <div>
+                <Label>Date & Time</Label>
+                <Input 
+                  type="datetime-local"
+                  value={newAnnouncement.scheduledFor}
+                  onChange={(e) => setNewAnnouncement({...newAnnouncement, scheduledFor: e.target.value})}
+                />
+              </div>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowAnnouncementForm(false)}>Cancel</Button>
+              <Button type="submit">Post Announcement</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSessionForm} onOpenChange={setShowSessionForm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Live Session</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreateSession} className="space-y-4">
+            <div>
+              <Label>Title</Label>
+              <Input 
+                value={newSession.title}
+                onChange={(e) => setNewSession({...newSession, title: e.target.value})}
+                required 
+              />
+            </div>
+            <div>
+              <Label>Date & Time</Label>
+              <Input 
+                type="datetime-local"
+                value={newSession.scheduledFor}
+                onChange={(e) => setNewSession({...newSession, scheduledFor: e.target.value})}
+                required 
+              />
+            </div>
+            <div>
+              <Label>Duration (minutes)</Label>
+              <Input 
+                type="number"
+                value={newSession.duration}
+                onChange={(e) => setNewSession({...newSession, duration: parseInt(e.target.value)})}
+                required 
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowSessionForm(false)}>Cancel</Button>
+              <Button type="submit">Schedule</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

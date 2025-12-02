@@ -11,7 +11,7 @@ async function getGradingQueue(req: AuthenticatedRequest) {
   try {
     const instructorId = req.user!.userId;
 
-    const [pendingSubmissions, averageGradingTime, overdueSubmissions] =
+    const [pendingSubmissions, averageGradingTime, overdueSubmissions, urgentCount] =
       await Promise.all([
         // Pending submissions awaiting grading
         prisma.assessmentSubmission.count({
@@ -51,12 +51,25 @@ async function getGradingQueue(req: AuthenticatedRequest) {
             },
           },
         }),
+        // Urgent submissions (submitted > 3 days ago)
+        prisma.assessmentSubmission.count({
+          where: {
+            assessment: {
+              course: { instructorId },
+            },
+            status: "SUBMITTED",
+            submittedAt: {
+              lt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+            },
+          },
+        }),
       ]);
 
     const queue = {
       pendingSubmissions,
       averageGradingTime: 45, // Mock value - would be calculated from actual data
       overdueSubmissions,
+      urgentCount,
     };
 
     return NextResponse.json({

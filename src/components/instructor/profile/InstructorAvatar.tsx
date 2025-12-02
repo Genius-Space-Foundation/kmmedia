@@ -46,7 +46,7 @@ export default function InstructorAvatar({
   return (
     <div className={`relative inline-block ${className}`}>
       <div
-        className={`${sizeClass} rounded-full overflow-hidden ${borderClass} bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center`}
+        className={`${sizeClass} rounded-full overflow-hidden ${borderClass} bg-brand-primary flex items-center justify-center`}
       >
         {src ? (
           <Image

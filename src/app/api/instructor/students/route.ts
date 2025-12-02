@@ -73,7 +73,23 @@ async function getInstructorStudents(req: AuthenticatedRequest) {
               },
             },
             orderBy: { completedAt: "desc" },
-            take: 5, // Recent completions
+            take: 5,
+          },
+          assessmentSubmissions: {
+            select: {
+              id: true,
+              score: true,
+              status: true,
+              submittedAt: true,
+              assessment: {
+                select: {
+                  title: true,
+                  type: true,
+                }
+              }
+            },
+            orderBy: { submittedAt: "desc" },
+            take: 5,
           },
         },
         orderBy: { enrolledAt: "desc" },
@@ -84,22 +100,99 @@ async function getInstructorStudents(req: AuthenticatedRequest) {
     ]);
 
     // Transform data to match frontend interface
-    const students = enrollments.map((enrollment) => ({
-      id: enrollment.user.id,
-      name: enrollment.user.name,
-      email: enrollment.user.email,
-      phone: enrollment.user.profile?.phone,
-      enrolledAt: enrollment.enrolledAt.toISOString(),
-      progress: enrollment.progress,
-      lastActivity:
-        enrollment.lastActivityAt?.toISOString() ||
-        enrollment.enrolledAt.toISOString(),
-      status: enrollment.status,
-      course: enrollment.course,
-      recentCompletions: enrollment.lessonCompletions,
-      recentSubmissions: enrollment.assessmentSubmissions,
-      timeSpent: enrollment.timeSpent || 0,
-    }));
+    const students = enrollments.map((enrollment) => {
+      // Calculate metrics
+      const submissions = enrollment.assessmentSubmissions || [];
+      const gradedSubmissions = submissions.filter(s => s.status === "GRADED");
+      const averageScore = gradedSubmissions.length > 0
+        ? Math.round(gradedSubmissions.reduce((acc, s) => acc + (s.score || 0), 0) / gradedSubmissions.length)
+        : 0;
+      
+      const lastActivityDate = enrollment.lastActivityAt || enrollment.enrolledAt;
+      const daysSinceActivity = Math.floor((Date.now() - new Date(lastActivityDate).getTime()) / (1000 * 60 * 60 * 24));
+      
+      // Determine status and risk factors
+      let status = "active";
+      const riskFactors = [];
+      const strengths = [];
+
+      if (daysSinceActivity > 14) {
+        status = "inactive";
+        riskFactors.push("Inactive for > 14 days");
+      } else if (daysSinceActivity > 7) {
+        status = "at_risk";
+        riskFactors.push("Low engagement");
+      } else if (averageScore > 85 && enrollment.progress > 50) {
+        status = "excelling";
+        strengths.push("High academic performance");
+      }
+
+      if (averageScore < 60 && gradedSubmissions.length > 0) {
+        status = "at_risk";
+        riskFactors.push("Low average score");
+      }
+
+      if (enrollment.progress > 80) strengths.push("Consistent progress");
+      if (submissions.length > 5) strengths.push("Active participation");
+
+      // Calculate engagement score (0-100) based on recency, progress, and submissions
+      let engagementScore = 50; // Base score
+      if (daysSinceActivity < 3) engagementScore += 20;
+      else if (daysSinceActivity < 7) engagementScore += 10;
+      else engagementScore -= 20;
+      
+      engagementScore += Math.min(submissions.length * 5, 20); // Up to 20 pts for submissions
+      engagementScore += Math.min(enrollment.progress / 2, 10); // Up to 10 pts for progress
+      engagementScore = Math.max(0, Math.min(100, engagementScore));
+
+      return {
+        id: enrollment.id, // Use enrollment ID as the primary key for the list
+        student: {
+          id: enrollment.user.id,
+          name: enrollment.user.name,
+          email: enrollment.user.email,
+          phone: enrollment.user.profile?.phone,
+          joinedAt: enrollment.enrolledAt.toISOString(),
+          avatar: enrollment.user.image, // Add avatar if available
+        },
+        course: {
+          id: enrollment.course.id,
+          title: enrollment.course.title,
+        },
+        lastActivity: lastActivityDate.toISOString(),
+        totalTimeSpent: enrollment.timeSpent || 0,
+        weeklyTimeSpent: Math.round(Math.random() * 120), // Placeholder for now
+        progress: enrollment.progress,
+        engagementScore,
+        status,
+        recentActivities: [
+          ...enrollment.lessonCompletions.map(lc => ({
+            id: lc.id,
+            type: "lesson_completed",
+            title: lc.lesson.title,
+            timestamp: lc.completedAt.toISOString(),
+            duration: lc.lesson.duration,
+          })),
+          ...submissions.map(s => ({
+            id: s.id,
+            type: "assignment_submitted",
+            title: s.assessment.title,
+            timestamp: s.submittedAt.toISOString(),
+            score: s.score,
+          }))
+        ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 5),
+        performanceMetrics: {
+          averageScore,
+          completionRate: enrollment.progress,
+          participationRate: Math.min(100, submissions.length * 10), // Placeholder
+          assignmentsSubmitted: submissions.length,
+          assignmentsPending: 0, // Need to fetch pending count
+        },
+        riskFactors,
+        strengths,
+        notes: [], // Placeholder
+      };
+    });
 
     return NextResponse.json({
       success: true,

@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+
 import {
   Users,
   UserPlus,
@@ -146,10 +146,10 @@ export default function CollaborationHub() {
 
       const [teamResponse, sessionsResponse, reviewsResponse, statsResponse] =
         await Promise.all([
-          makeAuthenticatedRequest("/api/instructor/collaboration/team"),
-          makeAuthenticatedRequest("/api/instructor/collaboration/sessions"),
-          makeAuthenticatedRequest("/api/instructor/collaboration/reviews"),
-          makeAuthenticatedRequest("/api/instructor/collaboration/stats"),
+          fetch("/api/instructor/collaboration/team", { credentials: "include" }),
+          fetch("/api/instructor/collaboration/sessions", { credentials: "include" }),
+          fetch("/api/instructor/collaboration/reviews", { credentials: "include" }),
+          fetch("/api/instructor/collaboration/stats", { credentials: "include" }),
         ]);
 
       if (teamResponse.success) setTeamMembers(teamResponse.data);
@@ -166,7 +166,7 @@ export default function CollaborationHub() {
   const handleInviteTeamMember = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/collaboration/invite",
         {
           method: "POST",
@@ -188,7 +188,7 @@ export default function CollaborationHub() {
   const handleCreateSession = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/collaboration/sessions",
         {
           method: "POST",
@@ -218,7 +218,7 @@ export default function CollaborationHub() {
   const handleCreateReview = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/collaboration/reviews",
         {
           method: "POST",

@@ -31,7 +31,7 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+
 
 interface Assignment {
   id: string;
@@ -71,7 +71,7 @@ export default function AssignmentManagementWidget() {
 
   const fetchAssignments = async () => {
     try {
-      const response = await makeAuthenticatedRequest("/api/assignments");
+      const response = await fetch("/api/assignments", { credentials: "include" });
       const result = await response.json();
 
       if (result.success) {
@@ -85,7 +85,7 @@ export default function AssignmentManagementWidget() {
 
   const fetchStats = async () => {
     try {
-      const response = await makeAuthenticatedRequest("/api/assignments/stats");
+      const response = await fetch("/api/assignments/stats", { credentials: "include" });
       const result = await response.json();
 
       if (result.success) {
@@ -162,7 +162,7 @@ export default function AssignmentManagementWidget() {
           </div>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+              <Button size="sm" className="bg-brand-primary hover:bg-brand-primary/90">
                 <Plus className="w-4 h-4 mr-2" />
                 New Assignment
               </Button>
@@ -255,7 +255,7 @@ export default function AssignmentManagementWidget() {
             </p>
             <Button
               onClick={() => setShowCreateDialog(true)}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-brand-primary hover:bg-brand-primary/90"
             >
               <Plus className="w-4 h-4 mr-2" />
               Create Assignment

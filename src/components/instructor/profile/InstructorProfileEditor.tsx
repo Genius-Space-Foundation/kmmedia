@@ -50,7 +50,6 @@ import {
 } from "lucide-react";
 import ProfileImageUploader from "./ProfileImageUploader";
 import InstructorAvatar from "./InstructorAvatar";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
 import { toast } from "sonner";
 
 interface InstructorProfile {
@@ -172,7 +171,7 @@ export default function InstructorProfileEditor() {
     try {
       if (typeof window === "undefined") return;
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/profile"
       );
       if (response.ok) {
@@ -203,7 +202,7 @@ export default function InstructorProfileEditor() {
         imageFormData.append("image", profileImageFile);
         imageFormData.append("type", "profile");
 
-        const uploadResponse = await makeAuthenticatedRequest(
+        const uploadResponse = await fetch(
           "/api/instructor/profile/upload-image",
           {
             method: "POST",
@@ -222,7 +221,7 @@ export default function InstructorProfileEditor() {
         imageFormData.append("image", coverImageFile);
         imageFormData.append("type", "cover");
 
-        const uploadResponse = await makeAuthenticatedRequest(
+        const uploadResponse = await fetch(
           "/api/instructor/profile/upload-image",
           {
             method: "POST",
@@ -237,7 +236,7 @@ export default function InstructorProfileEditor() {
       }
 
       // Update profile
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/profile",
         {
           method: "PUT",
@@ -338,7 +337,7 @@ export default function InstructorProfileEditor() {
   const completeness = getProfileCompleteness();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30">
+    <div className="min-h-screen bg-neutral-50">
       <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
         {/* Header Section */}
         <div className="relative">
@@ -354,7 +353,7 @@ export default function InstructorProfileEditor() {
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-4xl font-bold text-neutral-900">
                   Profile Settings
                 </h1>
                 <Sparkles className="w-6 h-6 text-purple-600" />
@@ -380,7 +379,7 @@ export default function InstructorProfileEditor() {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-500 rounded-full"
+                className="h-full bg-brand-primary transition-all duration-500 rounded-full"
                 style={{ width: `${completeness}%` }}
               />
             </div>
@@ -397,7 +396,7 @@ export default function InstructorProfileEditor() {
         {/* Cover Image Section */}
         <Card className="overflow-hidden border-0 shadow-xl">
           <CardContent className="p-0">
-            <div className="relative h-64 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 overflow-hidden">
+            <div className="relative h-64 bg-brand-primary overflow-hidden">
               {profileData.coverImage && (
                 <img
                   src={profileData.coverImage}
@@ -482,28 +481,28 @@ export default function InstructorProfileEditor() {
           <TabsList className="grid w-full grid-cols-4 bg-white/80 backdrop-blur-xl border border-gray-200 p-1 rounded-xl h-auto shadow-sm">
             <TabsTrigger
               value="personal"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg py-3"
+              className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg py-3"
             >
               <User className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Personal</span>
             </TabsTrigger>
             <TabsTrigger
               value="professional"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg py-3"
+              className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg py-3"
             >
               <Briefcase className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Professional</span>
             </TabsTrigger>
             <TabsTrigger
               value="social"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg py-3"
+              className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg py-3"
             >
               <Globe className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Social</span>
             </TabsTrigger>
             <TabsTrigger
               value="preferences"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white rounded-lg py-3"
+              className="data-[state=active]:bg-brand-primary data-[state=active]:text-white rounded-lg py-3"
             >
               <Settings className="w-4 h-4 mr-2" />
               <span className="hidden sm:inline">Settings</span>
@@ -829,7 +828,7 @@ export default function InstructorProfileEditor() {
                     {profileData.qualifications?.map((qualification, index) => (
                       <div
                         key={index}
-                        className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100 group hover:shadow-md transition-all"
+                        className="flex items-center gap-3 p-4 bg-white rounded-xl border border-neutral-200 group hover:shadow-md transition-all"
                       >
                         <div className="p-2 bg-white rounded-lg shadow-sm">
                           <GraduationCap className="w-5 h-5 text-blue-600" />
@@ -861,7 +860,7 @@ export default function InstructorProfileEditor() {
                     <Button
                       onClick={addQualification}
                       disabled={!newQualification.trim()}
-                      className="h-12 px-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      className="h-12 px-6 bg-brand-primary hover:bg-brand-primary/90"
                     >
                       <Award className="w-4 h-4 mr-2" />
                       Add
@@ -1199,7 +1198,7 @@ export default function InstructorProfileEditor() {
             <Button
               onClick={handleSaveProfile}
               disabled={saving || !profileData.name || !profileData.email}
-              className="h-12 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
+              className="h-12 px-8 bg-brand-primary hover:bg-brand-primary/90 shadow-lg hover:shadow-xl transition-all"
             >
               <Save className="w-5 h-5 mr-2" />
               {saving ? "Saving..." : "Save Changes"}

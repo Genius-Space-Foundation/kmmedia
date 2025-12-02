@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+
 
 interface Student {
   id: string;
@@ -111,8 +111,8 @@ export default function StudentAnalytics() {
       }
 
       const [studentsRes, metricsRes] = await Promise.all([
-        makeAuthenticatedRequest("/api/instructor/students"),
-        makeAuthenticatedRequest("/api/instructor/student-metrics"),
+        fetch("/api/instructor/students", { credentials: "include" }),
+        fetch("/api/instructor/student-metrics", { credentials: "include" }),
       ]);
 
       const [studentsData, metricsData] = await Promise.all([

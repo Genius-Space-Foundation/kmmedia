@@ -68,6 +68,7 @@ async function getInstructorActivity(req: AuthenticatedRequest) {
           submittedAt: true,
           student: {
             select: {
+              id: true,
               name: true,
             },
           },
@@ -118,9 +119,9 @@ async function getInstructorActivity(req: AuthenticatedRequest) {
         id: `submission-${submission.id}`,
         type: "ASSESSMENT_SUBMITTED" as const,
         title: "Assessment Submitted",
-        description: `${submission.user.name} submitted ${submission.assessment.title}`,
+        description: `${submission.student.name} submitted ${submission.assessment.title}`,
         timestamp: submission.submittedAt.toISOString(),
-        studentId: submission.user.id,
+        studentId: submission.student.id,
       })),
 
       ...recentAnnouncements.map((announcement) => ({

@@ -29,7 +29,7 @@ import {
   Filter,
   Search,
 } from "lucide-react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+
 
 interface MobileStats {
   totalCourses: number;
@@ -79,7 +79,7 @@ export default function MobileInstructorDashboard() {
       setLoading(true);
 
       // Fetch stats
-      const statsResponse = await makeAuthenticatedRequest(
+      const statsResponse = await fetch(
         "/api/instructor/stats"
       );
       if (statsResponse.ok) {
@@ -88,7 +88,7 @@ export default function MobileInstructorDashboard() {
       }
 
       // Fetch recent activities
-      const activitiesResponse = await makeAuthenticatedRequest(
+      const activitiesResponse = await fetch(
         "/api/instructor/activity"
       );
       if (activitiesResponse.ok) {
@@ -99,7 +99,7 @@ export default function MobileInstructorDashboard() {
       }
 
       // Fetch deadlines
-      const deadlinesResponse = await makeAuthenticatedRequest(
+      const deadlinesResponse = await fetch(
         "/api/instructor/deadlines"
       );
       if (deadlinesResponse.ok) {

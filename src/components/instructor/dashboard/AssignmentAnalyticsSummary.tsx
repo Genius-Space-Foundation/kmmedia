@@ -24,7 +24,7 @@ import {
   ArrowRight,
   Calendar,
 } from "lucide-react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+
 
 interface AssignmentAnalytics {
   totalAssignments: number;
@@ -73,7 +73,7 @@ export default function AssignmentAnalyticsSummary() {
 
   const fetchAnalytics = async () => {
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/assignments/analytics?timeRange=${timeRange}`
       );
       const result = await response.json();
@@ -426,7 +426,7 @@ export default function AssignmentAnalyticsSummary() {
                 </Button>
               </Link>
               <Link href="/assignments/create">
-                <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                <Button size="sm" className="bg-brand-primary hover:bg-brand-primary/90">
                   New Assignment
                 </Button>
               </Link>

@@ -67,7 +67,6 @@ import {
   Link,
   Upload,
 } from "lucide-react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
 
 interface Assessment {
   id: string;
@@ -275,7 +274,7 @@ export default function AssessmentBuilder() {
     try {
       if (typeof window === "undefined") return;
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         "/api/instructor/courses"
       );
       if (response.ok) {
@@ -293,7 +292,7 @@ export default function AssessmentBuilder() {
     try {
       if (typeof window === "undefined") return;
 
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/courses/${courseId}/assessments`
       );
       if (response.ok) {
@@ -309,7 +308,7 @@ export default function AssessmentBuilder() {
     if (!selectedCourse || !newAssessment.title.trim()) return;
 
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/courses/${selectedCourse}/assessments`,
         {
           method: "POST",
@@ -335,7 +334,7 @@ export default function AssessmentBuilder() {
     if (!editingAssessment) return;
 
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/assessments/${editingAssessment.id}`,
         {
           method: "PUT",
@@ -365,7 +364,7 @@ export default function AssessmentBuilder() {
     if (!confirm("Are you sure you want to delete this assessment?")) return;
 
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/assessments/${assessmentId}`,
         {
           method: "DELETE",
@@ -384,7 +383,7 @@ export default function AssessmentBuilder() {
 
   const handleTogglePublish = async (assessment: Assessment) => {
     try {
-      const response = await makeAuthenticatedRequest(
+      const response = await fetch(
         `/api/instructor/assessments/${assessment.id}/publish`,
         {
           method: "PATCH",

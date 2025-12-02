@@ -97,10 +97,10 @@ async function getInstructorDeadlines(req: AuthenticatedRequest) {
         id: `session-${session.id}`,
         title: session.title,
         type: "LIVE_SESSION" as const,
-        dueDate: session.scheduledFor.toISOString(),
+        dueDate: session.scheduledAt.toISOString(),
         courseId: session.course.id,
         courseTitle: session.course.title,
-        priority: getPriority(session.scheduledFor),
+        priority: getPriority(session.scheduledAt),
       })),
     ];
 

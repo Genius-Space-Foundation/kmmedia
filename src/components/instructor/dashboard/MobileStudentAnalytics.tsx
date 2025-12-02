@@ -27,7 +27,7 @@ import {
   Activity,
   BarChart3,
 } from "lucide-react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+
 
 interface Student {
   id: string;
@@ -77,7 +77,7 @@ export default function MobileStudentAnalytics() {
       setLoading(true);
 
       // Fetch student metrics
-      const metricsResponse = await makeAuthenticatedRequest(
+      const metricsResponse = await fetch(
         "/api/instructor/student-metrics"
       );
       if (metricsResponse.ok) {
@@ -86,7 +86,7 @@ export default function MobileStudentAnalytics() {
       }
 
       // Fetch students list
-      const studentsResponse = await makeAuthenticatedRequest(
+      const studentsResponse = await fetch(
         "/api/instructor/students"
       );
       if (studentsResponse.ok) {
@@ -423,7 +423,7 @@ export default function MobileStudentAnalytics() {
             {Array.isArray(students)
               ? students.filter((s) => s.progress >= 80 && s.engagement >= 70)
               : [].map((student) => (
-                  <Card key={student.id} className="border-green-200">
+                  <Card key={student.id} className="border-neutral-200">
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
