@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
-import { Upload, X, File, Image, FileText, Video } from "lucide-react";
+import { Upload, X, File as FileIcon, Image, FileText, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -248,7 +248,7 @@ export function FileUpload({
       const IconComponent = typeInfo.icon;
       return <IconComponent className={cn("h-4 w-4", typeInfo.color)} />;
     }
-    return <File className="h-4 w-4 text-gray-500" />;
+    return <FileIcon className="h-4 w-4 text-gray-500" />;
   };
 
   return (

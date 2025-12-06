@@ -12,6 +12,7 @@ export interface AssessmentData {
   timeLimit?: number; // in minutes
   attempts?: number;
   dueDate?: Date;
+  attachments?: string[]; // Array of file URLs
   questions: QuestionData[];
 }
 
@@ -51,6 +52,7 @@ export async function createAssessment(data: AssessmentData) {
       timeLimit: data.timeLimit,
       attempts: data.attempts,
       dueDate: data.dueDate,
+      attachments: data.attachments, // Save attachments
       questions: {
         create: data.questions.map((q) => ({
           text: q.text,

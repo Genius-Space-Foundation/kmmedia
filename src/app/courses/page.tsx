@@ -19,6 +19,7 @@ import CourseFilters, {
 import CourseCard from "@/components/courses/CourseCard";
 import CourseComparison from "@/components/courses/CourseComparison";
 import CourseWishlist from "@/components/courses/CourseWishlist";
+import CourseQuickPreviewModal from "@/components/course/CourseQuickPreviewModal";
 
 interface Course {
   id: string;
@@ -77,6 +78,8 @@ export default function CoursesPage() {
   });
   const [comparisonCourses, setComparisonCourses] = useState<Course[]>([]);
   const [wishlistCourses, setWishlistCourses] = useState<Course[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   // Check for authenticated user
   useEffect(() => {
@@ -260,8 +263,8 @@ export default function CoursesPage() {
   };
 
   const handlePreviewCourse = (course: Course) => {
-    // Open course preview modal or navigate to preview page
-    window.open(`/courses/${course.id}`, "_blank");
+    setSelectedCourse(course);
+    setIsPreviewOpen(true);
   };
 
   return (
@@ -505,7 +508,16 @@ export default function CoursesPage() {
           </div>
         </section>
 
-        {/* Footer */}
+        {/* Course Quick Preview Modal */}
+        <CourseQuickPreviewModal
+          course={selectedCourse}
+          isOpen={isPreviewOpen}
+          onClose={() => {
+            setIsPreviewOpen(false);
+            setSelectedCourse(null);
+          }}
+        />
+
         {/* Footer */}
         <Footer />
       </div>

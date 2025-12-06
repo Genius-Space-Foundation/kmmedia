@@ -82,7 +82,7 @@ interface ApplicationData {
 interface ApplicationWizardProps {
   courseId: string;
   courseTitle: string;
-  onComplete: (applicationData: ApplicationData) => void;
+  onComplete: (applicationData: ApplicationData, result?: any) => void;
   onCancel: () => void;
 }
 
@@ -295,12 +295,26 @@ export default function ApplicationWizard({
       // In a real implementation, you'd upload files first and get URLs
       const submissionData = {
         courseId: applicationData.courseId,
-        personalInfo: applicationData.personalInfo,
-        education: applicationData.education,
+        personalInfo: {
+          fullName: applicationData.personalInfo.fullName,
+          email: applicationData.personalInfo.email,
+          phone: applicationData.personalInfo.phone,
+          address: applicationData.personalInfo.address,
+          dateOfBirth: applicationData.personalInfo.dateOfBirth || undefined,
+          gender: applicationData.personalInfo.gender || undefined,
+        },
+        education: {
+          highestDegree: applicationData.education.highestDegree,
+          institution: applicationData.education.institution,
+          yearCompleted: applicationData.education.yearCompleted,
+          fieldOfStudy: applicationData.education.fieldOfStudy || undefined,
+          gpa: applicationData.education.gpa || undefined,
+        },
         motivation: {
           reasonForApplying: applicationData.motivation.reasonForApplying,
           careerGoals: applicationData.motivation.careerGoals,
           expectations: applicationData.motivation.expectations,
+          additionalInfo: applicationData.motivation.additionalInfo || undefined,
         },
         documents: [], // File URLs would go here after upload
       };
@@ -316,7 +330,7 @@ export default function ApplicationWizard({
       const result = await response.json();
 
       if (result.success) {
-        onComplete(applicationData);
+        onComplete(applicationData, result);
       } else {
         alert(result.message || "Failed to submit application");
       }

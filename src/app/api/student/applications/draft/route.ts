@@ -7,7 +7,7 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 // Save application draft
-export async function POST(request: AuthenticatedRequest) {
+async function saveDraft(request: AuthenticatedRequest) {
   try {
     if (!request.user) {
       return NextResponse.json(
@@ -78,7 +78,7 @@ export async function POST(request: AuthenticatedRequest) {
 }
 
 // Get application draft
-export async function GET(request: AuthenticatedRequest) {
+async function getDraft(request: AuthenticatedRequest) {
   try {
     if (!request.user) {
       return NextResponse.json(
@@ -125,3 +125,6 @@ export async function GET(request: AuthenticatedRequest) {
     );
   }
 }
+
+export const POST = withStudentAuth(saveDraft);
+export const GET = withStudentAuth(getDraft);

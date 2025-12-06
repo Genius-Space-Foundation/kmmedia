@@ -33,14 +33,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import {
   FileText,
-  CheckCircle,
+  CheckSquare,
   Clock,
+  AlertCircle,
   AlertTriangle,
   Search,
   Filter,
   Plus,
   MoreVertical,
-  BarChart3,
+  BarChart,
   Users,
   Calendar,
   ChevronRight,
@@ -50,6 +51,9 @@ import {
   Eye,
   ArrowLeft,
   Save,
+  CheckCircle,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -61,6 +65,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import QuestionEditor, { Question } from "../assessments/QuestionEditor";
+import CreateAssessmentForm from "../assessments/CreateAssessmentForm";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface Assessment {
   id: string;
@@ -124,6 +130,7 @@ export default function AssessmentCenter() {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [courses, setCourses] = useState<Array<{ id: string; title: string }>>([]);
+  const [editingAssessment, setEditingAssessment] = useState<any>(null);
   const [gradingQueue, setGradingQueue] = useState<GradingQueue>({
     pendingSubmissions: 0,
     averageGradingTime: 0,
@@ -143,19 +150,7 @@ export default function AssessmentCenter() {
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
-  // Assessment creation form
-  const [newAssessment, setNewAssessment] = useState({
-    title: "",
-    description: "",
-    type: "QUIZ" as const,
-    courseId: "",
-    totalPoints: 100,
-    passingScore: 70,
-    timeLimit: 60,
-    attempts: 1,
-    dueDate: "",
-    questions: [] as Question[],
-  });
+  // Removed old newAssessment state as it's now in CreateAssessmentForm
 
   // Grading form
   const [gradingData, setGradingData] = useState({
@@ -234,55 +229,7 @@ export default function AssessmentCenter() {
     return "LOW";
   };
 
-  const handleCreateAssessment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate that we have at least one question
-    if (newAssessment.questions.length === 0) {
-      alert("Please add at least one question to the assessment");
-      return;
-    }
-    
-    // Validate that courseId is selected
-    if (!newAssessment.courseId) {
-      alert("Please select a course for this assessment");
-      return;
-    }
-    
-    try {
-      const response = await fetch("/api/instructor/assessments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newAssessment),
-        credentials: "include",
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        alert("Assessment created successfully!");
-        setShowCreateForm(false);
-        // Reset form
-        setNewAssessment({
-          title: "",
-          description: "",
-          type: "QUIZ" as const,
-          courseId: "",
-          totalPoints: 100,
-          passingScore: 70,
-          timeLimit: 60,
-          attempts: 1,
-          dueDate: "",
-          questions: [] as Question[],
-        });
-        fetchAssessmentData(); // Refresh list
-      } else {
-        alert(`Error: ${data.message || "Failed to create assessment"}`);
-      }
-    } catch (error) {
-      console.error("Error creating assessment:", error);
-      alert("An error occurred while creating the assessment");
-    }
-  };
+  // Removed handleCreateAssessment as it's now in CreateAssessmentForm
 
   const handleGradeSubmission = async (submissionId: string) => {
     try {
@@ -395,7 +342,8 @@ export default function AssessmentCenter() {
   }
 
   return (
-    <div className="space-y-6">
+    <ErrorBoundary>
+      <div className="space-y-6">
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-white border-neutral-200">
@@ -620,14 +568,55 @@ export default function AssessmentCenter() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          setEditingAssessment(assessment);
+                          setShowCreateForm(true);
+                        }}>
                           <Edit className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={async () => {
+                          if (confirm(`Are you sure you want to delete "${assessment.title}"?`)) {
+                            try {
+                              const response = await fetch(`/api/instructor/assessments/${assessment.id}`, {
+                                method: "DELETE",
+                                credentials: "include",
+                              });
+                              const data = await response.json();
+                              if (data.success) {
+                                alert("Assessment deleted successfully");
+                                fetchAssessmentData();
+                              } else {
+                                alert(`Error: ${data.message}`);
+                              }
+                            } catch (error) {
+                              console.error("Error deleting assessment:", error);
+                              alert("Failed to delete assessment");
+                            }
+                          }
+                        }}>
                           <Copy className="mr-2 h-4 w-4" /> Duplicate
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
+                        <DropdownMenuItem className="text-red-600" onClick={async () => {
+                          if (confirm(`Are you sure you want to delete "${assessment.title}"? This action cannot be undone.`)) {
+                            try {
+                              const response = await fetch(`/api/instructor/assessments/${assessment.id}`, {
+                                method: "DELETE",
+                                credentials: "include",
+                              });
+                              const data = await response.json();
+                              if (data.success) {
+                                alert("Assessment deleted successfully");
+                                fetchAssessmentData();
+                              } else {
+                                alert(`Error: ${data.message}`);
+                              }
+                            } catch (error) {
+                              console.error("Error deleting assessment:", error);
+                              alert("Failed to delete assessment");
+                            }
+                          }
+                        }}>
                           <Trash2 className="mr-2 h-4 w-4" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -671,145 +660,20 @@ export default function AssessmentCenter() {
         </TabsContent>
       </Tabs>
 
-      {/* Create Assessment Dialog */}
-      <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create New Assessment</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleCreateAssessment} className="space-y-6">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={newAssessment.title}
-                    onChange={(e) => setNewAssessment({ ...newAssessment, title: e.target.value })}
-                    placeholder="e.g., Mid-term Exam"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="course">Course *</Label>
-                  <Select
-                    value={newAssessment.courseId}
-                    onValueChange={(value) => setNewAssessment({ ...newAssessment, courseId: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a course" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {courses.map((course) => (
-                        <SelectItem key={course.id} value={course.id}>
-                          {course.title}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="type">Type</Label>
-                  <Select
-                    value={newAssessment.type}
-                    onValueChange={(value: any) => setNewAssessment({ ...newAssessment, type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="QUIZ">Quiz</SelectItem>
-                      <SelectItem value="EXAM">Exam</SelectItem>
-                      <SelectItem value="ASSIGNMENT">Assignment</SelectItem>
-                      <SelectItem value="PROJECT">Project</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    value={newAssessment.description}
-                    onChange={(e) => setNewAssessment({ ...newAssessment, description: e.target.value })}
-                    placeholder="Brief description of the assessment..."
-                    rows={4}
-                  />
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="points">Total Points</Label>
-                    <Input
-                      id="points"
-                      type="number"
-                      value={newAssessment.totalPoints}
-                      onChange={(e) => setNewAssessment({ ...newAssessment, totalPoints: parseInt(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="passing">Passing Score (%)</Label>
-                    <Input
-                      id="passing"
-                      type="number"
-                      value={newAssessment.passingScore}
-                      onChange={(e) => setNewAssessment({ ...newAssessment, passingScore: parseInt(e.target.value) })}
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="time">Time Limit (mins)</Label>
-                    <Input
-                      id="time"
-                      type="number"
-                      value={newAssessment.timeLimit}
-                      onChange={(e) => setNewAssessment({ ...newAssessment, timeLimit: parseInt(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="attempts">Allowed Attempts</Label>
-                    <Input
-                      id="attempts"
-                      type="number"
-                      value={newAssessment.attempts}
-                      onChange={(e) => setNewAssessment({ ...newAssessment, attempts: parseInt(e.target.value) })}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="due">Due Date</Label>
-                  <Input
-                    id="due"
-                    type="datetime-local"
-                    value={newAssessment.dueDate}
-                    onChange={(e) => setNewAssessment({ ...newAssessment, dueDate: e.target.value })}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <Separator />
-            
-            <QuestionEditor 
-                questions={newAssessment.questions} 
-                onChange={(questions) => setNewAssessment({ ...newAssessment, questions })} 
-            />
-
-            <Separator />
-
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={() => setShowCreateForm(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" className="bg-brand-primary text-white">
-                Create Assessment
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Create/Edit Assessment Dialog */}
+      <CreateAssessmentForm 
+        open={showCreateForm} 
+        onOpenChange={(open) => {
+          setShowCreateForm(open);
+          if (!open) setEditingAssessment(null);
+        }}
+        onSuccess={() => {
+          fetchAssessmentData();
+          setEditingAssessment(null);
+        }}
+        courses={courses}
+        initialData={editingAssessment}
+      />
 
       {/* Grading Dialog */}
       <Dialog open={showGradingForm} onOpenChange={setShowGradingForm}>
@@ -868,6 +732,7 @@ export default function AssessmentCenter() {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }

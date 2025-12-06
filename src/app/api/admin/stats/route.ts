@@ -150,5 +150,4 @@ async function getAdminStats(req: AuthenticatedRequest) {
   }
 }
 
-// Temporarily bypass auth for testing
-export const GET = getAdminStats;
+export const GET = withAdminAuth(getAdminStats);

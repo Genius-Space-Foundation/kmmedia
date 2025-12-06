@@ -152,8 +152,8 @@ export default function AssignmentManagementWidget() {
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-blue-600" />
+            <CardTitle className="text-lg font-bold text-neutral-900">
+              {/* <FileText className="w-5 h-5 text-blue-600" /> */}
               Assignment Management
             </CardTitle>
             <CardDescription>
@@ -161,12 +161,12 @@ export default function AssignmentManagementWidget() {
             </CardDescription>
           </div>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-            <DialogTrigger asChild>
+            {/* <DialogTrigger asChild>
               <Button size="sm" className="bg-brand-primary hover:bg-brand-primary/90">
                 <Plus className="w-4 h-4 mr-2" />
                 New Assignment
               </Button>
-            </DialogTrigger>
+            </DialogTrigger> */}
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Quick Assignment Creation</DialogTitle>

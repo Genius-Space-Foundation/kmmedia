@@ -8,7 +8,6 @@ import {
   User,
   BookOpen,
   FileText,
-  TrendingUp,
   DollarSign,
   Activity,
   Settings,
@@ -16,7 +15,6 @@ import {
 } from "lucide-react";
 import { ModernSidebar } from "@/components/dashboard/modern-sidebar";
 import { ModernHeader } from "@/components/dashboard/modern-header";
-import { StatCard } from "@/components/ui/stat-card";
 import ApplicationManagement from "@/components/admin/applications/ApplicationManagement";
 import UserManagement from "@/components/admin/users/UserManagement";
 import CourseManagement from "@/components/admin/courses/CourseManagement";
@@ -256,7 +254,7 @@ export default function ProfessionalDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 flex">
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Modern Sidebar */}
       <ModernSidebar
         isOpen={sidebarOpen}
@@ -291,22 +289,6 @@ export default function ProfessionalDashboard() {
           {/* Overview Tab */}
           {activeTab === "overview" && (
             <div className="space-y-8">
-              {/* Stats Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {statCards.map((stat) => (
-                  <StatCard
-                    key={stat.title}
-                    title={stat.title}
-                    value={stat.value}
-                    change={stat.change}
-                    trend={stat.trend}
-                    icon={stat.icon}
-                    iconColor={stat.iconColor}
-                    subtitle={stat.subtitle}
-                  />
-                ))}
-              </div>
-
               {/* Dashboard Overview Component */}
               <DashboardOverview
                 stats={stats}
@@ -400,26 +382,10 @@ export default function ProfessionalDashboard() {
           )}
 
           {/* Profile Tab */}
-          {activeTab === "profile" && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-3xl font-black text-gray-900">My Profile</h2>
-                <p className="text-gray-600 mt-2">Manage your account settings and preferences</p>
-              </div>
-              <AdminProfile />
-            </div>
-          )}
+          {activeTab === "profile" && <AdminProfile />}
 
           {/* Settings Tab */}
-          {activeTab === "settings" && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-3xl font-black text-gray-900">System Settings</h2>
-                <p className="text-gray-600 mt-2">Configure platform settings and preferences</p>
-              </div>
-              <SystemSettings />
-            </div>
-          )}
+          {activeTab === "settings" && <SystemSettings />}
         </main>
       </div>
     </div>

@@ -27,6 +27,22 @@ import { useAutoSave } from "@/lib/hooks/useAutoSave";
 import { Progress } from "@/components/ui/progress";
 import { FileUpload, UploadedFile } from "@/components/ui/file-upload";
 import { useDocumentUpload } from "@/lib/hooks/useDocumentUpload";
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  GraduationCap,
+  Briefcase,
+  Target,
+  FileText,
+  CheckCircle2,
+  AlertCircle,
+  ChevronRight,
+  ChevronLeft,
+  Save,
+} from "lucide-react";
 
 // Form validation schemas for each step
 const step1Schema = z.object({
@@ -56,10 +72,10 @@ const step3Schema = z.object({
     relevantSkills: z.string().min(10, "Please describe your relevant skills"),
     motivation: z
       .string()
-      .min(50, "Please provide a detailed motivation (minimum 50 characters)"),
+      .min(10, "Please provide your motivation (minimum 10 characters)"),
     goals: z
       .string()
-      .min(30, "Please describe your goals (minimum 30 characters)"),
+      .min(10, "Please describe your goals (minimum 10 characters)"),
   }),
 });
 
@@ -90,16 +106,28 @@ interface ApplicationFormProps {
 const STEPS = [
   {
     id: 1,
-    title: "Personal Information",
-    description: "Basic personal details",
+    title: "Personal Info",
+    description: "Tell us about yourself",
+    icon: User,
   },
-  { id: 2, title: "Education", description: "Educational background" },
+  {
+    id: 2,
+    title: "Education",
+    description: "Your academic background",
+    icon: GraduationCap,
+  },
   {
     id: 3,
-    title: "Experience & Motivation",
-    description: "Work experience and goals",
+    title: "Experience",
+    description: "Skills and motivation",
+    icon: Briefcase,
   },
-  { id: 4, title: "Documents", description: "Upload supporting documents" },
+  {
+    id: 4,
+    title: "Documents",
+    description: "Supporting materials",
+    icon: FileText,
+  },
 ];
 
 export function ApplicationForm({
@@ -285,31 +313,41 @@ export function ApplicationForm({
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName" className="text-sm font-medium flex items-center gap-2">
+                  <User className="h-4 w-4 text-blue-600" />
+                  First Name *
+                </Label>
                 <Input
                   id="firstName"
                   {...register("personalInfo.firstName")}
                   placeholder="Enter your first name"
+                  className="h-11"
                 />
                 {errors.personalInfo?.firstName && (
-                  <p className="text-sm text-red-600">
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
                     {errors.personalInfo.firstName.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName" className="text-sm font-medium flex items-center gap-2">
+                  <User className="h-4 w-4 text-blue-600" />
+                  Last Name *
+                </Label>
                 <Input
                   id="lastName"
                   {...register("personalInfo.lastName")}
                   placeholder="Enter your last name"
+                  className="h-11"
                 />
                 {errors.personalInfo?.lastName && (
-                  <p className="text-sm text-red-600">
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
                     {errors.personalInfo.lastName.message}
                   </p>
                 )}
@@ -317,44 +355,59 @@ export function ApplicationForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
+                <Mail className="h-4 w-4 text-blue-600" />
+                Email Address *
+              </Label>
               <Input
                 id="email"
                 type="email"
                 {...register("personalInfo.email")}
-                placeholder="Enter your email address"
+                placeholder="your.email@example.com"
+                className="h-11"
               />
               {errors.personalInfo?.email && (
-                <p className="text-sm text-red-600">
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
                   {errors.personalInfo.email.message}
                 </p>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-blue-600" />
+                  Phone Number *
+                </Label>
                 <Input
                   id="phone"
                   {...register("personalInfo.phone")}
-                  placeholder="Enter your phone number"
+                  placeholder="+233 XX XXX XXXX"
+                  className="h-11"
                 />
                 {errors.personalInfo?.phone && (
-                  <p className="text-sm text-red-600">
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
                     {errors.personalInfo.phone.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Label htmlFor="dateOfBirth" className="text-sm font-medium flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-blue-600" />
+                  Date of Birth *
+                </Label>
                 <Input
                   id="dateOfBirth"
                   type="date"
                   {...register("personalInfo.dateOfBirth")}
+                  className="h-11"
                 />
                 {errors.personalInfo?.dateOfBirth && (
-                  <p className="text-sm text-red-600">
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
                     {errors.personalInfo.dateOfBirth.message}
                   </p>
                 )}
@@ -362,15 +415,20 @@ export function ApplicationForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
+              <Label htmlFor="address" className="text-sm font-medium flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-blue-600" />
+                Address *
+              </Label>
               <Textarea
                 id="address"
                 {...register("personalInfo.address")}
                 placeholder="Enter your full address"
                 rows={3}
+                className="resize-none"
               />
               {errors.personalInfo?.address && (
-                <p className="text-sm text-red-600">
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
                   {errors.personalInfo.address.message}
                 </p>
               )}
@@ -380,15 +438,18 @@ export function ApplicationForm({
 
       case 2:
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="space-y-2">
-              <Label htmlFor="highestEducation">Highest Education Level</Label>
+              <Label htmlFor="highestEducation" className="text-sm font-medium flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-purple-600" />
+                Highest Education Level *
+              </Label>
               <Select
                 onValueChange={(value) =>
                   setValue("education.highestEducation", value)
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select your education level" />
                 </SelectTrigger>
                 <SelectContent>
@@ -400,36 +461,45 @@ export function ApplicationForm({
                 </SelectContent>
               </Select>
               {errors.education?.highestEducation && (
-                <p className="text-sm text-red-600">
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
                   {errors.education.highestEducation.message}
                 </p>
               )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="institution">Institution Name</Label>
+                <Label htmlFor="institution" className="text-sm font-medium">
+                  Institution Name *
+                </Label>
                 <Input
                   id="institution"
                   {...register("education.institution")}
-                  placeholder="Enter institution name"
+                  placeholder="University or institution name"
+                  className="h-11"
                 />
                 {errors.education?.institution && (
-                  <p className="text-sm text-red-600">
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
                     {errors.education.institution.message}
                   </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="graduationYear">Graduation Year</Label>
+                <Label htmlFor="graduationYear" className="text-sm font-medium">
+                  Graduation Year *
+                </Label>
                 <Input
                   id="graduationYear"
                   {...register("education.graduationYear")}
                   placeholder="e.g., 2020"
+                  className="h-11"
                 />
                 {errors.education?.graduationYear && (
-                  <p className="text-sm text-red-600">
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
                     {errors.education.graduationYear.message}
                   </p>
                 )}
@@ -437,41 +507,55 @@ export function ApplicationForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="fieldOfStudy">Field of Study</Label>
+              <Label htmlFor="fieldOfStudy" className="text-sm font-medium">
+                Field of Study *
+              </Label>
               <Input
                 id="fieldOfStudy"
                 {...register("education.fieldOfStudy")}
-                placeholder="Enter your field of study"
+                placeholder="e.g., Computer Science, Business Administration"
+                className="h-11"
               />
               {errors.education?.fieldOfStudy && (
-                <p className="text-sm text-red-600">
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
                   {errors.education.fieldOfStudy.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="gpa">GPA (Optional)</Label>
+              <Label htmlFor="gpa" className="text-sm font-medium text-gray-600">
+                GPA (Optional)
+              </Label>
               <Input
                 id="gpa"
                 {...register("education.gpa")}
-                placeholder="e.g., 3.8"
+                placeholder="e.g., 3.8 out of 4.0"
+                className="h-11"
               />
             </div>
           </div>
         );
 
       case 3:
+        const motivationValue = watch("experience.motivation") || "";
+        const goalsValue = watch("experience.goals") || "";
+        const skillsValue = watch("experience.relevantSkills") || "";
+
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="space-y-2">
-              <Label htmlFor="workExperience">Work Experience</Label>
+              <Label htmlFor="workExperience" className="text-sm font-medium flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-green-600" />
+                Work Experience *
+              </Label>
               <Select
                 onValueChange={(value) =>
                   setValue("experience.workExperience", value)
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="h-11">
                   <SelectValue placeholder="Select your work experience" />
                 </SelectTrigger>
                 <SelectContent>
@@ -483,54 +567,81 @@ export function ApplicationForm({
                 </SelectContent>
               </Select>
               {errors.experience?.workExperience && (
-                <p className="text-sm text-red-600">
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
                   {errors.experience.workExperience.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="relevantSkills">Relevant Skills</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="relevantSkills" className="text-sm font-medium">
+                  Relevant Skills *
+                </Label>
+                <span className="text-xs text-gray-500">
+                  {skillsValue.length} characters
+                </span>
+              </div>
               <Textarea
                 id="relevantSkills"
                 {...register("experience.relevantSkills")}
-                placeholder="Describe your relevant skills and experience"
+                placeholder="Describe your relevant skills and experience..."
                 rows={4}
+                className="resize-none"
               />
               {errors.experience?.relevantSkills && (
-                <p className="text-sm text-red-600">
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
                   {errors.experience.relevantSkills.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="motivation">
-                Why do you want to take this course?
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="motivation" className="text-sm font-medium flex items-center gap-2">
+                  <Target className="h-4 w-4 text-orange-600" />
+                  Why do you want to take this course? *
+                </Label>
+                <span className={`text-xs ${motivationValue.length < 10 ? 'text-red-500' : 'text-gray-500'}`}>
+                  {motivationValue.length}/10 min
+                </span>
+              </div>
               <Textarea
                 id="motivation"
                 {...register("experience.motivation")}
-                placeholder="Explain your motivation for taking this course"
+                placeholder="Explain your motivation for taking this course..."
                 rows={4}
+                className="resize-none"
               />
               {errors.experience?.motivation && (
-                <p className="text-sm text-red-600">
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
                   {errors.experience.motivation.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="goals">Career Goals</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="goals" className="text-sm font-medium">
+                  Career Goals *
+                </Label>
+                <span className={`text-xs ${goalsValue.length < 10 ? 'text-red-500' : 'text-gray-500'}`}>
+                  {goalsValue.length}/10 min
+                </span>
+              </div>
               <Textarea
                 id="goals"
                 {...register("experience.goals")}
-                placeholder="Describe your career goals and how this course will help"
+                placeholder="Describe your career goals and how this course will help..."
                 rows={4}
+                className="resize-none"
               />
               {errors.experience?.goals && (
-                <p className="text-sm text-red-600">
+                <p className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
                   {errors.experience.goals.message}
                 </p>
               )}
@@ -540,20 +651,25 @@ export function ApplicationForm({
 
       case 4:
         return (
-          <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-medium text-blue-900 mb-2">
-                Document Upload
-              </h3>
-              <p className="text-sm text-blue-700">
-                Upload your supporting documents. All documents are optional but
-                recommended to strengthen your application.
-              </p>
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
+              <div className="flex items-start gap-3">
+                <FileText className="h-5 w-5 text-blue-600 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-blue-900 mb-1">
+                    Document Upload
+                  </h3>
+                  <p className="text-sm text-blue-700">
+                    Upload your supporting documents. All documents are optional but
+                    recommended to strengthen your application.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label>Resume/CV</Label>
+                <Label className="text-sm font-medium">Resume/CV</Label>
                 <FileUpload
                   accept=".pdf,.doc,.docx"
                   maxFiles={1}
@@ -569,13 +685,13 @@ export function ApplicationForm({
                   }}
                   onUpload={uploadFiles}
                   label="Upload Resume/CV"
-                  description="Drag and drop your resume or click to browse (PDF, DOC, DOCX)"
+                  description="PDF, DOC, or DOCX (Max 5MB)"
                   disabled={isUploading}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Cover Letter</Label>
+                <Label className="text-sm font-medium">Cover Letter</Label>
                 <FileUpload
                   accept=".pdf,.doc,.docx"
                   maxFiles={1}
@@ -591,13 +707,15 @@ export function ApplicationForm({
                   }}
                   onUpload={uploadFiles}
                   label="Upload Cover Letter"
-                  description="Drag and drop your cover letter or click to browse (PDF, DOC, DOCX)"
+                  description="PDF, DOC, or DOCX (Max 5MB)"
                   disabled={isUploading}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Portfolio (Optional)</Label>
+                <Label className="text-sm font-medium text-gray-600">
+                  Portfolio (Optional)
+                </Label>
                 <FileUpload
                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.mp4,.mov"
                   maxFiles={3}
@@ -613,13 +731,15 @@ export function ApplicationForm({
                   }}
                   onUpload={uploadFiles}
                   label="Upload Portfolio"
-                  description="Drag and drop your portfolio files or click to browse (PDF, DOC, DOCX, Images, Videos)"
+                  description="Documents, images, or videos (Max 10MB each, up to 3 files)"
                   disabled={isUploading}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>Certificates (Optional)</Label>
+                <Label className="text-sm font-medium text-gray-600">
+                  Certificates (Optional)
+                </Label>
                 <FileUpload
                   accept=".pdf,.jpg,.jpeg,.png"
                   maxFiles={5}
@@ -635,15 +755,16 @@ export function ApplicationForm({
                   }}
                   onUpload={uploadFiles}
                   label="Upload Certificates"
-                  description="Drag and drop your certificates or click to browse (PDF, Images)"
+                  description="PDF or images (Max 5MB each, up to 5 files)"
                   disabled={isUploading}
                 />
               </div>
             </div>
 
             {uploadError && (
-              <div className="p-3 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg">
-                {uploadError}
+              <div className="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 mt-0.5" />
+                <span>{uploadError}</span>
               </div>
             )}
           </div>
@@ -655,107 +776,146 @@ export function ApplicationForm({
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Application for {courseName}</CardTitle>
-            <CardDescription>
-              Step {currentStep} of {STEPS.length}:{" "}
-              {STEPS[currentStep - 1].description}
-            </CardDescription>
-          </div>
-          <AutoSaveIndicator status={saveStatus} />
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mt-4">
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
-            <span>Progress</span>
-            <span>{Math.round(progress)}% Complete</span>
-          </div>
-          <Progress value={progress} className="h-2" />
-        </div>
-
-        {/* Step Indicators */}
-        <div className="flex items-center justify-between mt-4">
-          {STEPS.map((step, index) => (
-            <div
-              key={step.id}
-              className={`flex items-center ${
-                index < STEPS.length - 1 ? "flex-1" : ""
-              }`}
-            >
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  step.id <= currentStep
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-600"
-                }`}
-              >
-                {step.id}
-              </div>
-              <div className="ml-2 hidden sm:block">
-                <p className="text-sm font-medium">{step.title}</p>
-              </div>
-              {index < STEPS.length - 1 && (
-                <div
-                  className={`flex-1 h-0.5 mx-4 ${
-                    step.id < currentStep ? "bg-blue-600" : "bg-gray-200"
-                  }`}
-                />
-              )}
+    <div className="w-full max-w-4xl mx-auto">
+      <Card className="border-0 shadow-2xl">
+        <CardHeader className="space-y-6 pb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-2xl font-bold text-gray-900">
+                Application for {courseName}
+              </CardTitle>
+              <CardDescription className="text-base mt-2">
+                Complete all steps to submit your application
+              </CardDescription>
             </div>
-          ))}
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        {error && (
-          <div className="mb-6 p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg">
-            {error}
+            <AutoSaveIndicator status={saveStatus} />
           </div>
-        )}
 
-        <form className="space-y-6">
-          {renderStep()}
+          {/* Progress Bar */}
+          <div>
+            <div className="flex justify-between text-sm font-medium text-gray-700 mb-3">
+              <span>Progress</span>
+              <span className="text-blue-600">{Math.round(progress)}% Complete</span>
+            </div>
+            <Progress value={progress} className="h-2.5" />
+          </div>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between items-center pt-6 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentStep === 1 || isLoading}
-            >
-              Previous
-            </Button>
+          {/* Step Indicators */}
+          <div className="grid grid-cols-4 gap-2">
+            {STEPS.map((step, index) => {
+              const Icon = step.icon;
+              const isActive = step.id === currentStep;
+              const isCompleted = step.id < currentStep;
 
-            <div className="flex items-center space-x-2">
+              return (
+                <div
+                  key={step.id}
+                  className={`relative flex flex-col items-center p-4 rounded-xl transition-all ${
+                    isActive
+                      ? "bg-blue-50 border-2 border-blue-600"
+                      : isCompleted
+                      ? "bg-green-50 border-2 border-green-600"
+                      : "bg-gray-50 border-2 border-gray-200"
+                  }`}
+                >
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all ${
+                      isActive
+                        ? "bg-blue-600 text-white shadow-lg scale-110"
+                        : isCompleted
+                        ? "bg-green-600 text-white"
+                        : "bg-gray-200 text-gray-500"
+                    }`}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle2 className="h-6 w-6" />
+                    ) : (
+                      <Icon className="h-6 w-6" />
+                    )}
+                  </div>
+                  <p
+                    className={`text-xs font-semibold text-center ${
+                      isActive
+                        ? "text-blue-900"
+                        : isCompleted
+                        ? "text-green-900"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    {step.title}
+                  </p>
+                  <p className="text-xs text-gray-500 text-center mt-1 hidden sm:block">
+                    {step.description}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </CardHeader>
+
+        <CardContent className="pb-8">
+          {error && (
+            <div className="mb-6 p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <form className="space-y-8">
+            {renderStep()}
+
+            {/* Navigation Buttons */}
+            <div className="flex justify-between items-center pt-8 border-t-2">
               <Button
                 type="button"
                 variant="outline"
-                onClick={saveNow}
-                disabled={isLoading}
+                onClick={handlePrevious}
+                disabled={currentStep === 1 || isLoading}
+                className="h-11 px-6"
               >
-                Save Now
+                <ChevronLeft className="h-4 w-4 mr-2" />
+                Previous
               </Button>
-              <Button type="button" onClick={handleNext} disabled={isLoading}>
-                {isLoading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Submitting...</span>
-                  </div>
-                ) : currentStep === STEPS.length ? (
-                  "Submit Application"
-                ) : (
-                  "Next"
-                )}
-              </Button>
+
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={saveNow}
+                  disabled={isLoading}
+                  className="h-11 px-6"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Draft
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={isLoading}
+                  className="h-11 px-8 bg-blue-600 hover:bg-blue-700"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Submitting...</span>
+                    </div>
+                  ) : currentStep === STEPS.length ? (
+                    <>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Submit Application
+                    </>
+                  ) : (
+                    <>
+                      Next
+                      <ChevronRight className="h-4 w-4 ml-2" />
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

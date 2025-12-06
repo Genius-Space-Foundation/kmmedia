@@ -676,11 +676,18 @@ export default function StudentDashboard() {
     }));
   };
 
-  const handleApplicationComplete = (applicationData: any) => {
+  const handleApplicationComplete = (applicationData: any, applicationResult?: any) => {
     setShowApplicationWizard(false);
     setSelectedCourseForApplication(null);
-    // Refresh applications
-    fetchDashboardData();
+    
+    // Check if course has application fee and redirect to payment
+    if (applicationResult?.data?.course?.applicationFee && applicationResult.data.course.applicationFee > 0) {
+      // Redirect to payment page
+      router.push(`/courses/${applicationResult.data.courseId}/apply/payment`);
+    } else {
+      // No fee required, just refresh dashboard
+      fetchDashboardData();
+    }
   };
 
   const handleApplicationCancel = () => {

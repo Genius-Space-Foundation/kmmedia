@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +35,8 @@ import {
   FileText,
 } from "lucide-react";
 import CourseAssignmentsTab from "@/components/course/CourseAssignmentsTab";
+import EnhancedNavigation from "@/components/navigation/EnhancedNavigation";
+import Footer from "@/components/layout/Footer";
 
 interface Course {
   id: string;
@@ -73,38 +76,20 @@ interface Course {
 export default function CourseDetailPage() {
   const params = useParams();
   const courseId = params.id as string;
+  const { data: session, status } = useSession();
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
-  const [user, setUser] = useState<any>(null);
+  
+  const isAuthenticated = status === "authenticated";
+  const user = session?.user;
 
   useEffect(() => {
     const fetchCourse = async () => {
       try {
         setLoading(true);
         setError(null);
-
-        // Check authentication
-        const token = localStorage.getItem("accessToken");
-        setIsAuthenticated(!!token);
-
-        // Get user info if authenticated
-        if (token) {
-          try {
-            const userResponse = await fetch("/api/auth/me");
-            if (userResponse.ok) {
-              const userData = await userResponse.json();
-              if (userData.success) {
-                setUser(userData.user);
-              }
-            }
-          } catch (error) {
-            console.error("Error fetching user:", error);
-          }
-        }
 
         const response = await fetch(`/api/courses/${courseId}`);
         const data = await response.json();
@@ -229,222 +214,8 @@ export default function CourseDetailPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Modern Header */}
-        <header className="sticky top-0 z-50 backdrop-blur-xl bg-white/95 border-b border-gray-200/50 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <nav className="flex items-center justify-between h-16">
-              {/* Logo Section */}
-              <Link
-                href="/"
-                className="flex items-center space-x-3 flex-shrink-0"
-              >
-                <div className="w-10 h-10 rounded-xl overflow-hidden shadow-md">
-                  <img
-                    src="/images/logo.jpeg"
-                    alt="KM Media Training Institute"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="hidden sm:block">
-                  <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    KM Media Training Institute
-                  </h1>
-                  <p className="text-sm text-gray-600">
-                    Excellence in Media Education
-                  </p>
-                </div>
-              </Link>
-
-              {/* Navigation Links */}
-              <div className="hidden lg:flex items-center space-x-1">
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                >
-                  <Link href="/">Home</Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                >
-                  <Link href="/about">About</Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                >
-                  <Link href="/courses">Courses</Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                >
-                  <Link href="/stories">Stories</Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                >
-                  <Link href="/contact">Contact</Link>
-                </Button>
-              </div>
-
-              {/* Auth Buttons and Mobile Menu */}
-              <div className="flex items-center space-x-3">
-                {/* Desktop Auth Buttons */}
-                <div className="hidden sm:flex items-center space-x-3">
-                  <Button
-                    asChild
-                    variant="ghost"
-                    className="hover:bg-blue-50 hover:text-blue-600"
-                  >
-                    <Link href="/auth/login">Sign In</Link>
-                  </Button>
-                  <Button
-                    asChild
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md"
-                  >
-                    <Link href="/auth/register">Sign Up</Link>
-                  </Button>
-                </div>
-
-                {/* Mobile Menu Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="lg:hidden hover:bg-blue-50 p-2"
-                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  aria-label="Toggle mobile menu"
-                >
-                  <svg
-                    className="w-5 h-5 transition-transform duration-200"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    {isMobileMenuOpen ? (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    ) : (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 6h16M4 12h16M4 18h16"
-                      />
-                    )}
-                  </svg>
-                </Button>
-              </div>
-            </nav>
-          </div>
-
-          {/* Mobile Navigation Menu */}
-          <div
-            className={`lg:hidden transition-all duration-300 ease-in-out overflow-hidden ${
-              isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-            }`}
-          >
-            <div className="mt-4 pb-4 border-t border-gray-200">
-              <div className="flex flex-col space-y-2 pt-4">
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="w-full justify-start hover:bg-blue-50"
-                >
-                  <Link href="/" onClick={() => setIsMobileMenuOpen(false)}>
-                    Home
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="w-full justify-start hover:bg-blue-50"
-                >
-                  <Link
-                    href="/about"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    About
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="w-full justify-start hover:bg-blue-50"
-                >
-                  <Link
-                    href="/courses"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Courses
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="w-full justify-start hover:bg-blue-50"
-                >
-                  <Link
-                    href="/stories"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Stories
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant="ghost"
-                  className="w-full justify-start hover:bg-blue-50"
-                >
-                  <Link
-                    href="/contact"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    Contact
-                  </Link>
-                </Button>
-
-                {/* Mobile Auth Buttons */}
-                <div className="pt-4 border-t border-gray-200 mt-4">
-                  <div className="flex flex-col space-y-2">
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full justify-start border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-300"
-                    >
-                      <Link
-                        href="/auth/login"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        Sign In
-                      </Link>
-                    </Button>
-                    <Button
-                      asChild
-                      className="w-full justify-start bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white transition-all duration-300"
-                    >
-                      <Link
-                        href="/auth/register"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        Sign Up
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
+        {/* Standard Navigation */}
+        <EnhancedNavigation user={user} />
 
         {/* Breadcrumb */}
         <nav className="py-6">
@@ -641,6 +412,345 @@ export default function CourseDetailPage() {
                 </div>
               </CardHeader>
             </Card>
+
+            {/* What You'll Learn Section */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-xl">
+              <CardHeader>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                    <CheckCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <CardTitle className="text-xl sm:text-2xl text-gray-900">
+                    What You'll Learn
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[
+                    {
+                      title: "Master Core Concepts",
+                      description: "Understand fundamental principles and techniques in " + course.category,
+                    },
+                    {
+                      title: "Hands-on Projects",
+                      description: "Build real-world projects to apply your knowledge practically",
+                    },
+                    {
+                      title: "Industry Best Practices",
+                      description: "Learn professional workflows and industry standards",
+                    },
+                    {
+                      title: "Portfolio Development",
+                      description: "Create impressive portfolio pieces to showcase your skills",
+                    },
+                    {
+                      title: "Expert Techniques",
+                      description: "Advanced methods used by professionals in the field",
+                    },
+                    {
+                      title: "Career Preparation",
+                      description: "Get ready for real-world opportunities and challenges",
+                    },
+                  ].map((outcome, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start space-x-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-100 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex-shrink-0 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center mt-0.5">
+                        <CheckCircle className="w-4 h-4 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-1">
+                          {outcome.title}
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {outcome.description}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Prerequisites Section */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-xl">
+              <CardHeader>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-white" />
+                  </div>
+                  <CardTitle className="text-xl sm:text-2xl text-gray-900">
+                    Prerequisites
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Required Skills */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <Award className="w-5 h-5 text-orange-600 mr-2" />
+                      Required Skills
+                    </h4>
+                    <ul className="space-y-2">
+                      {[
+                        "Basic computer literacy",
+                        "Passion for learning and creativity",
+                        "Commitment to complete the course",
+                      ].map((skill, index) => (
+                        <li key={index} className="flex items-start space-x-2">
+                          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                          <span className="text-gray-700">{skill}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Recommended Background */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <BookOpen className="w-5 h-5 text-blue-600 mr-2" />
+                      Recommended Background
+                    </h4>
+                    <ul className="space-y-2">
+                      {[
+                        "Interest in media and communications",
+                        "Creative mindset and artistic vision",
+                        "Willingness to practice regularly",
+                      ].map((item, index) => (
+                        <li key={index} className="flex items-start space-x-2">
+                          <div className="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-blue-600 text-xs">✓</span>
+                          </div>
+                          <span className="text-gray-700">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Equipment Needed */}
+                  <div>
+                    <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <FileText className="w-5 h-5 text-purple-600 mr-2" />
+                      Equipment & Software
+                    </h4>
+                    <ul className="space-y-2">
+                      {[
+                        "Computer or laptop (Windows/Mac)",
+                        "Stable internet connection",
+                        "Headphones for video lessons",
+                        "Software will be provided during the course",
+                      ].map((item, index) => (
+                        <li key={index} className="flex items-start space-x-2">
+                          <div className="w-5 h-5 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-purple-600 text-xs">•</span>
+                          </div>
+                          <span className="text-gray-700">{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Course Preview Section */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-xl">
+              <CardHeader>
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                    <Play className="w-5 h-5 text-white" />
+                  </div>
+                  <CardTitle className="text-xl sm:text-2xl text-gray-900">
+                    Course Preview
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Video Preview */}
+                <div className="relative aspect-video bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl overflow-hidden mb-6">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Button
+                      size="lg"
+                      className="bg-white/20 backdrop-blur-sm hover:bg-white/30 border-2 border-white/50 rounded-full w-20 h-20"
+                    >
+                      <Play className="w-8 h-8 text-white" />
+                    </Button>
+                  </div>
+                  <div className="absolute bottom-4 left-4 right-4">
+                    <div className="bg-black/60 backdrop-blur-sm rounded-lg p-3">
+                      <p className="text-white font-semibold">Course Introduction</p>
+                      <p className="text-white/80 text-sm">Preview what you'll learn</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sample Lessons */}
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">
+                    Free Preview Lessons
+                  </h4>
+                  <div className="space-y-2">
+                    {[
+                      { title: "Introduction to " + course.category, duration: "5:30" },
+                      { title: "Getting Started", duration: "8:15" },
+                      { title: "Basic Techniques", duration: "12:45" },
+                    ].map((lesson, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <Play className="w-4 h-4 text-purple-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{lesson.title}</p>
+                            <p className="text-sm text-gray-600">{lesson.duration}</p>
+                          </div>
+                        </div>
+                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                          Free
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Student Reviews Section */}
+            <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-xl">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center">
+                      <Star className="w-5 h-5 text-white" />
+                    </div>
+                    <CardTitle className="text-xl sm:text-2xl text-gray-900">
+                      Student Reviews
+                    </CardTitle>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Overall Rating */}
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl p-6 mb-6 border border-yellow-100">
+                  <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                    <div className="text-center">
+                      <div className="text-5xl font-bold text-gray-900 mb-2">4.8</div>
+                      <div className="flex items-center justify-center mb-2">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            className="w-5 h-5 text-yellow-500 fill-yellow-500"
+                          />
+                        ))}
+                      </div>
+                      <p className="text-sm text-gray-600">Based on 127 reviews</p>
+                    </div>
+
+                    {/* Rating Distribution */}
+                    <div className="flex-1 space-y-2">
+                      {[
+                        { stars: 5, percentage: 85 },
+                        { stars: 4, percentage: 10 },
+                        { stars: 3, percentage: 3 },
+                        { stars: 2, percentage: 1 },
+                        { stars: 1, percentage: 1 },
+                      ].map((rating) => (
+                        <div key={rating.stars} className="flex items-center gap-3">
+                          <span className="text-sm text-gray-600 w-12">
+                            {rating.stars} stars
+                          </span>
+                          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-yellow-500"
+                              style={{ width: `${rating.percentage}%` }}
+                            />
+                          </div>
+                          <span className="text-sm text-gray-600 w-12 text-right">
+                            {rating.percentage}%
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Individual Reviews */}
+                <div className="space-y-4">
+                  {[
+                    {
+                      name: "Sarah Johnson",
+                      rating: 5,
+                      date: "2 weeks ago",
+                      verified: true,
+                      comment: "Excellent course! The instructor explains everything clearly and the projects are very practical. Highly recommended!",
+                    },
+                    {
+                      name: "Michael Chen",
+                      rating: 4,
+                      date: "1 month ago",
+                      verified: true,
+                      comment: "Great content and well-structured. Would have loved more advanced topics but overall very satisfied with the learning experience.",
+                    },
+                    {
+                      name: "Amina Osei",
+                      rating: 5,
+                      date: "3 weeks ago",
+                      verified: true,
+                      comment: "This course exceeded my expectations! The hands-on approach really helped me understand the concepts better.",
+                    },
+                  ].map((review, index) => (
+                    <div
+                      key={index}
+                      className="p-4 bg-gray-50 rounded-xl border border-gray-100"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                            <span className="text-white font-semibold">
+                              {review.name.charAt(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="flex items-center space-x-2">
+                              <p className="font-semibold text-gray-900">{review.name}</p>
+                              {review.verified && (
+                                <Badge className="bg-green-100 text-green-800 text-xs">
+                                  <Shield className="w-3 h-3 mr-1" />
+                                  Verified
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star
+                                    key={i}
+                                    className={`w-4 h-4 ${
+                                      i < review.rating
+                                        ? "text-yellow-500 fill-yellow-500"
+                                        : "text-gray-300"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                              <span className="text-sm text-gray-500">{review.date}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-gray-700 leading-relaxed">{review.comment}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
 
             {/* Course Description */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-xl">
@@ -1204,62 +1314,8 @@ export default function CourseDetailPage() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-20 py-12 bg-gradient-to-r from-gray-900 to-slate-800 text-white rounded-t-3xl">
-          <div className="max-w-4xl mx-auto px-6 text-center">
-            <div className="flex items-center justify-center space-x-3 mb-6">
-              <div className="w-12 h-12 rounded-xl overflow-hidden">
-                <img
-                  src="/images/logo.jpeg"
-                  alt="KM Media Training Institute Logo"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-                  KM Media Training Institute
-                </h3>
-                <p className="text-gray-400 text-sm">
-                  Excellence in Media Education
-                </p>
-              </div>
-            </div>
-            <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-              Empowering the next generation of media professionals through
-              innovative hybrid learning experiences.
-            </p>
-            <div className="flex justify-center space-x-6 mb-8">
-              <Link
-                href="/about"
-                className="text-gray-400 hover:text-blue-400 transition-colors"
-              >
-                About
-              </Link>
-              <Link
-                href="/courses"
-                className="text-gray-400 hover:text-blue-400 transition-colors"
-              >
-                Courses
-              </Link>
-              <Link
-                href="/stories"
-                className="text-gray-400 hover:text-blue-400 transition-colors"
-              >
-                Stories
-              </Link>
-              <Link
-                href="/contact"
-                className="text-gray-400 hover:text-blue-400 transition-colors"
-              >
-                Contact
-              </Link>
-            </div>
-            <div className="pt-6 border-t border-gray-700">
-              <p className="text-gray-400">
-                &copy; 2025 KM Media Training Institute. All rights reserved.
-              </p>
-            </div>
-          </div>
-        </footer>
+        {/* Standard Footer */}
+        <Footer />
       </div>
     </div>
   );

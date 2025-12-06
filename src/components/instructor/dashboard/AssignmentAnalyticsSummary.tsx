@@ -152,8 +152,8 @@ export default function AssignmentAnalyticsSummary() {
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-purple-600" />
+            <CardTitle className="text-lg font-bold text-neutral-900">
+              {/* <BarChart3 className="w-5 h-5 text-purple-600" /> */}
               Assignment Analytics
             </CardTitle>
             <CardDescription>

@@ -15,22 +15,27 @@ const createApplicationSchema = z.object({
     email: z.string().email("Invalid email"),
     phone: z.string().min(1, "Phone is required"),
     address: z.string().min(1, "Address is required"),
+    dateOfBirth: z.string().optional(),
+    gender: z.string().optional(),
   }),
   education: z.object({
     highestDegree: z.string().min(1, "Highest degree is required"),
     institution: z.string().min(1, "Institution is required"),
     yearCompleted: z.string().min(1, "Year completed is required"),
+    fieldOfStudy: z.string().optional(),
+    gpa: z.string().optional(),
   }),
   motivation: z.object({
     reasonForApplying: z
       .string()
-      .min(50, "Reason for applying must be at least 50 characters"),
+      .min(10, "Reason for applying must be at least 10 characters"),
     careerGoals: z
       .string()
-      .min(20, "Career goals must be at least 20 characters"),
+      .min(10, "Career goals must be at least 10 characters"),
     expectations: z
       .string()
-      .min(20, "Expectations must be at least 20 characters"),
+      .min(10, "Expectations must be at least 10 characters"),
+    additionalInfo: z.string().optional(),
   }),
   documents: z.array(z.string()).default([]), // File URLs after upload
 });

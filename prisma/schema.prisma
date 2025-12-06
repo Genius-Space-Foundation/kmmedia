@@ -643,6 +643,7 @@ model Assessment {
   timeLimit    Int? // in minutes
   attempts     Int            @default(1)
   instructions String?
+  attachments  Json?          // Array of file URLs
   dueDate      DateTime?
   isPublished  Boolean        @default(false)
   createdAt    DateTime       @default(now())

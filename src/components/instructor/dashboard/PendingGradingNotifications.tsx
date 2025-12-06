@@ -217,8 +217,8 @@ export default function PendingGradingNotifications() {
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5 text-orange-600" />
+            <CardTitle className="text-lg font-bold text-neutral-900">
+              {/* <Bell className="w-5 h-5 text-orange-600" /> */}
               Grading Notifications
               {notifications.length > 0 && (
                 <Badge variant="destructive" className="ml-2">

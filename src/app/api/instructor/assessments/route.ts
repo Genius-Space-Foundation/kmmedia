@@ -20,6 +20,7 @@ const createAssessmentSchema = z.object({
   timeLimit: z.number().positive().optional(),
   attempts: z.number().positive().optional(),
   dueDate: z.string().datetime().optional(),
+  attachments: z.array(z.string()).optional(),
   questions: z
     .array(
       z.object({

@@ -88,82 +88,35 @@ export default function AdminProfile() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      // Try both token keys for compatibility
-      const token =
-        localStorage.getItem("token") || localStorage.getItem("accessToken");
-
-      console.log(
-        "Fetching profile with token:",
-        token ? "Present" : "Missing"
-      );
-
-      if (token) {
-        // Decode token to see its contents (for debugging)
-        try {
-          const tokenParts = token.split(".");
-          if (tokenParts.length === 3) {
-            const payload = JSON.parse(atob(tokenParts[1]));
-            console.log("Token payload:", payload);
-          }
-        } catch (e) {
-          console.error("Failed to decode token:", e);
-        }
-      }
-
-      if (!token) {
-        toast.error("Authentication required - Please login");
-        setLoading(false);
-        return;
-      }
 
       const response = await fetch("/api/user/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include", // Include session cookie
       });
 
       console.log("Profile API response status:", response.status);
-      console.log(
-        "Profile API response headers:",
-        Object.fromEntries(response.headers.entries())
-      );
-
-      // Get the response text first to see what we're getting
-      const responseText = await response.text();
-      console.log("Profile API raw response:", responseText);
 
       if (response.ok) {
-        try {
-          const data = JSON.parse(responseText);
-          console.log("Profile data parsed successfully:", data);
+        const data = await response.json();
+        console.log("Profile data:", data);
 
-          if (data.user) {
-            setProfile(data.user);
-            setFormData({
-              name: data.user.name || "",
-              email: data.user.email || "",
-              phone: data.user.phone || "",
-              bio: data.user.bio || "",
-              address: data.user.address || "",
-              dateOfBirth: data.user.dateOfBirth || "",
-            });
-          } else {
-            console.error("No user data in response");
-            toast.error("Invalid profile data");
-          }
-        } catch (parseError) {
-          console.error("Failed to parse profile response:", parseError);
-          toast.error("Invalid response format from server");
+        if (data.user) {
+          setProfile(data.user);
+          setFormData({
+            name: data.user.name || "",
+            email: data.user.email || "",
+            phone: data.user.phone || "",
+            bio: data.user.bio || "",
+            address: data.user.address || "",
+            dateOfBirth: data.user.dateOfBirth || "",
+          });
+        } else {
+          console.error("No user data in response");
+          toast.error("Invalid profile data");
         }
       } else {
-        try {
-          const errorData = JSON.parse(responseText);
-          console.error("Profile fetch error:", errorData);
-          toast.error(errorData.message || "Failed to load profile");
-        } catch (parseError) {
-          console.error("Failed to parse error response:", responseText);
-          toast.error(`Failed to load profile (${response.status})`);
-        }
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Profile fetch error:", errorData);
+        toast.error(errorData.message || "Failed to load profile");
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -201,14 +154,12 @@ export default function AdminProfile() {
 
     setSaving(true);
     try {
-      const token =
-        localStorage.getItem("token") || localStorage.getItem("accessToken");
       const response = await fetch("/api/user/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify(formData),
       });
 
@@ -253,14 +204,12 @@ export default function AdminProfile() {
 
     setSaving(true);
     try {
-      const token =
-        localStorage.getItem("token") || localStorage.getItem("accessToken");
       const response = await fetch("/api/user/password", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword,
@@ -306,13 +255,9 @@ export default function AdminProfile() {
       const formData = new FormData();
       formData.append("avatar", file);
 
-      const token =
-        localStorage.getItem("token") || localStorage.getItem("accessToken");
       const response = await fetch("/api/upload/avatar", {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
         body: formData,
       });
 
@@ -401,7 +346,7 @@ export default function AdminProfile() {
       </div>
 
       {/* Profile Header Card */}
-      <Card className="border-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+      <Card className="border-0 bg-blue-600 text-white shadow-xl">
         <CardContent className="p-6">
           <div className="flex items-center gap-6">
             <div className="relative">
