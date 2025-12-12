@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withStudentAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 
@@ -6,19 +6,25 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-// Get available courses for students
-async function getStudentCourses(req: AuthenticatedRequest) {
+async function handler(req: AuthenticatedRequest) {
   try {
+    const userId = req.user!.userId;
     const { searchParams } = new URL(req.url);
+    const search = searchParams.get("search");
     const category = searchParams.get("category");
     const difficulty = searchParams.get("difficulty");
-    const search = searchParams.get("search");
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "20");
 
+    // Build filter conditions
     const where: any = {
-      status: { in: ["APPROVED", "PUBLISHED"] }, // Show approved and published courses
+      status: "APPROVED", // Only approved courses
     };
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ];
+    }
 
     if (category && category !== "ALL") {
       where.category = category;
@@ -28,91 +34,72 @@ async function getStudentCourses(req: AuthenticatedRequest) {
       where.difficulty = difficulty;
     }
 
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
-        { instructor: { name: { contains: search, mode: "insensitive" } } },
-      ];
-    }
-
-    const [courses, total] = await Promise.all([
-      prisma.course.findMany({
-        where,
-        include: {
-          instructor: {
-            select: {
-              id: true,
-              name: true,
-              profile: {
-                select: {
-                  avatar: true,
-                  bio: true,
-                },
-              },
-            },
-          },
-          lessons: {
-            select: {
-              id: true,
-              title: true,
-              type: true,
-              duration: true,
-              order: true,
-            },
-            where: { isPublished: true },
-            orderBy: { order: "asc" },
-          },
-          _count: {
-            select: {
-              enrollments: true,
-              applications: true,
-            },
-          },
-          reviews: {
-            select: {
-              rating: true,
-            },
-          },
-        },
-        orderBy: { createdAt: "desc" },
-        skip: (page - 1) * limit,
-        take: limit,
+    // 1. Get user's active cohorts (via applications or enrollments)
+    // We want to exclude courses from cohorts the student is already in
+    const [activeApplications, activeEnrollments] = await Promise.all([
+      prisma.application.findMany({
+        where: { userId },
+        select: { course: { select: { cohort: true } } },
       }),
-      prisma.course.count({ where }),
+      prisma.enrollment.findMany({
+        where: { userId },
+        select: { course: { select: { cohort: true } } },
+      }),
     ]);
 
-    // Transform courses to include calculated fields
-    const transformedCourses = courses.map((course) => ({
-      ...course,
-      rating:
-        course.reviews.length > 0
-          ? course.reviews.reduce((acc, review) => acc + review.rating, 0) /
-            course.reviews.length
-          : 0,
-      reviewCount: course.reviews.length,
-      syllabus: course.lessons,
-      instructor: {
-        ...course.instructor,
-        avatar: course.instructor.profile?.avatar,
-        bio: course.instructor.profile?.bio,
+    // Collect forbidden cohorts (non-null)
+    const forbiddenCohorts = new Set<string>();
+    
+    activeApplications.forEach(app => {
+      if (app.course?.cohort) forbiddenCohorts.add(app.course.cohort);
+    });
+    
+    activeEnrollments.forEach(enrol => {
+      if (enrol.course?.cohort) forbiddenCohorts.add(enrol.course.cohort);
+    });
+
+    // 2. Add cohort exclusion to query
+    if (forbiddenCohorts.size > 0) {
+      where.NOT = {
+        cohort: { in: Array.from(forbiddenCohorts) }
+      };
+    }
+
+    // 3. Fetch courses
+    const courses = await prisma.course.findMany({
+      where,
+      include: {
+        instructor: {
+          select: {
+            name: true,
+          },
+        },
       },
+      orderBy: { createdAt: "desc" },
+    });
+
+    // 4. Map response (exclude sensitive data if any)
+    const formattedCourses = courses.map((course) => ({
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      category: course.category,
+      duration: course.duration,
+      price: course.price,
+      mode: course.mode,
+      difficulty: course.difficulty,
+      instructor: course.instructor,
+      applicationFee: course.applicationFee,
+      installmentEnabled: course.installmentEnabled,
+      cohort: course.cohort,
     }));
 
     return NextResponse.json({
       success: true,
-      data: {
-        courses: transformedCourses,
-        pagination: {
-          page,
-          limit,
-          total,
-          pages: Math.ceil(total / limit),
-        },
-      },
+      data: formattedCourses,
     });
   } catch (error) {
-    console.error("Get student courses error:", error);
+    console.error("Fetch courses error:", error);
     return NextResponse.json(
       { success: false, message: "Failed to fetch courses" },
       { status: 500 }
@@ -120,4 +107,4 @@ async function getStudentCourses(req: AuthenticatedRequest) {
   }
 }
 
-export const GET = withStudentAuth(getStudentCourses);
+export const GET = withStudentAuth(handler);

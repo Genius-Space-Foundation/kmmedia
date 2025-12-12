@@ -334,6 +334,7 @@ model Course {
   status         CourseStatus     @default(DRAFT)
   applicationFee Float            @default(0)
   difficulty     CourseDifficulty @default(BEGINNER)
+  cohort         String?          // e.g., "2025-Q1", "January 2025"
 
   // Installment configuration
   installmentEnabled Boolean @default(false)

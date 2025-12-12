@@ -15,13 +15,16 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 const initializeInstallmentSchema = z.object({
-  applicationId: z.string().min(1, "Application ID is required"),
+  applicationId: z.string().optional(),
+  enrollmentId: z.string().optional(),
+}).refine(data => data.applicationId || data.enrollmentId, {
+  message: "Either applicationId or enrollmentId is required"
 });
 
 async function handler(req: AuthenticatedRequest) {
   try {
     const body = await req.json();
-    const { applicationId } = initializeInstallmentSchema.parse(body);
+    const { applicationId, enrollmentId } = initializeInstallmentSchema.parse(body);
     const userId = req.user!.userId;
 
     // 1. Get user details
@@ -36,69 +39,112 @@ async function handler(req: AuthenticatedRequest) {
       );
     }
 
-    // 2. Validate Application & Course
-    const application = await prisma.application.findUnique({
-      where: { id: applicationId },
-      include: {
-        course: {
-          select: {
-            id: true,
-            title: true,
-            price: true,
-            installmentEnabled: true,
-            installmentPlan: true,
+    let courseData;
+    let targetEnrollmentId;
+    let targetApplicationId;
+
+    // 2. Handle either application or enrollment based payment
+    if (enrollmentId) {
+      // Subsequent installment - student already enrolled
+      const enrollment = await prisma.enrollment.findUnique({
+        where: { id: enrollmentId },
+        include: {
+          course: {
+            select: {
+              id: true,
+              title: true,
+              price: true,
+              installmentEnabled: true,
+              installmentPlan: true,
+            }
           }
         }
+      });
+
+      if (!enrollment) {
+        return NextResponse.json(
+          { success: false, message: "Enrollment not found" },
+          { status: 404 }
+        );
       }
-    });
 
-    if (!application) {
-      return NextResponse.json(
-        { success: false, message: "Application not found" },
-        { status: 404 }
-      );
+      if (enrollment.userId !== userId) {
+        return NextResponse.json(
+          { success: false, message: "Unauthorized" },
+          { status: 403 }
+        );
+      }
+
+      courseData = enrollment.course;
+      targetEnrollmentId = enrollment.id;
+    } else if (applicationId) {
+      // First installment - from approved application
+      const application = await prisma.application.findUnique({
+        where: { id: applicationId },
+        include: {
+          course: {
+            select: {
+              id: true,
+              title: true,
+              price: true,
+              installmentEnabled: true,
+              installmentPlan: true,
+            }
+          }
+        }
+      });
+
+      if (!application) {
+        return NextResponse.json(
+          { success: false, message: "Application not found" },
+          { status: 404 }
+        );
+      }
+
+      if (application.userId !== userId) {
+        return NextResponse.json(
+          { success: false, message: "Unauthorized" },
+          { status: 403 }
+        );
+      }
+
+      if (application.status !== "APPROVED") {
+        return NextResponse.json(
+          { success: false, message: "Application is not approved yet" },
+          { status: 400 }
+        );
+      }
+
+      // Check if already enrolled (shouldn't happen for applicationId path)
+      const existingEnrollment = await prisma.enrollment.findUnique({
+        where: {
+          userId_courseId: {
+            userId,
+            courseId: application.courseId,
+          },
+        },
+      });
+
+      if (existingEnrollment) {
+        return NextResponse.json(
+          { success: false, message: "You are already enrolled in this course" },
+          { status: 400 }
+        );
+      }
+
+      courseData = application.course;
+      targetApplicationId = application.id;
     }
 
-    if (application.userId !== userId) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 403 }
-      );
-    }
-
-    if (application.status !== "APPROVED") {
-      return NextResponse.json(
-        { success: false, message: "Application is not approved yet" },
-        { status: 400 }
-      );
-    }
-
-    if (!application.course.installmentEnabled || !application.course.installmentPlan) {
+    if (!courseData || !courseData.installmentEnabled || !courseData.installmentPlan) {
       return NextResponse.json(
         { success: false, message: "Installment payments are not enabled for this course" },
         { status: 400 }
       );
     }
 
-    // 3. Check if already enrolled
-    const existingEnrollment = await prisma.enrollment.findUnique({
-      where: {
-        userId_courseId: {
-          userId,
-          courseId: application.courseId,
-        },
-      },
-    });
-
-    if (existingEnrollment) {
-      return NextResponse.json(
-        { success: false, message: "You are already enrolled in this course" },
-        { status: 400 }
-      );
-    }
-
-    // 4. Calculate Upfront Amount
-    const plan = application.course.installmentPlan as any;
+    // 3. Calculate Installment Amount
+    const plan = courseData.installmentPlan as any;
     const upfrontPercentage = plan.upfront || 0;
     
     if (upfrontPercentage <= 0) {
@@ -108,30 +154,31 @@ async function handler(req: AuthenticatedRequest) {
         );
     }
 
-    const upfrontAmount = (application.course.price * upfrontPercentage) / 100;
+    const installmentAmount = (courseData.price * upfrontPercentage) / 100;
 
-    // 5. Initialize Payment
+    // 4. Initialize Payment
     const reference = generatePaymentReference();
     
     const paystackResponse = await initializePayment({
       email: user.email,
-      amount: convertToPesewas(upfrontAmount),
+      amount: convertToPesewas(installmentAmount),
       reference,
       metadata: {
         userId,
-        type: "INSTALLMENT_INIT", // Special type for first installment
-        applicationId,
-        courseId: application.courseId,
+        type: enrollmentId ? "INSTALLMENT" : "INSTALLMENT_INIT",
+        applicationId: targetApplicationId,
+        enrollmentId: targetEnrollmentId,
+        courseId: courseData.id,
         custom_fields: [
           {
             display_name: "Payment Type",
             variable_name: "payment_type",
-            value: `Installment (Upfront ${upfrontPercentage}%)`
+            value: `Installment Payment (${upfrontPercentage}%)`
           },
           {
             display_name: "Course",
             variable_name: "course_title",
-            value: application.course.title
+            value: courseData.title
           }
         ]
       },
@@ -144,20 +191,20 @@ async function handler(req: AuthenticatedRequest) {
       );
     }
 
-    // 6. Create Payment Record
-    // We use INSTALLMENT type but mark it as the first one via metadata or logic in verify
+    // 5. Create Payment Record
     await createPaymentRecord({
       userId,
       type: "INSTALLMENT",
-      amount: upfrontAmount,
+      amount: installmentAmount,
       reference,
     });
     
     await prisma.payment.update({
       where: { reference },
       data: { 
-        applicationId,
-        description: `Upfront payment (${upfrontPercentage}%) for ${application.course.title}`
+        applicationId: targetApplicationId,
+        enrollmentId: targetEnrollmentId,
+        description: `Installment payment (${upfrontPercentage}%) for ${courseData.title}`
       }
     });
 
@@ -168,7 +215,7 @@ async function handler(req: AuthenticatedRequest) {
         reference,
         accessCode: paystackResponse.data.access_code,
       },
-      message: "Installment payment initialized",
+      message: "Installment payment initialized successfully",
     });
 
   } catch (error) {

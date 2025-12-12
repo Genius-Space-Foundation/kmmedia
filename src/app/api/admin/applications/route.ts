@@ -54,10 +54,17 @@ async function getAdminApplications(req: NextRequest) {
               category: true,
               price: true,
               applicationFee: true,
+              instructor: {
+                select: {
+                  name: true,
+                  email: true,
+                },
+              },
             },
           },
           payments: {
             where: { type: "APPLICATION_FEE" },
+            orderBy: { createdAt: "desc" },
             select: {
               id: true,
               amount: true,

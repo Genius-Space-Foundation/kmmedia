@@ -75,6 +75,7 @@ interface StudentAssessmentsProps {
   submissions: AssessmentSubmission[];
   onTakeAssessment: (assessmentId: string) => void;
   onViewSubmission: (submissionId: string) => void;
+  onViewAssessmentDetails?: (assessment: Assessment) => void;
 }
 
 export default function StudentAssessments({
@@ -82,6 +83,7 @@ export default function StudentAssessments({
   submissions,
   onTakeAssessment,
   onViewSubmission,
+  onViewAssessmentDetails,
 }: StudentAssessmentsProps) {
   const [selectedAssessment, setSelectedAssessment] =
     useState<Assessment | null>(null);
@@ -165,8 +167,12 @@ export default function StudentAssessments({
   };
 
   const handleTakeAssessment = (assessment: Assessment) => {
-    setSelectedAssessment(assessment);
-    setShowAssessmentDialog(true);
+    if (onViewAssessmentDetails) {
+      onViewAssessmentDetails(assessment);
+    } else {
+      setSelectedAssessment(assessment);
+      setShowAssessmentDialog(true);
+    }
   };
 
   const confirmTakeAssessment = () => {

@@ -16,9 +16,9 @@ export interface AuthenticatedRequest extends NextRequest {
  * Middleware to protect admin routes
  */
 export function withAdminAuth(
-  handler: (req: AuthenticatedRequest) => Promise<NextResponse>
+  handler: (req: AuthenticatedRequest, ...args: any[]) => Promise<NextResponse>
 ) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
     try {
       const session = await getServerSession(authOptions);
 
@@ -47,7 +47,7 @@ export function withAdminAuth(
       };
 
       // Call the handler
-      return handler(authenticatedReq);
+      return handler(authenticatedReq, ...args);
     } catch (error) {
       console.error("Admin auth error:", error);
       return NextResponse.json(
@@ -62,10 +62,10 @@ export function withAdminAuth(
  * Middleware to protect routes with specific roles
  */
 export function withRoleAuth(
-  handler: (req: AuthenticatedRequest) => Promise<NextResponse>,
+  handler: (req: AuthenticatedRequest, ...args: any[]) => Promise<NextResponse>,
   allowedRoles: UserRole[]
 ) {
-  return async (req: NextRequest): Promise<NextResponse> => {
+  return async (req: NextRequest, ...args: any[]): Promise<NextResponse> => {
     try {
       const session = await getServerSession(authOptions);
 
@@ -93,7 +93,7 @@ export function withRoleAuth(
         status: session.user.status,
       };
 
-      return handler(authenticatedReq);
+      return handler(authenticatedReq, ...args);
     } catch (error) {
       console.error("Role auth error:", error);
       return NextResponse.json(

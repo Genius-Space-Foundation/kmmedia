@@ -63,7 +63,64 @@ async function createApplication(req: AuthenticatedRequest) {
       );
     }
 
-    // Check if application fee has been paid (if applicable)
+    // ONE COURSE PER COHORT: Check if user has any application/enrollment in the same cohort
+    if (course.cohort) {
+      const existingInCohort = await prisma.application.findFirst({
+        where: {
+          userId,
+          course: {
+            cohort: course.cohort,
+          },
+        },
+        include: {
+          course: {
+            select: {
+              title: true,
+              cohort: true,
+            },
+          },
+        },
+      });
+
+      if (existingInCohort) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `You already have an application for "${existingInCohort.course.title}" in the ${course.cohort} cohort. Only one course per cohort is allowed.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      // Also check enrollments
+      const existingEnrollmentInCohort = await prisma.enrollment.findFirst({
+        where: {
+          userId,
+          course: {
+            cohort: course.cohort,
+          },
+        },
+        include: {
+          course: {
+            select: {
+              title: true,
+              cohort: true,
+            },
+          },
+        },
+      });
+
+      if (existingEnrollmentInCohort) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `You are already enrolled in "${existingEnrollmentInCohort.course.title}" for the ${course.cohort} cohort. Only one course per cohort is allowed.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Check if application fee has been paid (if applicable)
     let applicationFeePaymentId: string | null = null;
 

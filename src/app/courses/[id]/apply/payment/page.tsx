@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +34,7 @@ interface Course {
 export default function PaymentPage() {
   const params = useParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
   const courseId = params.id as string;
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,31 +42,39 @@ export default function PaymentPage() {
   const [paymentStatus, setPaymentStatus] = useState<
     "pending" | "processing" | "success" | "failed"
   >("pending");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const fetchCourseAndCheckAuth = async () => {
+    // Redirect to login if not authenticated
+    if (status === "unauthenticated") {
+      const callbackUrl = typeof window !== "undefined" 
+        ? encodeURIComponent(window.location.pathname)
+        : encodeURIComponent(`/courses/${courseId}/apply/payment`);
+      router.push(`/auth/login?callbackUrl=${callbackUrl}`);
+      return;
+    }
+
+    // Wait for session to load
+    if (status === "loading") {
+      return;
+    }
+
+    const fetchCourse = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        // Check authentication
-        const token = localStorage.getItem("accessToken");
-        if (!token) {
-          setError("You must be logged in to make payments");
-          setIsAuthenticated(false);
-          setLoading(false);
-          return;
-        }
-        setIsAuthenticated(true);
-
-        // Fetch course data
+        // Fetch course data (cookies are sent automatically)
         const response = await fetch(`/api/courses/${courseId}`, {
+          credentials: "include",
           headers: {
-            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
+
+        if (response.status === 401) {
+          router.push(`/auth/login?callbackUrl=${encodeURIComponent(window.location.pathname)}`);
+          return;
+        }
 
         const data = await response.json();
 
@@ -81,27 +91,29 @@ export default function PaymentPage() {
       }
     };
 
-    if (courseId) {
-      fetchCourseAndCheckAuth();
+    if (courseId && status === "authenticated") {
+      fetchCourse();
     }
-  }, [courseId]);
+  }, [courseId, status, router]);
 
   const handlePayment = async () => {
+    if (status !== "authenticated" || !session) {
+      setError("You must be logged in to make payments");
+      const callbackUrl = typeof window !== "undefined" 
+        ? encodeURIComponent(window.location.pathname)
+        : encodeURIComponent(`/courses/${courseId}/apply/payment`);
+      router.push(`/auth/login?callbackUrl=${callbackUrl}`);
+      return;
+    }
+
     setPaymentStatus("processing");
 
     try {
-      const token = localStorage.getItem("accessToken");
-      if (!token) {
-        setError("You must be logged in to make payments");
-        setPaymentStatus("failed");
-        return;
-      }
-
-      // Initialize payment with Paystack
+      // Initialize payment with Paystack (cookies are sent automatically)
       const response = await fetch("/api/payments/initialize", {
         method: "POST",
+        credentials: "include",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -111,10 +123,23 @@ export default function PaymentPage() {
         }),
       });
 
+      if (response.status === 401) {
+        setError("You must be logged in to make payments");
+        setPaymentStatus("failed");
+        const callbackUrl = typeof window !== "undefined" 
+          ? encodeURIComponent(window.location.pathname)
+          : encodeURIComponent(`/courses/${courseId}/apply/payment`);
+        router.push(`/auth/login?callbackUrl=${callbackUrl}`);
+        return;
+      }
+
       const data = await response.json();
 
-      if (data.success && data.data.authorization_url) {
+      if (data.success && data.data.authorizationUrl) {
         // Redirect to Paystack payment page
+        window.location.href = data.data.authorizationUrl;
+      } else if (data.success && data.data.authorization_url) {
+        // Fallback for old API response format
         window.location.href = data.data.authorization_url;
       } else {
         setError(data.message || "Failed to initialize payment");
@@ -151,7 +176,7 @@ export default function PaymentPage() {
               <span className="text-white text-2xl">❌</span>
             </div>
             <CardTitle className="text-2xl text-gray-900">
-              {!isAuthenticated
+              {status === "unauthenticated"
                 ? "Authentication Required"
                 : "Error Loading Course"}
             </CardTitle>
@@ -159,7 +184,7 @@ export default function PaymentPage() {
           </CardHeader>
           <CardContent className="text-center">
             <div className="space-y-4">
-              {!isAuthenticated ? (
+              {status === "unauthenticated" ? (
                 <div className="space-y-3">
                   <p className="text-gray-600">
                     You need to be logged in to make payments.

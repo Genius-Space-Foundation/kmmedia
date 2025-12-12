@@ -45,7 +45,17 @@ interface Assignment {
   estimatedTime: number; // in minutes
 }
 
-export default function UpcomingAssignmentsWidget() {
+interface UpcomingAssignmentsWidgetProps {
+  deadlines?: any[];
+  onViewDeadlines?: () => void;
+  onViewAssessmentDetails?: (assessment: any) => void;
+}
+
+export default function UpcomingAssignmentsWidget({
+  deadlines = [],
+  onViewDeadlines,
+  onViewAssessmentDetails,
+}: UpcomingAssignmentsWidgetProps) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -146,47 +156,90 @@ export default function UpcomingAssignmentsWidget() {
       : `${hours}h`;
   };
 
+  const handleViewDetails = (assignment: Assignment) => {
+    if (onViewAssessmentDetails) {
+      // Map to Assessment format
+      onViewAssessmentDetails({
+        id: assignment.id,
+        title: assignment.title,
+        description: assignment.description,
+        type: "ASSIGNMENT", // Default mapping
+        courseId: assignment.course.id,
+        courseName: assignment.course.title,
+        dueDate: assignment.dueDate,
+        points: assignment.totalPoints,
+        duration: assignment.estimatedTime,
+        status: assignment.submission?.status === "DRAFT" ? "IN_PROGRESS" : assignment.submission?.status === "SUBMITTED" ? "SUBMITTED" : assignment.submission?.status === "GRADED" ? "GRADED" : "NOT_STARTED",
+        instructions: "Please complete the assignment according to the requirements.",
+        requirements: [
+          "Submit before the deadline",
+          "Follow formatting guidelines",
+          "Include all required sections"
+        ],
+        resources: [],
+        submissions: assignment.submission ? [{
+          id: "sub-1",
+          attemptNumber: 1,
+          submittedAt: assignment.submission.submittedAt,
+          score: assignment.submission.grade,
+          maxScore: assignment.totalPoints,
+          status: assignment.submission.grade ? "GRADED" : "PENDING"
+        }] : [],
+        allowedAttempts: 1,
+        attemptsUsed: assignment.submission ? 1 : 0
+      });
+    }
+  };
+
   const getActionButton = (assignment: Assignment) => {
     if (assignment.submission?.status === "GRADED") {
       return (
-        <Link href={`/assignments/${assignment.id}/results`}>
-          <Button size="sm" variant="outline">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => handleViewDetails(assignment)}
+          >
             <CheckCircle className="w-3 h-3 mr-1" />
             View Results
           </Button>
-        </Link>
       );
     }
 
     if (assignment.submission?.status === "SUBMITTED") {
       return (
-        <Link href={`/assignments/${assignment.id}/submission`}>
-          <Button size="sm" variant="outline">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => handleViewDetails(assignment)}
+          >
             <FileText className="w-3 h-3 mr-1" />
             View Submission
           </Button>
-        </Link>
       );
     }
 
     if (assignment.submission?.status === "DRAFT") {
       return (
-        <Link href={`/assignments/${assignment.id}/submit`}>
-          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+          <Button 
+            size="sm" 
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => handleViewDetails(assignment)}
+          >
             <Play className="w-3 h-3 mr-1" />
             Continue
           </Button>
-        </Link>
       );
     }
 
     return (
-      <Link href={`/assignments/${assignment.id}`}>
-        <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+        <Button 
+          size="sm" 
+          className="bg-blue-600 hover:bg-blue-700"
+          onClick={() => handleViewDetails(assignment)}
+        >
           <Play className="w-3 h-3 mr-1" />
           Start Assignment
         </Button>
-      </Link>
     );
   };
 

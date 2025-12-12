@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware/auth";
 import { prisma } from "@/lib/db";
 import {
   notifyApplicationApproved,
@@ -9,8 +10,8 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-export async function PUT(
-  request: NextRequest,
+async function updateApplication(
+  req: AuthenticatedRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   // Skip during build
@@ -19,9 +20,17 @@ export async function PUT(
   }
 
   try {
+    if (!req.user || !req.user.userId) {
+      return NextResponse.json(
+        { success: false, message: "User not authenticated" },
+        { status: 401 }
+      );
+    }
+
     const applicationId = (await params).id;
-    const body = await request.json();
-    const { status, comments, reviewedAt } = body;
+    const body = await req.json();
+    const { status, comments, reviewNotes, reviewedAt } = body;
+    const adminId = req.user.userId;
 
     const validStatuses = ["PENDING", "APPROVED", "REJECTED", "UNDER_REVIEW"];
     if (!validStatuses.includes(status)) {
@@ -31,13 +40,25 @@ export async function PUT(
       );
     }
 
+    // Check if application exists
+    const existingApplication = await prisma.application.findUnique({
+      where: { id: applicationId },
+    });
+
+    if (!existingApplication) {
+      return NextResponse.json(
+        { success: false, message: "Application not found" },
+        { status: 404 }
+      );
+    }
+
     const updatedApplication = await prisma.application.update({
       where: { id: applicationId },
       data: {
         status,
-        comments: comments || null,
+        reviewNotes: reviewNotes || comments || null, // Support both field names for backward compatibility
+        reviewedBy: adminId,
         reviewedAt: reviewedAt ? new Date(reviewedAt) : new Date(),
-        updatedAt: new Date(),
       },
       include: {
         user: {
@@ -45,7 +66,8 @@ export async function PUT(
             id: true,
             name: true,
             email: true,
-            avatar: true,
+            image: true,
+            profileImage: true,
             phone: true,
           },
         },
@@ -67,6 +89,23 @@ export async function PUT(
     });
 
     if (status === "APPROVED") {
+      console.log(`Application ${applicationId} approved. Updating payment stats...`);
+      
+      // Explicitly update application fee payment
+      const paymentUpdate = await prisma.payment.updateMany({
+        where: {
+          applicationId: applicationId,
+          type: "APPLICATION_FEE",
+          status: { not: "COMPLETED" },
+        },
+        data: {
+          status: "COMPLETED",
+          paidAt: new Date(),
+        },
+      });
+
+      console.log(`Updated ${paymentUpdate.count} payments for application ${applicationId}`);
+
       await notifyApplicationApproved(applicationId).catch((error) =>
         console.error("Failed to send approval notification:", error)
       );
@@ -90,8 +129,8 @@ export async function PUT(
   }
 }
 
-export async function GET(
-  request: NextRequest,
+async function getApplication(
+  req: AuthenticatedRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   // Skip during build
@@ -110,10 +149,10 @@ export async function GET(
             id: true,
             name: true,
             email: true,
-            avatar: true,
+            image: true,
+            profileImage: true,
             phone: true,
             bio: true,
-            address: true,
             dateOfBirth: true,
           },
         },
@@ -125,20 +164,20 @@ export async function GET(
             price: true,
             applicationFee: true,
             duration: true,
-            level: true,
             category: true,
             instructor: {
               select: {
                 id: true,
                 name: true,
                 email: true,
-                avatar: true,
+                image: true,
+                profileImage: true,
               },
             },
           },
         },
         documents: true,
-        payment: true,
+        payments: true,
       },
     });
 
@@ -161,3 +200,6 @@ export async function GET(
     );
   }
 }
+
+export const PUT = withAdminAuth(updateApplication);
+export const GET = withAdminAuth(getApplication);

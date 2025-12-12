@@ -14,7 +14,7 @@ async function bulkHandler(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { applicationIds, action, comments } = body;
+    const { applicationIds, action, comments, reviewNotes } = body;
 
     if (!applicationIds || !Array.isArray(applicationIds) || applicationIds.length === 0) {
       return NextResponse.json(
@@ -34,9 +34,8 @@ async function bulkHandler(request: NextRequest) {
       where: { id: { in: applicationIds } },
       data: {
         status: action === "APPROVE" ? "APPROVED" : "REJECTED",
-        ...(comments && { comments }),
+        reviewNotes: reviewNotes || comments, // Map to correct field
         reviewedAt: new Date(),
-        updatedAt: new Date(),
       },
     });
 

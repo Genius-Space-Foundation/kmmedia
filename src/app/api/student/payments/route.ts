@@ -96,11 +96,52 @@ export const GET = withStudentAuth(async (request: AuthenticatedRequest) => {
       totalTransactions: transactions.length,
     };
 
+    // Calculate Installment Status for active enrollments
+    const enrollments = await prisma.enrollment.findMany({
+      where: { userId },
+      include: {
+        course: {
+          select: {
+            id: true,
+            title: true,
+            price: true,
+            installmentEnabled: true,
+            installmentPlan: true,
+          }
+        },
+        payments: {
+          where: { status: "COMPLETED" },
+          select: { amount: true }
+        }
+      }
+    });
+
+    const installmentStatus = enrollments
+      .filter(e => e.course.installmentEnabled)
+      .map(e => {
+        const totalPaidForCourse = e.payments.reduce((sum, p) => sum + p.amount, 0);
+        const remainingBalance = Math.max(0, e.course.price - totalPaidForCourse);
+        const progress = Math.min(100, Math.round((totalPaidForCourse / e.course.price) * 100));
+        
+        return {
+          enrollmentId: e.id,
+          courseId: e.course.id,
+          courseTitle: e.course.title,
+          totalPrice: e.course.price,
+          totalPaid: totalPaidForCourse,
+          remainingBalance,
+          progress,
+          isFullyPaid: remainingBalance <= 0,
+          plan: e.course.installmentPlan
+        };
+      });
+
     return NextResponse.json({
       success: true,
       data: {
         transactions,
         summary,
+        installmentStatus
       },
     });
   } catch (error) {

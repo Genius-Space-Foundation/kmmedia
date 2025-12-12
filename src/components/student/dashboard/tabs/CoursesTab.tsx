@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import {
   Card,
@@ -8,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -16,9 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CheckCircle, Clock, CreditCard, BookOpen, AlertCircle } from "lucide-react";
 
 interface CoursesTabProps {
   courses: any[];
+  applications: any[];
+  enrollments: any[];
   courseFilter: {
     search: string;
     category: string;
@@ -27,20 +30,154 @@ interface CoursesTabProps {
   };
   setCourseFilter: (filter: any) => void;
   onApplyForCourse: (courseId: string) => void;
+  onPayTuition?: (applicationId: string, type: "FULL" | "INSTALLMENT") => void;
 }
 
 export default function CoursesTab({
   courses,
+  applications,
+  enrollments,
   courseFilter,
   setCourseFilter,
   onApplyForCourse,
+  onPayTuition,
 }: CoursesTabProps) {
+  
+  // Determine current state
+  const hasEnrollment = enrollments && enrollments.length > 0;
+  const hasApplication = applications && applications.length > 0;
+  const approvedApplication = applications?.find((app: any) => app.status === "APPROVED");
+  const pendingApplication = applications?.find((app: any) => app.status === "PENDING");
+  
+  // STATE 4: ENROLLED - Show enrollment confirmation
+  if (hasEnrollment) {
+    const enrollment = enrollments[0];
+    return (
+      <div className="space-y-6">
+        <Card className="border-green-200 bg-green-50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-10 w-10 text-green-600" />
+              <div>
+                <CardTitle className="text-green-900">You're Enrolled!</CardTitle>
+                <CardDescription className="text-green-700">
+                  {enrollment.course?.title || "Course"}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-gray-700">
+              Congratulations! You are now enrolled in this course. Start learning today!
+            </p>
+            <Button asChild className="w-full">
+              <Link href={`/courses/${enrollment.courseId}/learn`}>
+                <BookOpen className="mr-2 h-4 w-4" />
+                Go to Course
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // STATE 3: APPROVED - Show payment options
+  if (approvedApplication && onPayTuition) {
+    const app = approvedApplication;
+    return (
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold">Complete Your Enrollment</h2>
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader>
+            <CardTitle>{app.course?.title}</CardTitle>
+            <CardDescription>Your application has been approved!</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-700">Course Price:</span>
+              <span className="text-2xl font-bold">₵{app.course?.price?.toLocaleString()}</span>
+            </div>
+            
+            <div className="grid gap-3">
+              <Button 
+                className="w-full" 
+                onClick={() => onPayTuition(app.id, "FULL")}
+              >
+                <CreditCard className="mr-2 h-4 w-4" />
+                Pay Full Tuition
+              </Button>
+              
+              {app.course?.installmentEnabled && (
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => onPayTuition(app.id, "INSTALLMENT")}
+                >
+                  Pay in Installments
+                  {app.course?.installmentPlan && (
+                    <span className="ml-2 text-sm">
+                      (Start with {app.course.installmentPlan.upfront}%)
+                    </span>
+                  )}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // STATE 2: PENDING - Show application status
+  if (pendingApplication) {
+    const app = pendingApplication;
+    return (
+      <div className="space-y-6">
+        <Card className="border-yellow-200 bg-yellow-50">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Clock className="h-10 w-10 text-yellow-600" />
+              <div>
+                <CardTitle className="text-yellow-900">Application Under Review</CardTitle>
+                <CardDescription className="text-yellow-700">
+                  {app.course?.title || "Course"}
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Status:</span>
+                <Badge className="bg-yellow-100 text-yellow-800">
+                  {app.status}
+                </Badge>
+              </div>
+              {app.submittedAt && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Submitted:</span>
+                  <span className="text-gray-900">
+                    {new Date(app.submittedAt).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+            </div>
+            <p className="text-sm text-gray-600">
+              Your application is being reviewed by our team. You'll receive an email notification once a decision is made.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+  
+  // STATE 1: NO APPLICATION - Show course catalog
   const filteredCourses = (courses || []).filter((course) => {
     const matchesSearch =
       course.title.toLowerCase().includes(courseFilter.search.toLowerCase()) ||
       course.description
-        .toLowerCase()
-        .includes(courseFilter.search.toLowerCase());
+        .toLowerCase().includes(courseFilter.search.toLowerCase());
     const matchesCategory =
       courseFilter.category === "ALL" ||
       course.category === courseFilter.category;
@@ -59,10 +196,10 @@ export default function CoursesTab({
           </div>
           <div>
             <CardTitle className="text-2xl font-bold text-gray-900">
-              Course Catalog
+              Available Courses
             </CardTitle>
             <CardDescription className="text-gray-600">
-              Discover and apply for amazing courses to advance your skills
+              Browse and apply to start your learning journey
             </CardDescription>
           </div>
         </div>
@@ -120,7 +257,7 @@ export default function CoursesTab({
           {!Array.isArray(filteredCourses) || filteredCourses.length === 0 ? (
             <div className="col-span-full text-center py-12">
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">📚</span>
+                <AlertCircle className="h-10 w-10 text-gray-400" />
               </div>
               <p className="text-gray-500 font-medium text-lg">
                 No courses available at the moment
@@ -142,6 +279,11 @@ export default function CoursesTab({
                         <span className="px-2 py-1 bg-brand-primary/10 text-brand-primary text-xs font-semibold rounded-full">
                           {course.category}
                         </span>
+                        {course.cohort && (
+                          <Badge variant="outline" className="text-xs">
+                            {course.cohort}
+                          </Badge>
+                        )}
                       </div>
                       <h3 className="font-bold text-xl text-neutral-900 group-hover:text-brand-primary transition-colors">
                         {course.title}
@@ -156,7 +298,7 @@ export default function CoursesTab({
                     <div className="flex items-center space-x-2">
                       <span className="text-blue-500">👨‍🏫</span>
                       <span className="text-gray-600">
-                        {course.instructor.name}
+                        {course.instructor?.name || "Instructor"}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -168,13 +310,13 @@ export default function CoursesTab({
                     <div className="flex items-center space-x-2">
                       <span className="text-purple-500">🎓</span>
                       <span className="text-gray-600">
-                        {course.mode.join(", ")}
+                        {course.mode?.join(", ") || "Online"}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
                       <span className="text-yellow-500">💰</span>
                       <span className="text-gray-600">
-                        ₵{course.price.toLocaleString()}
+                        ₵{course.price?.toLocaleString()}
                       </span>
                     </div>
                   </div>

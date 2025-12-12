@@ -20,9 +20,10 @@ interface ClassSession {
 
 interface ClassScheduleWidgetProps {
   classes?: ClassSession[];
+  onViewClassDetails?: (classSession: any) => void;
 }
 
-export default function ClassScheduleWidget({ classes = [] }: ClassScheduleWidgetProps) {
+export default function ClassScheduleWidget({ classes = [], onViewClassDetails }: ClassScheduleWidgetProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Mock data if no classes provided
@@ -79,6 +80,53 @@ export default function ClassScheduleWidget({ classes = [] }: ClassScheduleWidge
     const newDate = new Date(currentDate);
     newDate.setDate(currentDate.getDate() - 7);
     setCurrentDate(newDate);
+  };
+
+  const handleViewDetails = (session: ClassSession) => {
+    if (onViewClassDetails) {
+      // Map to the format expected by UpcomingClassDetailModal
+      onViewClassDetails({
+        id: session.id,
+        title: session.title,
+        courseName: session.courseTitle,
+        date: session.startTime.toISOString().split('T')[0],
+        startTime: session.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        endTime: session.endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        duration: (session.endTime.getTime() - session.startTime.getTime()) / (1000 * 60),
+        type: "HYBRID", // Default mapping
+        instructor: {
+          id: "inst-1",
+          name: session.instructor,
+          photo: "/images/avatars/instructor.jpg",
+          bio: "Experienced instructor with over 10 years of teaching experience."
+        },
+        location: session.location,
+        status: session.status,
+        agenda: [
+          "Introduction and Attendance",
+          "Core Concepts Review",
+          "Practical Demonstration",
+          "Student Practice Session",
+          "Q&A and Wrap-up"
+        ],
+        materials: [
+          {
+            id: "m1",
+            name: "Class Slides",
+            type: "PDF",
+            url: "#",
+            downloadable: true
+          },
+          {
+            id: "m2",
+            name: "Reference Guide",
+            type: "DOCUMENT",
+            url: "#",
+            downloadable: true
+          }
+        ]
+      });
+    }
   };
 
   return (
@@ -165,7 +213,10 @@ export default function ClassScheduleWidget({ classes = [] }: ClassScheduleWidge
 
               {/* Actions Column */}
               <div className="flex items-center justify-end">
-                <Button className="bg-brand-primary hover:bg-brand-secondary text-white w-full sm:w-auto">
+                <Button 
+                  className="bg-brand-primary hover:bg-brand-secondary text-white w-full sm:w-auto"
+                  onClick={() => handleViewDetails(session)}
+                >
                   View Details
                 </Button>
               </div>

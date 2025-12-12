@@ -14,6 +14,7 @@ import UserManagement from "../users/UserManagement";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -21,6 +22,7 @@ import {
   Users,
   BookOpen,
   DollarSign,
+  FileText,
   Clock,
   ArrowUpRight,
   ArrowDownRight,
@@ -43,6 +45,7 @@ import {
   Settings,
   Download,
 } from "lucide-react";
+import { toast } from "sonner";
 import { safeJsonParse } from "@/lib/api-utils";
 
 interface DashboardStats {
@@ -161,13 +164,17 @@ export default function EnhancedDashboard() {
     try {
       setLoading(true);
 
-      // Fetch comprehensive dashboard stats
-      const statsResponse = await fetch("/api/admin/dashboard/comprehensive", {
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      // Fetch comprehensive dashboard stats and pending applications
+      const [statsResponse, applicationsResponse] = await Promise.all([
+        fetch("/api/admin/dashboard/comprehensive", {
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }),
+        fetch("/api/admin/applications?status=PENDING&limit=5", {
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        }),
+      ]);
 
       if (statsResponse.ok) {
         const statsData = await safeJsonParse(statsResponse, {
@@ -179,6 +186,16 @@ export default function EnhancedDashboard() {
           setFinancialSummary(statsData.data.financial || financialSummary);
           setUserSummary(statsData.data.users || userSummary);
           setSystemMetrics(statsData.data.systemMetrics || []);
+        }
+      }
+
+      if (applicationsResponse.ok) {
+        const appsData = await safeJsonParse(applicationsResponse, {
+          success: false,
+          data: { applications: [] },
+        });
+        if (appsData.success && appsData.data?.applications) {
+          setPendingApplications(appsData.data.applications);
         }
       } else {
         // Mock comprehensive data for development
@@ -366,6 +383,38 @@ export default function EnhancedDashboard() {
     }
   };
 
+  const handleApplicationAction = async (
+    applicationId: string,
+    action: "APPROVE" | "REJECT"
+  ) => {
+    try {
+      const response = await fetch(`/api/admin/applications/${applicationId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: action === "APPROVE" ? "APPROVED" : "REJECTED",
+          reviewNotes: "Quick action from dashboard",
+          reviewedAt: new Date().toISOString(),
+        }),
+      });
+
+      if (response.ok) {
+        toast.success(`Application ${action.toLowerCase()}d successfully`);
+        fetchDashboardData();
+      } else {
+        const error = await safeJsonParse(response, {
+          message: "Failed to update application",
+        });
+        toast.error(error.message);
+      }
+    } catch (error) {
+      console.error("Error updating application:", error);
+      toast.error("Failed to update application");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -530,8 +579,80 @@ export default function EnhancedDashboard() {
             </Card>
           </div>
 
-          {/* System Health Overview */}
+          {/* Pending Applications & System Health */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="bg-white/90 backdrop-blur-xl border-0 shadow-lg rounded-2xl">
+              <CardHeader>
+                <CardTitle className="text-lg font-semibold text-gray-900 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Pending Applications
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => router.push("/dashboards/admin/applications")}
+                  >
+                    View All
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {pendingApplications.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      No pending applications
+                    </div>
+                  ) : (
+                    pendingApplications.map((app) => (
+                      <div
+                        key={app.id}
+                        className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={app.user?.image || app.user?.profileImage} />
+                            <AvatarFallback>
+                              {app.user?.name?.slice(0, 2).toUpperCase() || "NA"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-sm text-gray-900">
+                              {app.user?.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {app.course?.title}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white h-8 w-8 p-0"
+                            onClick={() =>
+                              handleApplicationAction(app.id, "APPROVE")
+                            }
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="h-8 w-8 p-0"
+                            onClick={() =>
+                              handleApplicationAction(app.id, "REJECT")
+                            }
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="bg-white/90 backdrop-blur-xl border-0 shadow-lg rounded-2xl">
               <CardHeader>
                 <CardTitle className="text-lg font-semibold text-gray-900 flex items-center gap-2">

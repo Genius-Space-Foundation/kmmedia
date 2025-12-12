@@ -86,60 +86,31 @@ export default function FinancialManagement() {
   const fetchPayments = async () => {
     try {
       setLoading(true);
-      // TODO: Implement actual API call
-      // Mock data for now
-      const mockPayments: Payment[] = [
-        {
-          id: "1",
-          reference: "PAY-2024-001",
-          amount: 5000,
-          currency: "GHS",
-          status: "SUCCESS",
-          paymentMethod: "Paystack",
+      const response = await fetch("/api/admin/payments");
+      const data = await response.json();
+
+      if (data.success) {
+        const mappedPayments: Payment[] = data.data.payments.map((p: any) => ({
+          id: p.id,
+          reference: p.reference,
+          amount: p.amount,
+          currency: "GHS", // Default currency
+          status: p.status === "COMPLETED" ? "SUCCESS" : p.status,
+          paymentMethod: p.method || "Paystack",
           user: {
-            id: "user-1",
-            name: "John Doe",
-            email: "john@example.com",
+            id: p.user.id,
+            name: p.user.name,
+            email: p.user.email,
           },
-          course: {
-            id: "course-1",
-            title: "Film Production Fundamentals",
-          },
-          paidAt: new Date().toISOString(),
-        },
-        {
-          id: "2",
-          reference: "PAY-2024-002",
-          amount: 3500,
-          currency: "GHS",
-          status: "SUCCESS",
-          paymentMethod: "Paystack",
-          user: {
-            id: "user-2",
-            name: "Jane Smith",
-            email: "jane@example.com",
-          },
-          application: {
-            id: "app-1",
-          },
-          paidAt: new Date(Date.now() - 86400000).toISOString(),
-        },
-        {
-          id: "3",
-          reference: "PAY-2024-003",
-          amount: 2000,
-          currency: "GHS",
-          status: "PENDING",
-          paymentMethod: "Paystack",
-          user: {
-            id: "user-3",
-            name: "Mike Johnson",
-            email: "mike@example.com",
-          },
-          paidAt: new Date(Date.now() - 172800000).toISOString(),
-        },
-      ];
-      setPayments(mockPayments);
+          course: p.application?.course || p.enrollment?.course || undefined,
+          application: p.application,
+          paidAt: p.createdAt, // Using createdAt as paidAt for now
+          metadata: p.metadata,
+        }));
+        setPayments(mappedPayments);
+      } else {
+        toast.error("Failed to load payments");
+      }
     } catch (error) {
       console.error("Error fetching payments:", error);
       toast.error("Failed to fetch payments");
@@ -160,6 +131,27 @@ export default function FinancialManagement() {
       toast.error("Failed to process refund");
     } finally {
       setRefunding(false);
+    }
+  };
+
+  const handleConfirmPayment = async (paymentId: string) => {
+    try {
+      const response = await fetch(`/api/admin/payments/${paymentId}/confirm`, {
+        method: "POST",
+        credentials: "include",
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success("Payment confirmed successfully");
+        fetchPayments();
+      } else {
+        toast.error(data.message || "Failed to confirm payment");
+      }
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      toast.error("Failed to confirm payment");
     }
   };
 
@@ -395,6 +387,16 @@ export default function FinancialManagement() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
+                          {payment.status === "PENDING" && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-green-600 hover:text-green-700"
+                              onClick={() => handleConfirmPayment(payment.id)}
+                            >
+                              <CheckCircle className="h-4 w-4" />
+                            </Button>
+                          )}
                           {payment.status === "SUCCESS" && (
                             <Button
                               variant="ghost"

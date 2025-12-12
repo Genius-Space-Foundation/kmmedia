@@ -4,6 +4,14 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { 
+  CreditCard, 
+  Clock, 
+  FileText, 
+  CheckCircle, 
+  AlertCircle,
+  Download 
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -40,6 +48,7 @@ import ApplicationWizard from "@/components/onboarding/ApplicationWizard";
 import AchievementSystem from "@/components/gamification/AchievementSystem";
 // import CourseRecommendations from "@/components/recommendations/CourseRecommendations";
 import NotificationSystem from "@/components/mobile/NotificationSystem";
+import { AdaptiveCourseTab } from "@/components/student/dashboard/AdaptiveCourseTab";
 import PaymentDashboard from "@/components/student/payments/PaymentDashboard";
 import StudentLayout from "@/components/student/layout/StudentLayout";
 import StudentSettings from "@/components/student/settings/StudentSettings";
@@ -50,6 +59,8 @@ import DeadlinesAndReminders from "@/components/student/dashboard/DeadlinesAndRe
 
 import AchievementProgressTracking from "@/components/student/dashboard/AchievementProgressTracking";
 import AssignmentSubmissionPortal from "@/components/student/dashboard/AssignmentSubmissionPortal";
+import AssessmentDetailModal from "@/components/student/dashboard/AssessmentDetailModal";
+import UpcomingClassDetailModal from "@/components/student/dashboard/UpcomingClassDetailModal";
 
 interface Course {
   id: string;
@@ -58,7 +69,10 @@ interface Course {
   category: string;
   duration: number;
   price: number;
+  price: number;
   applicationFee: number;
+  installmentEnabled?: boolean;
+  installmentPlan?: any;
   mode: string[];
   difficulty: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
   rating: number;
@@ -100,8 +114,8 @@ interface Application {
   reviewedAt?: string;
   reviewNotes?: string;
   payments: {
-    applicationFee: PaymentInfo;
-    tuition?: PaymentInfo;
+    applicationFee: Payment;
+    tuition?: Payment;
   };
   documents: ApplicationDocument[];
 }
@@ -263,6 +277,9 @@ export default function StudentDashboard() {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedPaymentPlan, setSelectedPaymentPlan] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState("PAYSTACK");
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [installmentStatus, setInstallmentStatus] = useState<any[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
 
   // Learning States
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
@@ -277,6 +294,14 @@ export default function StudentDashboard() {
     priority: "MEDIUM" as const,
   });
 
+  // Detail Modal States
+  const [selectedAssessment, setSelectedAssessment] = useState<any | null>(
+    null
+  );
+  const [isAssessmentModalOpen, setIsAssessmentModalOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<any | null>(null);
+  const [isClassModalOpen, setIsClassModalOpen] = useState(false);
+
   useEffect(() => {
     if (status === "authenticated") {
       fetchDashboardData();
@@ -284,7 +309,6 @@ export default function StudentDashboard() {
       fetchEnhancedDashboardData();
     }
   }, [status, session]);
-
 
   useEffect(() => {
     // Check if user needs onboarding
@@ -311,8 +335,8 @@ export default function StudentDashboard() {
           notifications: {
             email: true,
             push: false,
-            sms: false
-          }
+            sms: false,
+          },
         });
       } else {
         // Fallback to API call if needed, but rely on cookie auth
@@ -440,7 +464,7 @@ export default function StudentDashboard() {
   const fetchDashboardData = async () => {
     try {
       if (status === "loading") return;
-      
+
       if (status === "unauthenticated") {
         console.log("User unauthenticated, redirecting to login");
         router.push("/auth/login");
@@ -470,7 +494,6 @@ export default function StudentDashboard() {
         fetch("/api/student/notifications/user"),
         fetch("/api/student/stats/user"),
       ]);
-
 
       // Check for 401 responses (unauthorized)
       if (
@@ -564,12 +587,24 @@ export default function StudentDashboard() {
 
       if (
         paymentsData.success &&
-        paymentsData.data &&
-        Array.isArray(paymentsData.data.payments)
+        paymentsData.data
       ) {
-        setPaymentPlans(paymentsData.data.payments);
+        console.log("Payments API Data:", paymentsData.data); // Debug logging
+        setPayments(paymentsData.data.transactions || []);
+        setInstallmentStatus(paymentsData.data.installmentStatus || []);
+        console.log("Installment Status Set:", paymentsData.data.installmentStatus); // Debug logging
+        
+        // Update stats with payment summary
+        if (paymentsData.data.summary) {
+           setDashboardStats((prev: any) => ({
+             ...prev,
+             paymentSummary: paymentsData.data.summary
+           }));
+        }
       } else {
-        setPaymentPlans([]);
+        console.warn("Payments API failed or empty:", paymentsData); // Debug logging
+        setPayments([]);
+        setInstallmentStatus([]);
       }
 
       if (
@@ -676,12 +711,18 @@ export default function StudentDashboard() {
     }));
   };
 
-  const handleApplicationComplete = (applicationData: any, applicationResult?: any) => {
+  const handleApplicationComplete = (
+    applicationData: any,
+    applicationResult?: any
+  ) => {
     setShowApplicationWizard(false);
     setSelectedCourseForApplication(null);
-    
+
     // Check if course has application fee and redirect to payment
-    if (applicationResult?.data?.course?.applicationFee && applicationResult.data.course.applicationFee > 0) {
+    if (
+      applicationResult?.data?.course?.applicationFee &&
+      applicationResult.data.course.applicationFee > 0
+    ) {
       // Redirect to payment page
       router.push(`/courses/${applicationResult.data.courseId}/apply/payment`);
     } else {
@@ -729,21 +770,42 @@ export default function StudentDashboard() {
     courseId?: string
   ) => {
     try {
-      const response = await fetch("/api/student/payments/initialize", {
+      let endpoint = "/api/payments/initialize"; // Default fallback
+      let body: any = { type, amount, courseId };
+
+      const applicationId = applications.find(a => a.course.id === courseId)?.id;
+
+      if (type === "TUITION") {
+        endpoint = "/api/payments/tuition/initialize";
+        body = { applicationId }; // Tuition endpoint expects { applicationId }
+      } else if (type === "INSTALLMENT") {
+        endpoint = "/api/payments/installment/initialize";
+        body = { applicationId }; // Installment endpoint expects { applicationId }
+      }
+
+      const response = await fetch(endpoint, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type,
-          amount,
-          courseId,
-          paymentMethod,
-          paymentPlan: selectedPaymentPlan,
-        }),
+        body: JSON.stringify(body),
       });
+
+      if (response.status === 401) {
+        alert("You must be logged in to make payments");
+        router.push("/auth/login");
+        return;
+      }
 
       const result = await response.json();
       if (result.success) {
-        window.location.href = result.data.authorizationUrl;
+        // Handle both camelCase and snake_case response formats
+        const authUrl =
+          result.data.authorizationUrl || result.data.authorization_url;
+        if (authUrl) {
+          window.location.href = authUrl;
+        } else {
+          alert("Payment initialization failed: No authorization URL received");
+        }
       } else {
         alert(result.message || "Failed to initialize payment");
       }
@@ -821,12 +883,24 @@ export default function StudentDashboard() {
     }
   };
 
+  // Detail Modal Handlers
+  const handleViewAssessmentDetails = (assessment: any) => {
+    setSelectedAssessment(assessment);
+    setIsAssessmentModalOpen(true);
+  };
+
+  const handleViewClassDetails = (classSession: any) => {
+    setSelectedClass(classSession);
+    setIsClassModalOpen(true);
+  };
+
   // Assessment Functions
   const handleTakeAssessment = async (assessmentId: string) => {
     try {
-      // Navigate to assessment page or open assessment modal
-      console.log("Taking assessment:", assessmentId);
-      // Implementation for taking assessment
+      // Close modal if open
+      setIsAssessmentModalOpen(false);
+      // Navigate to assessment page
+      router.push(`/assignments/${assessmentId}`);
     } catch (error) {
       console.error("Error taking assessment:", error);
       alert("Failed to start assessment");
@@ -835,9 +909,17 @@ export default function StudentDashboard() {
 
   const handleViewSubmission = async (submissionId: string) => {
     try {
-      // Navigate to submission details or open modal
-      console.log("Viewing submission:", submissionId);
-      // Implementation for viewing submission details
+      // Close modal if open
+      setIsAssessmentModalOpen(false);
+      // Navigate to submission details
+      if (selectedAssessment) {
+        router.push(`/assignments/${selectedAssessment.id}/submission`);
+      } else {
+        // Fallback if we don't have the assessment ID context
+        console.warn("No assessment context for submission view");
+        // Try to navigate to a generic submission view if available or alert
+        alert("Could not determine assessment context");
+      }
     } catch (error) {
       console.error("Error viewing submission:", error);
       alert("Failed to load submission details");
@@ -1155,6 +1237,8 @@ export default function StudentDashboard() {
               onContinueCourse={handleContinueCourse}
               onViewDeadlines={handleViewDeadlines}
               onViewAchievements={handleViewAchievements}
+              onViewAssessmentDetails={handleViewAssessmentDetails}
+              onViewClassDetails={handleViewClassDetails}
             />
           )}
 
@@ -1164,11 +1248,17 @@ export default function StudentDashboard() {
               <div className="flex space-x-4 border-b border-gray-200 pb-2">
                 <button
                   className={`pb-2 px-1 ${
-                    !courseFilter.category || courseFilter.category === "MY_LEARNING"
+                    !courseFilter.category ||
+                    courseFilter.category === "MY_LEARNING"
                       ? "border-b-2 border-brand-primary text-brand-primary font-medium"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
-                  onClick={() => setCourseFilter({ ...courseFilter, category: "MY_LEARNING" })}
+                  onClick={() =>
+                    setCourseFilter({
+                      ...courseFilter,
+                      category: "MY_LEARNING",
+                    })
+                  }
                 >
                   My Learning
                 </button>
@@ -1178,13 +1268,16 @@ export default function StudentDashboard() {
                       ? "border-b-2 border-brand-primary text-brand-primary font-medium"
                       : "text-gray-500 hover:text-gray-700"
                   }`}
-                  onClick={() => setCourseFilter({ ...courseFilter, category: "ALL" })}
+                  onClick={() =>
+                    setCourseFilter({ ...courseFilter, category: "ALL" })
+                  }
                 >
                   Course Catalog
                 </button>
               </div>
 
-              {(!courseFilter.category || courseFilter.category === "MY_LEARNING") ? (
+              {!courseFilter.category ||
+              courseFilter.category === "MY_LEARNING" ? (
                 <CourseProgressVisualization
                   enrollments={enrollments}
                   onContinueCourse={handleContinueCourse}
@@ -1222,7 +1315,11 @@ export default function StudentDashboard() {
                         className="max-w-xs"
                       />
                       <Select
-                        value={courseFilter.category === "MY_LEARNING" ? "ALL" : courseFilter.category}
+                        value={
+                          courseFilter.category === "MY_LEARNING"
+                            ? "ALL"
+                            : courseFilter.category
+                        }
                         onValueChange={(value: string) =>
                           setCourseFilter({ ...courseFilter, category: value })
                         }
@@ -1232,8 +1329,12 @@ export default function StudentDashboard() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="ALL">All Categories</SelectItem>
-                          <SelectItem value="PHOTOGRAPHY">Photography</SelectItem>
-                          <SelectItem value="VIDEOGRAPHY">Videography</SelectItem>
+                          <SelectItem value="PHOTOGRAPHY">
+                            Photography
+                          </SelectItem>
+                          <SelectItem value="VIDEOGRAPHY">
+                            Videography
+                          </SelectItem>
                           <SelectItem value="EDITING">Editing</SelectItem>
                           <SelectItem value="MARKETING">Marketing</SelectItem>
                         </SelectContent>
@@ -1241,7 +1342,10 @@ export default function StudentDashboard() {
                       <Select
                         value={courseFilter.difficulty}
                         onValueChange={(value: string) =>
-                          setCourseFilter({ ...courseFilter, difficulty: value })
+                          setCourseFilter({
+                            ...courseFilter,
+                            difficulty: value,
+                          })
                         }
                       >
                         <SelectTrigger className="w-40">
@@ -1250,7 +1354,9 @@ export default function StudentDashboard() {
                         <SelectContent>
                           <SelectItem value="ALL">All Levels</SelectItem>
                           <SelectItem value="BEGINNER">Beginner</SelectItem>
-                          <SelectItem value="INTERMEDIATE">Intermediate</SelectItem>
+                          <SelectItem value="INTERMEDIATE">
+                            Intermediate
+                          </SelectItem>
                           <SelectItem value="ADVANCED">Advanced</SelectItem>
                         </SelectContent>
                       </Select>
@@ -1344,7 +1450,9 @@ export default function StudentDashboard() {
                                   </Button>
                                 </Link>
                                 <Button
-                                  onClick={() => handleApplyForCourse(course.id)}
+                                  onClick={() =>
+                                    handleApplyForCourse(course.id)
+                                  }
                                   className="flex-1 btn-brand-professional font-semibold py-3 rounded-xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300"
                                 >
                                   🚀 Apply Now
@@ -1407,12 +1515,14 @@ export default function StudentDashboard() {
                     onViewDeadline={handleViewDeadline}
                     onAddReminder={handleAddReminder}
                   />
-                  
+
                   <div className="grid grid-cols-1 gap-6">
                     <Card>
                       <CardHeader>
                         <CardTitle>Recent Assignments</CardTitle>
-                        <CardDescription>Your latest assignment tasks</CardDescription>
+                        <CardDescription>
+                          Your latest assignment tasks
+                        </CardDescription>
                       </CardHeader>
                       <CardContent>
                         <AssignmentSubmissionPortal userId={user?.id || ""} />
@@ -1422,7 +1532,9 @@ export default function StudentDashboard() {
                     <Card>
                       <CardHeader>
                         <CardTitle>Upcoming Quizzes</CardTitle>
-                        <CardDescription>Scheduled quizzes and exams</CardDescription>
+                        <CardDescription>
+                          Scheduled quizzes and exams
+                        </CardDescription>
                       </CardHeader>
                       <CardContent>
                         <StudentAssessments
@@ -1430,6 +1542,7 @@ export default function StudentDashboard() {
                           submissions={assessmentSubmissions}
                           onTakeAssessment={handleTakeAssessment}
                           onViewSubmission={handleViewSubmission}
+                          onViewAssessmentDetails={handleViewAssessmentDetails}
                         />
                       </CardContent>
                     </Card>
@@ -1449,6 +1562,7 @@ export default function StudentDashboard() {
                   submissions={assessmentSubmissions}
                   onTakeAssessment={handleTakeAssessment}
                   onViewSubmission={handleViewSubmission}
+                  onViewAssessmentDetails={handleViewAssessmentDetails}
                 />
               )}
             </div>
@@ -1476,6 +1590,350 @@ export default function StudentDashboard() {
           )}
         </div>
       </div>
+      
+          {/* Payments Tab */}
+          {activeTab === "payments" && activeTab === "payments" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">My Payments</h2>
+                  <p className="text-gray-500">View your transaction history and payment status</p>
+                </div>
+                <Button onClick={() => setActiveTab("applications")} className="bg-blue-600 hover:bg-blue-700">
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Make a Payment
+                </Button>
+              </div>
+
+              {/* Payment Summary */}
+              {dashboardStats?.paymentSummary && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-100">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-green-600 mb-1">Total Paid</p>
+                          <p className="text-3xl font-bold text-green-700">
+                            {formatCurrency(dashboardStats.paymentSummary.totalPaid)}
+                          </p>
+                        </div>
+                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                          <CreditCard className="w-6 h-6 text-green-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-100">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-yellow-600 mb-1">Pending Amount</p>
+                          <p className="text-3xl font-bold text-yellow-700">
+                            {formatCurrency(dashboardStats.paymentSummary.totalPending)}
+                          </p>
+                        </div>
+                        <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                          <Clock className="w-6 h-6 text-yellow-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-white border-gray-100">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-gray-600 mb-1">Completed Transactions</p>
+                          <p className="text-3xl font-bold text-gray-900">
+                            {dashboardStats.paymentSummary.completedCount}
+                          </p>
+                        </div>
+                        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                          <FileText className="w-6 h-6 text-gray-600" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
+              {/* Installment Status */}
+              {installmentStatus.length > 0 && (
+                <div className="grid gap-6 mb-8">
+                  <h3 className="text-xl font-semibold text-gray-800">Active Installment Plans</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {installmentStatus.map((plan: any) => (
+                      <Card key={plan.courseId} className="border-blue-100 bg-blue-50/50">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-lg font-bold text-gray-900 flex justify-between">
+                            {plan.courseTitle}
+                            <Badge variant={plan.isFullyPaid ? "default" : "secondary"}>
+                              {plan.isFullyPaid ? "Fully Paid" : "Active Plan"}
+                            </Badge>
+                          </CardTitle>
+                          <CardDescription>
+                            Total Course Price: {formatCurrency(plan.totalPrice)}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                           <div className="space-y-4">
+                             <div>
+                               <div className="flex justify-between text-sm mb-1">
+                                 <span className="text-gray-600">Progress</span>
+                                 <span className="font-medium">{plan.progress}% Paid</span>
+                               </div>
+                               <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                 <div 
+                                   className="bg-blue-600 h-2.5 rounded-full transition-all duration-500" 
+                                   style={{ width: `${plan.progress}%` }}
+                                 ></div>
+                               </div>
+                             </div>
+                             
+                             <div className="flex justify-between items-center text-sm">
+                               <div>
+                                 <p className="text-gray-500">Amount Paid</p>
+                                 <p className="font-semibold text-gray-900">{formatCurrency(plan.totalPaid)}</p>
+                               </div>
+                               <div className="text-right">
+                                 <p className="text-gray-500">Remaining Balance</p>
+                                 <p className="font-semibold text-red-600">{formatCurrency(plan.remainingBalance)}</p>
+                               </div>
+                             </div>
+
+                             {!plan.isFullyPaid && (
+                               <Button 
+                                className="w-full mt-2" 
+                                onClick={async () => {
+                                  try {
+                                    const response = await fetch("/api/payments/installment/initialize", {
+                                      method: "POST",
+                                      credentials: "include",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ enrollmentId: plan.enrollmentId }),
+                                    });
+                                    const result = await response.json();
+                                    if (result.success && result.data.authorizationUrl) {
+                                      window.location.href = result.data.authorizationUrl;
+                                    } else {
+                                      alert(result.message || "Failed to initialize payment");
+                                    }
+                                  } catch (error) {
+                                    console.error("Payment initialization error:", error);
+                                    alert("An error occurred while processing payment");
+                                  }
+                                }}
+                               >
+                                 Pay Next Installment
+                               </Button>
+                             )}
+                           </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Transaction History */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Transaction History</CardTitle>
+                  <CardDescription>Recent payments and their status</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {payments.length === 0 ? (
+                    <div className="text-center py-12">
+                      <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <CreditCard className="w-8 h-8 text-gray-400" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900">No transactions yet</h3>
+                      <p className="text-gray-500 mt-1">Payments you make will appear here.</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b text-left text-sm font-medium text-gray-500">
+                            <th className="pb-4 pl-4">Date</th>
+                            <th className="pb-4">Description</th>
+                            <th className="pb-4">Reference</th>
+                            <th className="pb-4">Amount</th>
+                            <th className="pb-4">Status</th>
+                            <th className="pb-4 pr-4">Receipt</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y">
+                          {payments.map((payment) => (
+                            <tr key={payment.id} className="text-sm">
+                              <td className="py-4 pl-4 font-medium text-gray-900">
+                                {new Date(payment.createdAt).toLocaleDateString()}
+                              </td>
+                              <td className="py-4 text-gray-600">
+                                {payment.description || 
+                                 (payment.application?.course?.title ? `Application Fee: ${payment.application.course.title}` : 
+                                 payment.enrollment?.course?.title ? `Tuition: ${payment.enrollment.course.title}` : 
+                                 payment.type)}
+                              </td>
+                              <td className="py-4 font-mono text-gray-500 text-xs">
+                                {payment.reference}
+                              </td>
+                              <td className="py-4 font-medium text-gray-900">
+                                {formatCurrency(payment.amount)}
+                              </td>
+                              <td className="py-4">
+                                <Badge variant={
+                                  payment.status === "COMPLETED" ? "default" :
+                                  payment.status === "PENDING" ? "secondary" : "destructive"
+                                } className={
+                                  payment.status === "COMPLETED" ? "bg-green-100 text-green-800" :
+                                  payment.status === "PENDING" ? "bg-yellow-100 text-yellow-800" : ""
+                                }>
+                                  {payment.status}
+                                </Badge>
+                              </td>
+                              <td className="py-4 pr-4">
+                                {payment.status === "COMPLETED" && (
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => handleDownloadReceipt(payment.id)}
+                                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                  >
+                                    Download
+                                  </Button>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+          {activeTab === "applications" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">My Applications</h2>
+                  <p className="text-gray-500">Track and manage your course applications</p>
+                </div>
+                <Button onClick={() => setCourseFilter({ ...courseFilter, category: "ALL" })} variant="outline">
+                  Browse More Courses
+                </Button>
+              </div>
+
+              {applications.length === 0 ? (
+                <Card className="p-8 text-center bg-gray-50 border-dashed border-2">
+                  <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <span className="text-2xl">📝</span>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">No Applications Yet</h3>
+                  <p className="text-gray-500 mb-6">You haven't applied to any courses yet.</p>
+                  <Button onClick={() => setActiveTab("courses")}>Browse Courses</Button>
+                </Card>
+              ) : (
+                <div className="grid gap-6">
+                  {applications.map((app) => (
+                    <Card key={app.id} className="overflow-hidden">
+                      <div className="p-6 flex flex-col md:flex-row gap-6">
+                        {/* Course Info */}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Badge variant={
+                              app.status === "APPROVED" ? "default" : 
+                              app.status === "REJECTED" ? "destructive" : "secondary"
+                            } className={
+                              app.status === "APPROVED" ? "bg-green-100 text-green-800 hover:bg-green-200" : ""
+                            }>
+                              {app.status}
+                            </Badge>
+                            <span className="text-sm text-gray-500">
+                              Applied: {new Date(app.submittedAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                          
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">{app.course.title}</h3>
+                          <p className="text-gray-600 mb-4 line-clamp-2">{app.course.description}</p>
+                          
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <span>💰</span> Tuition: {formatCurrency(app.course.price)}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span>⏱️</span> Duration: {app.course.duration} weeks
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex flex-col justify-center min-w-[200px] border-l pl-6 border-gray-100">
+                          {app.status === "APPROVED" && (
+                            <div className="space-y-3">
+                              {!enrollments.find(e => e.course.id === app.course.id) ? (
+                                <>
+                                  <div className="p-3 bg-green-50 rounded-lg text-sm text-green-800">
+                                    <p className="font-medium">Application Approved!</p>
+                                    <p>Please pay tuition to enroll.</p>
+                                  </div>
+                                  <Button 
+                                    className="w-full bg-green-600 hover:bg-green-700" 
+                                    onClick={() => handleInitializePayment("TUITION", app.course.price, app.course.id)}
+                                  >
+                                    Pay Tuition ({formatCurrency(app.course.price)})
+                                  </Button>
+                                  
+                                  {app.course.installmentEnabled && (
+                                    <div className="mt-2">
+                                      <p className="text-xs text-center text-gray-500 mb-1">- OR -</p>
+                                      <Button 
+                                        className="w-full bg-blue-600 hover:bg-blue-700" 
+                                        variant="outline"
+                                        onClick={() => handleInitializePayment("INSTALLMENT", 0, app.course.id)}
+                                      >
+                                        Pay in Installments
+                                      </Button>
+                                      {app.course.installmentPlan?.upfront && (
+                                        <p className="text-xs text-center text-gray-500 mt-1">
+                                          Initial deposit: {app.course.installmentPlan.upfront}% ({formatCurrency((app.course.price * (app.course.installmentPlan.upfront)) / 100)})
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-800 flex items-center gap-2">
+                                  <span>✅</span> Enrolled Successfully
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {app.status === "PENDING" && (
+                            <div className="p-3 bg-yellow-50 rounded-lg text-sm text-yellow-800">
+                              <p className="font-medium">Under Review</p>
+                              <p>We'll notify you once approved.</p>
+                            </div>
+                          )}
+
+                          {app.status === "REJECTED" && (
+                            <div className="p-3 bg-red-50 rounded-lg text-sm text-red-800">
+                              <p className="font-medium">Application Rejected</p>
+                              <p>{app.reviewNotes || "Please contact support for more details."}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
       {/* Onboarding Flow */}
       {showOnboarding && (
@@ -1494,6 +1952,28 @@ export default function StudentDashboard() {
           onCancel={handleApplicationCancel}
         />
       )}
+      {/* Detail Modals */}
+      <AssessmentDetailModal
+        assessment={selectedAssessment}
+        isOpen={isAssessmentModalOpen}
+        onClose={() => {
+          setIsAssessmentModalOpen(false);
+          setSelectedAssessment(null);
+        }}
+        onStartAssessment={handleTakeAssessment}
+        onViewSubmission={handleViewSubmission}
+      />
+
+      <UpcomingClassDetailModal
+        classSession={selectedClass}
+        isOpen={isClassModalOpen}
+        onClose={() => {
+          setIsClassModalOpen(false);
+          setSelectedClass(null);
+        }}
+        onJoinClass={(id) => console.log("Join class", id)}
+        onAddToCalendar={(id) => console.log("Add to calendar", id)}
+      />
     </StudentLayout>
   );
 }

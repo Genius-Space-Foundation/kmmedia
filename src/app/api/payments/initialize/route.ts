@@ -10,9 +10,9 @@ import { prisma } from "@/lib/db";
 import { PaymentType } from "@prisma/client";
 import { z } from "zod";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
-export const fetchCache = 'force-no-store';
+export const fetchCache = "force-no-store";
 
 const initializePaymentSchema = z.object({
   type: z.enum(["APPLICATION_FEE", "TUITION", "INSTALLMENT"]),
@@ -22,9 +22,16 @@ const initializePaymentSchema = z.object({
 
 async function handler(req: AuthenticatedRequest) {
   try {
+    if (!req.user || !req.user.userId) {
+      return NextResponse.json(
+        { success: false, message: "User not authenticated" },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const { type, courseId, amount } = initializePaymentSchema.parse(body);
-    const userId = req.user!.userId;
+    const userId = req.user.userId;
 
     // Get user details
     const user = await prisma.user.findUnique({

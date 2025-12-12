@@ -62,7 +62,6 @@ const step2Schema = z.object({
     institution: z.string().min(2, "Institution name is required"),
     graduationYear: z.string().min(4, "Graduation year is required"),
     fieldOfStudy: z.string().min(2, "Field of study is required"),
-    gpa: z.string().optional(),
   }),
 });
 
@@ -522,18 +521,6 @@ export function ApplicationForm({
                   {errors.education.fieldOfStudy.message}
                 </p>
               )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="gpa" className="text-sm font-medium text-gray-600">
-                GPA (Optional)
-              </Label>
-              <Input
-                id="gpa"
-                {...register("education.gpa")}
-                placeholder="e.g., 3.8 out of 4.0"
-                className="h-11"
-              />
             </div>
           </div>
         );

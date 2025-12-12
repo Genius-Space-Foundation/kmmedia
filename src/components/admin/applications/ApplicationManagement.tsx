@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -54,8 +55,11 @@ interface Application {
     id: string;
     name: string;
     email: string;
-    avatar?: string;
-    phone?: string;
+    name: string;
+    email: string;
+    image?: string;
+    profileImage?: string;
+    phones?: string;
   };
   course: {
     id: string;
@@ -116,7 +120,25 @@ export default function ApplicationManagement({
       });
 
       if (data.success) {
-        setApplications(Array.isArray(data.data) ? data.data : []);
+        // Handle both pagination format and direct array format
+        const rawApps = data.data?.applications || (Array.isArray(data.data) ? data.data : []);
+        
+        // Map API response to UI model
+        const apps = rawApps.map((app: any) => {
+          // Find any successful payment, otherwise use the most recent one (which is first due to API sorting)
+          const successfulPayment = app.payments?.find((p: any) => p.status === "COMPLETED");
+          const latestPayment = app.payments?.[0]; // API returns most recent first
+          
+          return {
+            ...app,
+            appliedAt: app.submittedAt || app.createdAt,
+            // Prioritize seeing a successful payment, regardless of subsequent failed attempts (redundant checks etc)
+            paymentStatus: successfulPayment?.status || latestPayment?.status || "PENDING",
+            paymentReference: successfulPayment?.reference || latestPayment?.reference,
+          };
+        });
+        
+        setApplications(apps);
       } else {
         console.error("API returned error:", data.message);
         toast.error(data.message || "Failed to fetch applications");
@@ -144,8 +166,13 @@ export default function ApplicationManagement({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          status: action,
-          comments: comment,
+          status:
+            action === "APPROVE"
+              ? "APPROVED"
+              : action === "REJECT"
+              ? "REJECTED"
+              : action,
+          reviewNotes: comment,
           reviewedAt: new Date().toISOString(),
         }),
       });
@@ -156,8 +183,18 @@ export default function ApplicationManagement({
         setShowDetails(false);
         if (onRefresh) onRefresh();
       } else {
-        const error = await response.json();
-        toast.error(error.message || "Failed to update application");
+
+        let errorMessage = "Failed to update application";
+        try {
+          const text = await response.text();
+          if (text) {
+            const data = JSON.parse(text);
+            errorMessage = data.message || errorMessage;
+          }
+        } catch (e) {
+          console.error("Error parsing error response:", e);
+        }
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error("Error updating application:", error);
@@ -183,7 +220,7 @@ export default function ApplicationManagement({
         body: JSON.stringify({
           applicationIds: selectedApplications,
           action,
-          comments: comment,
+          reviewNotes: comment,
           reviewedAt: new Date().toISOString(),
         }),
       });
@@ -376,7 +413,7 @@ export default function ApplicationManagement({
                           }
                         />
                         <Avatar className="h-12 w-12">
-                          <AvatarImage src={application.user.avatar} />
+                          <AvatarImage src={application.user.image || application.user.profileImage} />
                           <AvatarFallback>
                             {application.user.name
                               .split(" ")
@@ -508,7 +545,7 @@ export default function ApplicationManagement({
                 <CardContent>
                   <div className="flex items-start gap-4">
                     <Avatar className="h-16 w-16">
-                      <AvatarImage src={selectedApplication.user.avatar} />
+                      <AvatarImage src={selectedApplication.user.image || selectedApplication.user.profileImage} />
                       <AvatarFallback>
                         {selectedApplication.user.name
                           .split(" ")

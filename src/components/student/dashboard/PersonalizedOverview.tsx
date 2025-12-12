@@ -19,6 +19,8 @@ interface PersonalizedOverviewProps {
   achievements: any[];
   onViewDeadlines: () => void;
   onViewAchievements: () => void;
+  onViewAssessmentDetails?: (assessment: any) => void;
+  onViewClassDetails?: (classSession: any) => void;
 }
 
 export default function PersonalizedOverview({
@@ -28,6 +30,8 @@ export default function PersonalizedOverview({
   achievements,
   onViewDeadlines,
   onViewAchievements,
+  onViewAssessmentDetails,
+  onViewClassDetails,
 }: PersonalizedOverviewProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -110,7 +114,7 @@ export default function PersonalizedOverview({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Row 1: Schedule & Attendance */}
         <div className="lg:col-span-2">
-          <ClassScheduleWidget />
+          <ClassScheduleWidget onViewClassDetails={onViewClassDetails} />
         </div>
         <div className="lg:col-span-1">
           <AttendanceTracker 
@@ -124,7 +128,8 @@ export default function PersonalizedOverview({
         <div className="lg:col-span-2">
           <UpcomingAssignmentsWidget 
             deadlines={upcomingDeadlines} 
-            onViewDeadlines={onViewDeadlines} 
+            onViewDeadlines={onViewDeadlines}
+            onViewAssessmentDetails={onViewAssessmentDetails}
           />
         </div>
         <div className="lg:col-span-1">

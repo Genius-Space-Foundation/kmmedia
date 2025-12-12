@@ -972,32 +972,43 @@ export default function AdminDashboard() {
   // Application Management Functions
   const handleApplicationApproval = async (
     applicationId: string,
-    action: "approve" | "reject",
+    action: "approve" | "reject" | "APPROVED" | "REJECTED" | "UNDER_REVIEW",
     notes?: string
   ) => {
     try {
-      const accessToken = localStorage.getItem("accessToken");
-      if (!accessToken) {
-        alert("You need to log in first. Redirecting to login page...");
-        window.location.href = "/auth/login";
-        return;
+      // Handle both string status values and action words
+      let status: string;
+      if (action === "approve" || action === "APPROVED") {
+        status = "APPROVED";
+      } else if (action === "reject" || action === "REJECTED") {
+        status = "REJECTED";
+      } else {
+        status = action; // Already a status value
       }
 
       const response = await fetch(`/api/admin/applications/${applicationId}`, {
         method: "PUT",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
-          status: action === "approve" ? "APPROVED" : "REJECTED",
+          status,
           reviewNotes: notes,
         }),
       });
 
+      if (response.status === 401) {
+        alert("You need to log in first. Redirecting to login page...");
+        router.push("/auth/login");
+        return;
+      }
+
       const result = await response.json();
       if (result.success) {
         fetchDashboardData();
+        // Show success message
+        alert(`Application ${status.toLowerCase()} successfully`);
       } else {
         alert(result.message || "Failed to update application status");
       }
@@ -2660,7 +2671,7 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Button
                             size="sm"
                             variant="outline"
@@ -2671,11 +2682,13 @@ export default function AdminDashboard() {
                           >
                             👁️ Details
                           </Button>
+
+                          {/* Show action buttons for PENDING applications - Make them prominent */}
                           {application.status === "PENDING" && (
                             <>
                               <Button
                                 size="sm"
-                                className="bg-brand-secondary hover:bg-brand-secondary/90 text-white font-semibold px-4 py-2 rounded-xl"
+                                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transition-all"
                                 onClick={() =>
                                   handleApplicationApproval(
                                     application.id,
@@ -2688,7 +2701,7 @@ export default function AdminDashboard() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                className="border-red-200 text-red-600 hover:bg-red-50 font-semibold px-4 py-2 rounded-xl"
+                                className="border-2 border-red-400 text-red-600 hover:bg-red-50 hover:border-red-500 font-semibold px-5 py-2.5 rounded-xl shadow-lg hover:shadow-xl transition-all bg-white"
                                 onClick={() =>
                                   handleApplicationApproval(
                                     application.id,
@@ -2700,27 +2713,36 @@ export default function AdminDashboard() {
                               </Button>
                             </>
                           )}
+
+                          {/* Status dropdown - always visible for quick status changes */}
                           <Select
                             value={application.status}
                             onValueChange={(value: string) =>
                               handleApplicationApproval(
                                 application.id,
-                                value as "approve" | "reject"
+                                value as
+                                  | "APPROVED"
+                                  | "REJECTED"
+                                  | "UNDER_REVIEW"
+                                  | "PENDING"
                               )
                             }
                           >
-                            <SelectTrigger className="w-32 h-10 bg-white/80 border-brand-primary/20 rounded-xl">
+                            <SelectTrigger className="min-w-[140px] h-10 bg-white/80 border-2 border-brand-primary/30 rounded-xl font-semibold hover:border-brand-primary/50 transition-all">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="APPROVED">
-                                ✅ Approve
-                              </SelectItem>
-                              <SelectItem value="REJECTED">
-                                ❌ Reject
+                              <SelectItem value="PENDING">
+                                ⏳ Pending
                               </SelectItem>
                               <SelectItem value="UNDER_REVIEW">
-                                👁️ Review
+                                👁️ Under Review
+                              </SelectItem>
+                              <SelectItem value="APPROVED">
+                                ✅ Approved
+                              </SelectItem>
+                              <SelectItem value="REJECTED">
+                                ❌ Rejected
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -2740,6 +2762,20 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                   )}
+
+                  {/* Info message if no pending applications */}
+                  {applications.length > 0 &&
+                    applications.filter((app) => app.status === "PENDING")
+                      .length === 0 &&
+                    applicationFilter.status === "ALL" && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                        <p className="text-sm text-blue-800">
+                          ℹ️ No pending applications. Use the status dropdown on
+                          each application to change its status, or filter by
+                          "Pending" to see applications awaiting review.
+                        </p>
+                      </div>
+                    )}
                 </div>
               </CardContent>
             </Card>

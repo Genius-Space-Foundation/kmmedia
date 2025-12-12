@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import {
   Card,
   CardContent,
@@ -54,7 +55,6 @@ interface ApplicationData {
     institution: string;
     yearCompleted: string;
     fieldOfStudy: string;
-    gpa?: string;
   };
   workExperience: {
     hasExperience: boolean;
@@ -82,7 +82,10 @@ interface ApplicationData {
 interface ApplicationWizardProps {
   courseId: string;
   courseTitle: string;
-  onComplete: (applicationData: ApplicationData, result?: any) => void;
+  onComplete: (
+    applicationData: ApplicationData,
+    result?: { success: boolean; data?: unknown; message?: string }
+  ) => void;
   onCancel: () => void;
 }
 
@@ -92,9 +95,11 @@ export default function ApplicationWizard({
   onComplete,
   onCancel,
 }: ApplicationWizardProps) {
+  const { data: session } = useSession();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [userDataLoaded, setUserDataLoaded] = useState(false);
   const [applicationData, setApplicationData] = useState<ApplicationData>({
     courseId,
     personalInfo: {
@@ -110,7 +115,6 @@ export default function ApplicationWizard({
       institution: "",
       yearCompleted: "",
       fieldOfStudy: "",
-      gpa: "",
     },
     workExperience: {
       hasExperience: false,
@@ -196,6 +200,65 @@ export default function ApplicationWizard({
 
   const progress = ((currentStep + 1) / steps.length) * 100;
 
+  // Fetch and prefill user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (userDataLoaded) return; // Only fetch once
+
+      try {
+        // Try to get data from session first for immediate feedback
+        if (session?.user) {
+          const user = session.user;
+          setApplicationData((prev) => ({
+            ...prev,
+            personalInfo: {
+              fullName: user.name || prev.personalInfo.fullName,
+              email: user.email || prev.personalInfo.email,
+              phone: prev.personalInfo.phone, // Phone might not be in session
+              address: prev.personalInfo.address, // Address might not be in session
+              dateOfBirth: prev.personalInfo.dateOfBirth, // DOB might not be in session
+              gender: prev.personalInfo.gender,
+            },
+          }));
+        }
+
+        // Fetch full profile data from API to get complete information
+        const response = await fetch("/api/user/profile", {
+          credentials: "include",
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.user) {
+            const userData = result.user;
+            setApplicationData((prev) => ({
+              ...prev,
+              personalInfo: {
+                fullName: userData.name || prev.personalInfo.fullName,
+                email: userData.email || prev.personalInfo.email,
+                phone: userData.phone || prev.personalInfo.phone,
+                address: userData.address || prev.personalInfo.address,
+                dateOfBirth:
+                  userData.dateOfBirth || prev.personalInfo.dateOfBirth,
+                gender: prev.personalInfo.gender, // Gender not typically in profile
+              },
+            }));
+          }
+        }
+        setUserDataLoaded(true);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        // Don't block the form if profile fetch fails
+        setUserDataLoaded(true);
+      }
+    };
+
+    // Only fetch if we have a session or if session is still loading
+    if (session || !session) {
+      fetchUserData();
+    }
+  }, [session, userDataLoaded]);
+
   // Auto-save draft every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
@@ -205,6 +268,7 @@ export default function ApplicationWizard({
     }, 30000);
 
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, applicationData]);
 
   const saveDraft = async () => {
@@ -308,13 +372,13 @@ export default function ApplicationWizard({
           institution: applicationData.education.institution,
           yearCompleted: applicationData.education.yearCompleted,
           fieldOfStudy: applicationData.education.fieldOfStudy || undefined,
-          gpa: applicationData.education.gpa || undefined,
         },
         motivation: {
           reasonForApplying: applicationData.motivation.reasonForApplying,
           careerGoals: applicationData.motivation.careerGoals,
           expectations: applicationData.motivation.expectations,
-          additionalInfo: applicationData.motivation.additionalInfo || undefined,
+          additionalInfo:
+            applicationData.motivation.additionalInfo || undefined,
         },
         documents: [], // File URLs would go here after upload
       };
@@ -327,7 +391,37 @@ export default function ApplicationWizard({
         }
       );
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (jsonError) {
+        console.error("Failed to parse response as JSON:", jsonError);
+        const text = await response.text();
+        console.error("Response text:", text);
+        alert("Server error: Invalid response format");
+        return;
+      }
+
+      if (!response.ok) {
+        // Handle validation errors
+        if (result.errors && Array.isArray(result.errors)) {
+          const errorMessages = result.errors
+            .map((err: { path?: (string | number)[]; message?: string }) => {
+              const path = err.path?.join(".") || "field";
+              return `${path}: ${err.message || "Invalid value"}`;
+            })
+            .join("\n");
+          alert(`Validation errors:\n${errorMessages}`);
+        } else if (
+          result.errorMessages &&
+          Array.isArray(result.errorMessages)
+        ) {
+          alert(`Validation errors:\n${result.errorMessages.join("\n")}`);
+        } else {
+          alert(result.message || "Failed to submit application");
+        }
+        return;
+      }
 
       if (result.success) {
         onComplete(applicationData, result);
@@ -525,8 +619,10 @@ export default function ApplicationWizard({
                     <SelectItem value="none">No formal education</SelectItem>
                     <SelectItem value="high-school">High School</SelectItem>
                     <SelectItem value="diploma">Diploma</SelectItem>
-                    <SelectItem value="bachelor">Bachelor's Degree</SelectItem>
-                    <SelectItem value="master">Master's Degree</SelectItem>
+                    <SelectItem value="bachelor">
+                      Bachelor&apos;s Degree
+                    </SelectItem>
+                    <SelectItem value="master">Master&apos;s Degree</SelectItem>
                     <SelectItem value="phd">PhD</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
@@ -584,27 +680,6 @@ export default function ApplicationWizard({
                   placeholder="2020"
                   min="1950"
                   max="2024"
-                />
-              </div>
-              <div>
-                <Label htmlFor="gpa">GPA (Optional)</Label>
-                <Input
-                  id="gpa"
-                  type="number"
-                  step="0.1"
-                  value={applicationData.education.gpa}
-                  onChange={(e) =>
-                    setApplicationData((prev) => ({
-                      ...prev,
-                      education: {
-                        ...prev.education,
-                        gpa: e.target.value,
-                      },
-                    }))
-                  }
-                  placeholder="3.5"
-                  min="0"
-                  max="4"
                 />
               </div>
             </div>

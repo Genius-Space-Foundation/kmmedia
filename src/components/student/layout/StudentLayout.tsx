@@ -80,16 +80,9 @@ export default function StudentLayout({
 
   const navigationItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard, badge: null },
-    { id: "courses", label: "Courses", icon: BookOpen, badge: null },
+    { id: "courses", label: "My Course", icon: BookOpen, badge: null },
     { id: "assessments", label: "Assessments", icon: FileText, badge: null },
     { id: "achievements", label: "Achievements", icon: Award, badge: null },
-    // {
-    //   id: "recommendations",
-    //   label: "Recommendations",
-    //   icon: Target,
-    //   badge: null,
-    // },
-    // { id: "analytics", label: "Analytics", icon: LayoutDashboard, badge: null },
     { id: "payments", label: "Payments", icon: CreditCard, badge: null },
     {
       id: "notifications",
