@@ -13,9 +13,13 @@ const gradeSubmissionSchema = z.object({
 });
 
 // Grade assessment submission
-async function gradeSubmissionHandler(req: AuthenticatedRequest) {
+async function gradeSubmissionHandler(
+  req: AuthenticatedRequest,
+  props: { params: Promise<{ id: string }> }
+) {
   try {
-    const { id } = req.nextUrl.pathname.split("/").pop() as any;
+    const params = await props.params;
+    const { id } = params;
     const body = await req.json();
     const data = gradeSubmissionSchema.parse(body);
     const instructorId = req.user!.userId;

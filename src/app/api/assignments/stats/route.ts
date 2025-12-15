@@ -32,37 +32,35 @@ async function getAssignmentStats(req: AuthenticatedRequest) {
       }),
 
       // Pending grading (submissions that are submitted but not graded)
-      prisma.assessmentSubmission.count({
+      prisma.assignmentSubmission.count({
         where: {
-          assessment: {
-            course: { instructorId },
+          assignment: {
+            instructorId,
           },
           status: "SUBMITTED",
         },
       }),
 
       // Overdue submissions (submitted after due date)
-      prisma.assessmentSubmission.count({
+      prisma.assignmentSubmission.count({
         where: {
-          assessment: {
-            course: { instructorId },
+          assignment: {
+            instructorId,
           },
-          submittedAt: {
-            gt: prisma.assignment.fields.dueDate
-          }
+          isLate: true,
         },
       }),
 
       // Scores for average calculation
-      prisma.assessmentSubmission.aggregate({
+      prisma.assignmentSubmission.aggregate({
         where: {
-          assessment: {
-            course: { instructorId },
+          assignment: {
+            instructorId,
           },
           status: "GRADED",
         },
         _avg: {
-          score: true,
+          grade: true, // changed from score to grade based on model
         },
       }),
 
@@ -86,7 +84,7 @@ async function getAssignmentStats(req: AuthenticatedRequest) {
         publishedAssignments,
         pendingGrading,
         overdueSubmissions,
-        averageScore: Math.round(scores._avg.score || 0),
+        averageScore: Math.round(scores._avg.grade || 0),
         completionRate,
       },
     });

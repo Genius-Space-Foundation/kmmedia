@@ -111,6 +111,20 @@ export const GET = withStudentAuth(async (request: AuthenticatedRequest) => {
       nextLevelPoints: nextLevel ? nextLevel.points - totalPoints : 0,
       rank,
       percentile,
+      // Expanded real stats
+      totalHours: Math.floor(
+        enrollments.reduce((sum, e) => sum + (e.timeSpent || 0), 0) / 60
+      ), // Convert minutes to hours
+      coursesCompleted: enrollments.filter(e => e.progress === 100).length,
+      averageScore: assessmentSubmissions.length > 0 
+        ? Math.round(assessmentSubmissions.reduce((sum, s) => sum + (s.score / (s.assessment.totalPoints || 1) * 100), 0) / assessmentSubmissions.length)
+        : 0,
+      skillsLearned: [], // Could be populated from Course.category or similar
+      weeklyGoal: {
+          target: 10, // Could fetch from LearningProfile
+          current: 0, // Need logic to track weekly progress
+          unit: "hours"
+      }
     };
 
     return NextResponse.json({

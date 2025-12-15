@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Clock, CreditCard, BookOpen, AlertCircle } from "lucide-react";
+import EnrolledCourseView from "./EnrolledCourseView";
 
 interface AdaptiveCourseTabProps {
   // Course catalog data
@@ -19,6 +20,9 @@ interface AdaptiveCourseTabProps {
   // Handlers
   onApplyForCourse: (courseId: string) => void;
   onPayTuition: (applicationId: string, type: "FULL" | "INSTALLMENT") => void;
+  onLessonClick?: (lessonId: string) => void;
+  onAssignmentClick?: (assignmentId: string) => void;
+  onAssessmentClick?: (assessmentId: string) => void;
   
   // Utilities
   formatCurrency: (amount: number) => string;
@@ -30,6 +34,9 @@ export function AdaptiveCourseTab({
   enrollments,
   onApplyForCourse,
   onPayTuition,
+  onLessonClick = () => {},
+  onAssignmentClick = () => {},
+  onAssessmentClick = () => {},
   formatCurrency,
 }: AdaptiveCourseTabProps) {
   
@@ -39,36 +46,16 @@ export function AdaptiveCourseTab({
   const approvedApplication = applications.find((app: any) => app.status === "APPROVED");
   const pendingApplication = applications.find((app: any) => app.status === "PENDING");
   
-  // STATE 4: ENROLLED - Show enrollment confirmation
+  // STATE 4: ENROLLED - Show full course content
   if (hasEnrollment) {
     const enrollment = enrollments[0];
     return (
-      <div className="space-y-6">
-        <Card className="border-green-200 bg-green-50">
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-10 w-10 text-green-600" />
-              <div>
-                <CardTitle className="text-green-900">You're Enrolled!</CardTitle>
-                <CardDescription className="text-green-700">
-                  {enrollment.course.title}
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-gray-700">
-              Congratulations! You are now enrolled in this course. Start learning today!
-            </p>
-            <Button asChild className="w-full">
-              <a href={`/courses/${enrollment.courseId}/learn`}>
-                <BookOpen className="mr-2 h-4 w-4" />
-                Go to Course
-              </a>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      <EnrolledCourseView
+        enrollment={enrollment}
+        onLessonClick={onLessonClick}
+        onAssignmentClick={onAssignmentClick}
+        onAssessmentClick={onAssessmentClick}
+      />
     );
   }
   

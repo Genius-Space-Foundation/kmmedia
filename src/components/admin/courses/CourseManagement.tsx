@@ -150,10 +150,14 @@ export default function CourseManagement({ onRefresh }: CourseManagementProps) {
         setShowDetails(false);
         if (onRefresh) onRefresh();
       } else {
-        const error = await safeJsonParse(response, {
+        const errorData = await safeJsonParse(response, {
           message: "Unknown error",
         });
-        toast.error(error.message || "Failed to update course");
+        console.error("Course update failed:", errorData);
+        toast.error(
+          (errorData.message || "Failed to update course") + 
+          (errorData.error ? `: ${errorData.error}` : "")
+        );
       }
     } catch (error) {
       console.error("Error updating course:", error);

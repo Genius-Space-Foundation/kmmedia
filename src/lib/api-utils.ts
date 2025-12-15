@@ -26,7 +26,8 @@ export async function safeJsonParse<T = any>(
     // Check if response is ok
     if (!response.ok) {
       console.warn("Response not ok:", response.status, response.statusText);
-      return fallback;
+      // specific status code handling can be done here if needed
+      // continue to try to parse json which might contain error details
     }
 
     const text = await response.text();

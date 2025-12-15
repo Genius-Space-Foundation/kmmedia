@@ -21,7 +21,16 @@ const getDraftSchema = z.object({
 async function saveDraft(req: AuthenticatedRequest) {
   try {
     const body = await req.json();
-    const { courseId, currentStep, formData } = saveDraftSchema.parse(body);
+    const validation = saveDraftSchema.safeParse(body);
+    
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, message: "Invalid input", errors: validation.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const { courseId, currentStep, formData } = validation.data;
     const userId = req.user!.userId;
 
     // Check if course exists
@@ -37,7 +46,7 @@ async function saveDraft(req: AuthenticatedRequest) {
       );
     }
 
-    if (course.status !== "APPROVED") {
+    if (course.status !== "APPROVED" && course.status !== "PUBLISHED") {
       return NextResponse.json(
         { success: false, message: "Course is not available for applications" },
         { status: 400 }
@@ -102,12 +111,7 @@ async function saveDraft(req: AuthenticatedRequest) {
   } catch (error) {
     console.error("Save draft error:", error);
 
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.issues },
-        { status: 400 }
-      );
-    }
+
 
     return NextResponse.json(
       {

@@ -357,105 +357,52 @@ export default function StudentDashboard() {
 
   const fetchEnhancedDashboardData = async () => {
     try {
-      // Mock data for enhanced dashboard features
-      // In a real implementation, these would be API calls
-
-      // Mock upcoming deadlines
-      const mockDeadlines = [
-        {
-          id: "1",
-          title: "Photography Assignment 1",
-          description: "Submit your first photography portfolio",
-          dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-          course: {
-            id: "1",
-            title: "Digital Photography Basics",
-            color: "blue",
-          },
-          type: "assignment",
-          priority: "high",
-          status: "pending",
-          estimatedTime: 120,
-          reminderSet: false,
-        },
-        {
-          id: "2",
-          title: "Video Editing Quiz",
-          description: "Complete the mid-term quiz on video editing techniques",
-          dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-          course: { id: "2", title: "Video Production", color: "green" },
-          type: "quiz",
-          priority: "medium",
-          status: "pending",
-          estimatedTime: 45,
-          reminderSet: true,
-        },
-      ];
-
-      // Mock achievements
-      const mockAchievements = [
-        {
-          id: "1",
-          title: "First Steps",
-          description: "Completed your first lesson",
-          icon: "🎯",
-          category: "learning",
-          rarity: "common",
-          earnedDate: new Date(
-            Date.now() - 7 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-          points: 10,
-        },
-        {
-          id: "2",
-          title: "Week Warrior",
-          description: "Maintained a 7-day learning streak",
-          icon: "🔥",
-          category: "engagement",
-          rarity: "rare",
-          earnedDate: new Date(
-            Date.now() - 3 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-          points: 50,
-        },
-        {
-          id: "3",
-          title: "Course Conqueror",
-          description: "Completed your first course",
-          icon: "🏆",
-          category: "milestone",
-          rarity: "epic",
-          earnedDate: new Date(
-            Date.now() - 1 * 24 * 60 * 60 * 1000
-          ).toISOString(),
-          points: 100,
-        },
-      ];
-
-      // Mock learning stats
-      const mockLearningStats = {
-        totalHours: 24,
-        coursesCompleted: 1,
-        averageScore: 87,
-        skillsLearned: ["Photography", "Video Editing", "Color Theory"],
-        weeklyGoal: {
-          target: 10,
-          current: 6,
-          unit: "hours" as const,
-        },
+      // Helper function for safe fetching (can reuse if moved outside or define here)
+      const safeFetch = async (url: string) => {
+        try {
+          const response = await fetch(url);
+          return response;
+        } catch (error) {
+          console.error(`Error fetching ${url}:`, error);
+          return new Response(JSON.stringify({ success: false, data: [] }), { status: 500 });
+        }
       };
 
-      // Mock learning streak
-      const mockLearningStreak = {
-        current: 5,
-        longest: 12,
-        lastActivity: "Today",
-      };
+      const [deadlinesRes, achievementsRes, statsRes] = await Promise.all([
+        safeFetch("/api/student/deadlines"),
+        safeFetch("/api/student/achievements/user"),
+        safeFetch("/api/student/stats/user"),
+      ]);
 
-      setUpcomingDeadlines(mockDeadlines);
-      setAchievements(mockAchievements);
-      setLearningStats(mockLearningStats);
-      setLearningStreak(mockLearningStreak);
+      const [deadlinesData, achievementsData, statsData] = await Promise.all([
+        safeJsonParse(deadlinesRes, []),
+        safeJsonParse(achievementsRes, { success: false, data: { achievements: [] } }),
+        safeJsonParse(statsRes, { success: false, data: {} }),
+      ]);
+
+      if (Array.isArray(deadlinesData)) {
+        setUpcomingDeadlines(deadlinesData);
+      }
+
+      if (achievementsData.success && achievementsData.data?.achievements) {
+        setAchievements(achievementsData.data.achievements);
+      }
+
+      if (statsData.success && statsData.data) {
+        setLearningStats(prev => ({
+            ...prev,
+            ...statsData.data
+        }));
+        // Also update streak if available in stats
+        if (statsData.data.currentStreak !== undefined) {
+             setLearningStreak({
+                 current: statsData.data.currentStreak,
+                 longest: statsData.data.longestStreak || statsData.data.currentStreak,
+                 lastActivity: "Today" // You might want to format this based on lastActivityAt
+             });
+        }
+      }
+
     } catch (error) {
       console.error("Error fetching enhanced dashboard data:", error);
     }
@@ -475,6 +422,24 @@ export default function StudentDashboard() {
 
       // Fetch all student data in parallel (cookies are sent automatically)
       console.log("Making API calls...");
+      
+      // Helper function to safely fetch with error logging
+      const safeFetch = async (url: string, name: string) => {
+        try {
+          console.log(`Fetching ${name}...`);
+          const response = await fetch(url);
+          console.log(`${name} response:`, response.status);
+          return response;
+        } catch (error) {
+          console.error(`Error fetching ${name}:`, error);
+          // Return a mock response to prevent Promise.all from failing
+          return new Response(JSON.stringify({ success: false, data: [] }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+      };
+
       const [
         coursesRes,
         applicationsRes,
@@ -485,14 +450,14 @@ export default function StudentDashboard() {
         notificationsRes,
         statsRes,
       ] = await Promise.all([
-        fetch("/api/student/courses"),
-        fetch("/api/student/applications"),
-        fetch("/api/student/enrollments"),
-        fetch("/api/student/payments"),
-        fetch("/api/student/support-tickets"),
-        fetch("/api/student/assessments"),
-        fetch("/api/student/notifications/user"),
-        fetch("/api/student/stats/user"),
+        safeFetch("/api/student/courses", "Courses"),
+        safeFetch("/api/student/applications", "Applications"),
+        safeFetch("/api/student/enrollments", "Enrollments"),
+        safeFetch("/api/student/payments", "Payments"),
+        safeFetch("/api/student/support-tickets", "Support Tickets"),
+        safeFetch("/api/student/assessments", "Assessments"),
+        safeFetch("/api/student/notifications/user", "Notifications"),
+        safeFetch("/api/student/stats/user", "Stats"),
       ]);
 
       // Check for 401 responses (unauthorized)
@@ -1242,231 +1207,34 @@ export default function StudentDashboard() {
             />
           )}
 
-          {/* Courses Tab (Merged My Learning & Catalog) */}
+          {/* Courses Tab - Adaptive Course View */}
           {activeTab === "courses" && (
-            <div className="space-y-6">
-              <div className="flex space-x-4 border-b border-gray-200 pb-2">
-                <button
-                  className={`pb-2 px-1 ${
-                    !courseFilter.category ||
-                    courseFilter.category === "MY_LEARNING"
-                      ? "border-b-2 border-brand-primary text-brand-primary font-medium"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                  onClick={() =>
-                    setCourseFilter({
-                      ...courseFilter,
-                      category: "MY_LEARNING",
-                    })
-                  }
-                >
-                  My Learning
-                </button>
-                <button
-                  className={`pb-2 px-1 ${
-                    courseFilter.category !== "MY_LEARNING"
-                      ? "border-b-2 border-brand-primary text-brand-primary font-medium"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                  onClick={() =>
-                    setCourseFilter({ ...courseFilter, category: "ALL" })
-                  }
-                >
-                  Course Catalog
-                </button>
-              </div>
-
-              {!courseFilter.category ||
-              courseFilter.category === "MY_LEARNING" ? (
-                <CourseProgressVisualization
-                  enrollments={enrollments}
-                  onContinueCourse={handleContinueCourse}
-                  onViewCourse={handleViewCourse}
-                />
-              ) : (
-                <Card className="shadow-xl border-0 card-brand-subtle">
-                  <CardHeader className="pb-6">
-                    <div className="flex items-center space-x-3 mb-4">
-                      <div className="w-10 h-10 icon-brand-primary rounded-lg flex items-center justify-center primary-glow">
-                        <span className="text-white text-lg">🎯</span>
-                      </div>
-                      <div>
-                        <CardTitle className="text-2xl text-gray-900">
-                          Course Catalog
-                        </CardTitle>
-                        <CardDescription className="text-gray-600">
-                          Discover and apply for amazing courses to advance your
-                          skills
-                        </CardDescription>
-                      </div>
-                    </div>
-
-                    {/* Course Filters */}
-                    <div className="flex flex-wrap gap-4 mb-4">
-                      <Input
-                        placeholder="Search courses..."
-                        value={courseFilter.search}
-                        onChange={(e) =>
-                          setCourseFilter({
-                            ...courseFilter,
-                            search: e.target.value,
-                          })
-                        }
-                        className="max-w-xs"
-                      />
-                      <Select
-                        value={
-                          courseFilter.category === "MY_LEARNING"
-                            ? "ALL"
-                            : courseFilter.category
-                        }
-                        onValueChange={(value: string) =>
-                          setCourseFilter({ ...courseFilter, category: value })
-                        }
-                      >
-                        <SelectTrigger className="w-40">
-                          <SelectValue placeholder="Category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ALL">All Categories</SelectItem>
-                          <SelectItem value="PHOTOGRAPHY">
-                            Photography
-                          </SelectItem>
-                          <SelectItem value="VIDEOGRAPHY">
-                            Videography
-                          </SelectItem>
-                          <SelectItem value="EDITING">Editing</SelectItem>
-                          <SelectItem value="MARKETING">Marketing</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Select
-                        value={courseFilter.difficulty}
-                        onValueChange={(value: string) =>
-                          setCourseFilter({
-                            ...courseFilter,
-                            difficulty: value,
-                          })
-                        }
-                      >
-                        <SelectTrigger className="w-40">
-                          <SelectValue placeholder="Difficulty" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ALL">All Levels</SelectItem>
-                          <SelectItem value="BEGINNER">Beginner</SelectItem>
-                          <SelectItem value="INTERMEDIATE">
-                            Intermediate
-                          </SelectItem>
-                          <SelectItem value="ADVANCED">Advanced</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {!Array.isArray(courses) || courses.length === 0 ? (
-                        <div className="col-span-full text-center py-12">
-                          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <span className="text-3xl">📚</span>
-                          </div>
-                          <p className="text-gray-500 font-medium text-lg">
-                            No courses available at the moment
-                          </p>
-                          <p className="text-sm text-gray-400">
-                            Check back soon for new courses!
-                          </p>
-                        </div>
-                      ) : (
-                        courses.map((course) => (
-                          <div
-                            key={course.id}
-                            className="bg-gradient-to-br from-gray-50 to-blue-50 border border-gray-200 rounded-2xl p-6 hover:shadow-lg transition-all duration-300 group"
-                          >
-                            <div className="space-y-4">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center space-x-2 mb-2">
-                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
-                                      {course.category}
-                                    </span>
-                                  </div>
-                                  <h3 className="font-bold text-xl text-gray-900 group-hover:text-blue-600 transition-colors">
-                                    {course.title}
-                                  </h3>
-                                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                                    {course.description}
-                                  </p>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-blue-500">👨‍🏫</span>
-                                  <span className="text-gray-600">
-                                    {course.instructor.name}
-                                  </span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-green-500">⏱️</span>
-                                  <span className="text-gray-600">
-                                    {course.duration} weeks
-                                  </span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-purple-500">🎓</span>
-                                  <span className="text-gray-600">
-                                    {course.mode.join(", ")}
-                                  </span>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-yellow-500">💰</span>
-                                  <span className="text-gray-600">
-                                    {formatCurrency(course.price)}
-                                  </span>
-                                </div>
-                              </div>
-
-                              {course.applicationFee > 0 && (
-                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                                  <p className="text-sm text-yellow-800">
-                                    <span className="font-semibold">
-                                      Application Fee:
-                                    </span>{" "}
-                                    {formatCurrency(course.applicationFee)}
-                                  </p>
-                                </div>
-                              )}
-
-                              <div className="flex gap-2">
-                                <Link
-                                  href={`/courses/${course.id}`}
-                                  className="flex-1"
-                                >
-                                  <Button
-                                    variant="outline"
-                                    className="w-full py-3 rounded-xl border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white transition-all duration-300"
-                                  >
-                                    📖 View Details
-                                  </Button>
-                                </Link>
-                                <Button
-                                  onClick={() =>
-                                    handleApplyForCourse(course.id)
-                                  }
-                                  className="flex-1 btn-brand-professional font-semibold py-3 rounded-xl shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300"
-                                >
-                                  🚀 Apply Now
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+            <AdaptiveCourseTab
+              courses={courses}
+              applications={applications}
+              enrollments={enrollments}
+              onApplyForCourse={handleApplyForCourse}
+              onPayTuition={(applicationId, type) => {
+                if (type === "FULL") {
+                  handleInitializePayment("TUITION", 0, "");
+                } else {
+                  handleInitializePayment("INSTALLMENT", 0, "");
+                }
+              }}
+              onLessonClick={(lessonId) => {
+                // Navigate to lesson viewer or open lesson modal
+                console.log("View lesson:", lessonId);
+              }}
+              onAssignmentClick={() => {
+                setActiveTab("assessments");
+                setAssessmentFilter("ASSIGNMENTS");
+              }}
+              onAssessmentClick={() => {
+                setActiveTab("assessments");
+                setAssessmentFilter("QUIZZES");
+              }}
+              formatCurrency={formatCurrency}
+            />
           )}
 
           {/* Assessments Tab (Merged Assessments & Deadlines) */}
@@ -1948,6 +1716,7 @@ export default function StudentDashboard() {
         <ApplicationWizard
           courseId={selectedCourseForApplication.id}
           courseTitle={selectedCourseForApplication.title}
+          applicationFee={selectedCourseForApplication.applicationFee || 0}
           onComplete={handleApplicationComplete}
           onCancel={handleApplicationCancel}
         />

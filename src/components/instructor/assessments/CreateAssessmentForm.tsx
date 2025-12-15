@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,6 +147,7 @@ export default function CreateAssessmentForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             ...newAssessment,
+            dueDate: newAssessment.dueDate ? new Date(newAssessment.dueDate).toISOString() : undefined,
             // Add file URLs here if backend supports it
             attachments: files.map(f => f.url).filter(Boolean) 
         }),
@@ -227,9 +229,9 @@ export default function CreateAssessmentForm({
               <DialogTitle className="text-2xl font-bold">
                 Create New Assessment
               </DialogTitle>
-              <p className="text-sm text-neutral-500 mt-1">
+              <DialogDescription className="text-sm text-neutral-500 mt-1">
                 Design a comprehensive assessment for your students
-              </p>
+              </DialogDescription>
             </div>
           </div>
         </DialogHeader>

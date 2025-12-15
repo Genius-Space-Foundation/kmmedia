@@ -72,7 +72,8 @@ export function NotificationList({ userId, className }: NotificationListProps) {
         `/api/notifications?userId=${userId}&limit=50`
       );
       if (response.ok) {
-        const data = await response.json();
+        const result = await response.json();
+        const data = result.data || {};
         setNotifications(data.notifications || []);
       }
     } catch (error) {

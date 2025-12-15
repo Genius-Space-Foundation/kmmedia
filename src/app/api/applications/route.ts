@@ -36,7 +36,7 @@ async function createApplication(req: AuthenticatedRequest) {
       );
     }
 
-    if (course.status !== "APPROVED") {
+    if (course.status !== "APPROVED" && course.status !== "PUBLISHED") {
       return NextResponse.json(
         { success: false, message: "Course is not available for applications" },
         { status: 400 }
@@ -138,6 +138,8 @@ async function createApplication(req: AuthenticatedRequest) {
         },
       });
 
+      /* 
+      // TEMPORARILY DISABLED FOR TESTING
       if (!applicationFeePayment) {
         return NextResponse.json(
           {
@@ -148,6 +150,22 @@ async function createApplication(req: AuthenticatedRequest) {
         );
       }
       
+      applicationFeePaymentId = applicationFeePayment.id;
+      */
+      
+      // Allow proceeding without payment for now
+      // applicationFeePaymentId = null;
+
+      // RE-ENABLED
+      if (!applicationFeePayment) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Application fee must be paid before submitting application",
+          },
+          { status: 400 }
+        );
+      }
       applicationFeePaymentId = applicationFeePayment.id;
     }
 

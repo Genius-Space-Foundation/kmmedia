@@ -26,33 +26,7 @@ interface ClassScheduleWidgetProps {
 export default function ClassScheduleWidget({ classes = [], onViewClassDetails }: ClassScheduleWidgetProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  // Mock data if no classes provided
-  const mockClasses: ClassSession[] = [
-    {
-      id: "1",
-      title: "Photography Basics",
-      courseTitle: "Introduction to Photography",
-      startTime: new Date(new Date().setHours(14, 0, 0, 0)),
-      endTime: new Date(new Date().setHours(17, 0, 0, 0)),
-      location: "Studio A, Building 2",
-      instructor: "John Doe",
-      type: "STUDIO",
-      status: "UPCOMING",
-    },
-    {
-      id: "2",
-      title: "Lighting Techniques",
-      courseTitle: "Advanced Lighting",
-      startTime: new Date(new Date().setDate(new Date().getDate() + 1)),
-      endTime: new Date(new Date().setDate(new Date().getDate() + 1)),
-      location: "Lab 3, Main Campus",
-      instructor: "Jane Smith",
-      type: "LAB",
-      status: "UPCOMING",
-    },
-  ];
-
-  const displayClasses = classes.length > 0 ? classes : mockClasses;
+  const displayClasses = classes;
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(currentDate);

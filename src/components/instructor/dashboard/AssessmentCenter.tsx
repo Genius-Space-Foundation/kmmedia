@@ -341,6 +341,35 @@ export default function AssessmentCenter() {
     );
   }
 
+// File Display Component
+  const FileDisplay = ({ files }: { files: any[] }) => {
+    if (!files || files.length === 0) return null;
+    return (
+      <div className="mt-4 space-y-2">
+        <h4 className="font-medium text-sm text-gray-700">Submitted Files:</h4>
+        <div className="grid grid-cols-1 gap-2">
+          {files.map((file: any, idx: number) => (
+            <div key={idx} className="flex items-center justify-between p-3 bg-white border rounded-md">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-blue-500" />
+                <span className="text-sm text-gray-700">{file.fileName || file.name || "Untitled File"}</span>
+                <span className="text-xs text-gray-400">({(file.fileSize / 1024).toFixed(1)} KB)</span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => window.open(file.cloudinaryUrl || file.url, '_blank')}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                <Eye className="h-4 w-4 mr-1" /> View
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <ErrorBoundary>
       <div className="space-y-6">
@@ -485,6 +514,11 @@ export default function AssessmentCenter() {
                             High Priority
                           </Badge>
                         )}
+                        {(submission as any).isAssignment && (
+                             <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                               Assignment File
+                             </Badge>
+                        )}
                       </div>
                       <p className="text-sm text-gray-500 mb-4">{submission.studentEmail}</p>
                       
@@ -505,6 +539,7 @@ export default function AssessmentCenter() {
                         <Button 
                           onClick={() => {
                             setSelectedSubmission(submission);
+                            setGradingData({ score: 0, feedback: "", rubric: [] }); // Reset grading data properly
                             setShowGradingForm(true);
                           }}
                           className="bg-brand-primary text-white"
@@ -517,9 +552,18 @@ export default function AssessmentCenter() {
                           <span className="text-xs text-gray-500">Score</span>
                         </div>
                       )}
-                      <Button variant="outline" size="icon">
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      {(submission as any).isAssignment && (submission as any).files && (
+                          <Button 
+                           variant="outline" 
+                           size="icon"
+                           onClick={() => {
+                             setSelectedSubmission(submission);
+                             setShowGradingForm(true);
+                           }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -643,7 +687,7 @@ export default function AssessmentCenter() {
                         {assessment._count.submissions} Subs
                       </div>
                       <div className="flex items-center">
-                        <BarChart3 className="h-4 w-4 mr-2 text-gray-400" />
+                        <BarChart className="h-4 w-4 mr-2 text-gray-400" />
                         Avg: {assessment.averageScore}%
                       </div>
                     </div>
@@ -677,7 +721,7 @@ export default function AssessmentCenter() {
 
       {/* Grading Dialog */}
       <Dialog open={showGradingForm} onOpenChange={setShowGradingForm}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Grade Submission</DialogTitle>
           </DialogHeader>
@@ -689,11 +733,19 @@ export default function AssessmentCenter() {
                   <span className="text-gray-500">{new Date(selectedSubmission.submittedAt).toLocaleString()}</span>
                 </div>
                 <p className="text-sm text-gray-600">Time spent: {selectedSubmission.timeSpent} minutes</p>
+                {(selectedSubmission as any).submissionText && (
+                  <div className="mt-4 p-3 bg-white border rounded">
+                    <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Text Submission</p>
+                    <p className="text-sm">{ (selectedSubmission as any).submissionText }</p>
+                  </div>
+                )}
+                {/* File Display */}
+                <FileDisplay files={(selectedSubmission as any).files} />
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="score">Score (0-100)</Label>
+                  <Label htmlFor="score">Score (0-{(selectedSubmission as any).totalPoints || 100})</Label>
                   <div className="flex items-center gap-4">
                     <Input
                       id="score"
@@ -701,10 +753,10 @@ export default function AssessmentCenter() {
                       value={gradingData.score}
                       onChange={(e) => setGradingData({ ...gradingData, score: parseInt(e.target.value) })}
                       className="w-32"
-                      max={100}
+                      max={(selectedSubmission as any).totalPoints || 100}
                       min={0}
                     />
-                    <Progress value={gradingData.score} className="flex-1" />
+                    <Progress value={(gradingData.score / ((selectedSubmission as any).totalPoints || 100)) * 100} className="flex-1" />
                   </div>
                 </div>
                 

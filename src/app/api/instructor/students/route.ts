@@ -25,9 +25,13 @@ async function getInstructorStudents(req: AuthenticatedRequest) {
       where.courseId = courseId;
     }
 
+    // Computed statuses (excelling, at_risk, etc.) cannot be filtered at DB level
+    // and don't match EnrollmentStatus enum. Client-side filtering is used.
+    /* 
     if (status && status !== "ALL") {
       where.status = status;
-    }
+    } 
+    */
 
     if (search) {
       where.user = {
@@ -52,6 +56,25 @@ async function getInstructorStudents(req: AuthenticatedRequest) {
                   phone: true,
                 },
               },
+              assessmentSubmissions: {
+                select: {
+                  id: true,
+                  score: true,
+                  status: true,
+                  submittedAt: true,
+                  assessment: {
+                    select: {
+                      id: true,
+                      title: true,
+                      type: true,
+                      courseId: true,
+                    }
+                  }
+                },
+                orderBy: { submittedAt: "desc" },
+                // Fetch more than 5 to allow for client-side filtering by courseId
+                take: 20,
+              },
             },
           },
           course: {
@@ -75,22 +98,6 @@ async function getInstructorStudents(req: AuthenticatedRequest) {
             orderBy: { completedAt: "desc" },
             take: 5,
           },
-          assessmentSubmissions: {
-            select: {
-              id: true,
-              score: true,
-              status: true,
-              submittedAt: true,
-              assessment: {
-                select: {
-                  title: true,
-                  type: true,
-                }
-              }
-            },
-            orderBy: { submittedAt: "desc" },
-            take: 5,
-          },
         },
         orderBy: { enrolledAt: "desc" },
         skip: (page - 1) * limit,
@@ -102,7 +109,11 @@ async function getInstructorStudents(req: AuthenticatedRequest) {
     // Transform data to match frontend interface
     const students = enrollments.map((enrollment) => {
       // Calculate metrics
-      const submissions = enrollment.assessmentSubmissions || [];
+      // Filter submissions to only those belonging to this course
+      const allSubmissions = enrollment.user.assessmentSubmissions || [];
+      const submissions = allSubmissions.filter(
+        (s) => s.assessment.courseId === enrollment.course.id
+      );
       const gradedSubmissions = submissions.filter(s => s.status === "GRADED");
       const averageScore = gradedSubmissions.length > 0
         ? Math.round(gradedSubmissions.reduce((acc, s) => acc + (s.score || 0), 0) / gradedSubmissions.length)

@@ -3,6 +3,11 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import {
+  CreditCard, 
+  CheckCircle2,
+  AlertCircle 
+} from "lucide-react";
+import {
   Card,
   CardContent,
   CardDescription,
@@ -69,7 +74,7 @@ interface ApplicationData {
     expectations: string;
     additionalInfo?: string;
   };
-  documents: File[];
+  // documents: File[]; // Removed documents
   emergencyContact: {
     name: string;
     relationship: string;
@@ -82,6 +87,7 @@ interface ApplicationData {
 interface ApplicationWizardProps {
   courseId: string;
   courseTitle: string;
+  applicationFee: number;
   onComplete: (
     applicationData: ApplicationData,
     result?: { success: boolean; data?: unknown; message?: string }
@@ -92,6 +98,7 @@ interface ApplicationWizardProps {
 export default function ApplicationWizard({
   courseId,
   courseTitle,
+  applicationFee,
   onComplete,
   onCancel,
 }: ApplicationWizardProps) {
@@ -100,6 +107,9 @@ export default function ApplicationWizard({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [userDataLoaded, setUserDataLoaded] = useState(false);
+  const [isFeePaid, setIsFeePaid] = useState(false);
+  const [isInitializingPayment, setIsInitializingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
   const [applicationData, setApplicationData] = useState<ApplicationData>({
     courseId,
     personalInfo: {
@@ -129,7 +139,7 @@ export default function ApplicationWizard({
       expectations: "",
       additionalInfo: "",
     },
-    documents: [],
+    // documents: [],
     emergencyContact: {
       name: "",
       relationship: "",
@@ -172,14 +182,8 @@ export default function ApplicationWizard({
       required: true,
       completed: false,
     },
-    {
-      id: "documents",
-      title: "Documents",
-      description: "Upload required documents",
-      component: "documents",
-      required: true,
-      completed: false,
-    },
+
+    /*
     {
       id: "emergency",
       title: "Emergency Contact",
@@ -188,10 +192,12 @@ export default function ApplicationWizard({
       required: true,
       completed: false,
     },
+    */
     {
+       // Step 5: Review & Pay
       id: "review",
-      title: "Review & Submit",
-      description: "Review your application",
+      title: "Review & Pay",
+      description: "Application Fee & Submission",
       component: "review",
       required: true,
       completed: false,
@@ -253,11 +259,58 @@ export default function ApplicationWizard({
       }
     };
 
+    // Check URL for payment success
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("payment") === "success") {
+      setIsFeePaid(true);
+      // Wait for data to load then verify active step
+      // The current step initialization might need adjustment if we reload on payment success
+    }
+
     // Only fetch if we have a session or if session is still loading
     if (session || !session) {
       fetchUserData();
     }
   }, [session, userDataLoaded]);
+
+  // Handle Pay Application Fee
+  const handlePayFee = async () => {
+    setIsInitializingPayment(true);
+    setPaymentError("");
+    try {
+      // Save draft first
+      await saveDraft();
+
+      // Initialize payment
+      const response = await makeAuthenticatedRequest("/api/payments/initialize", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "APPLICATION_FEE",
+          amount: applicationFee, // Use prop
+          courseId: courseId, 
+          callbackUrl: `${window.location.origin}${window.location.pathname}?payment=success`
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // Redirect to Paystack
+         const authUrl = result.data.authorizationUrl || result.data.authorization_url;
+         if (authUrl) {
+           window.location.href = authUrl;
+         } else {
+            setPaymentError("Failed to get payment URL");
+         }
+      } else {
+        setPaymentError(result.message || "Payment initialization failed");
+      }
+    } catch (err) {
+      console.error("Payment error:", err);
+      setPaymentError("An error occurred while initializing payment");
+    } finally {
+      setIsInitializingPayment(false);
+    }
+  };
 
   // Auto-save draft every 30 seconds
   useEffect(() => {
@@ -315,17 +368,17 @@ export default function ApplicationWizard({
             applicationData.motivation.careerGoals !== "" &&
             applicationData.motivation.expectations !== "";
           break;
-        case "documents":
-          completed = applicationData.documents.length > 0;
-          break;
+        /*
         case "emergency":
           completed =
             applicationData.emergencyContact.name !== "" &&
             applicationData.emergencyContact.relationship !== "" &&
             applicationData.emergencyContact.phone !== "";
           break;
+        */
         case "review":
-          completed = applicationData.termsAccepted;
+           // Complete if fee is paid OR fee is 0
+          completed = applicationData.termsAccepted && (isFeePaid || applicationFee === 0);
           break;
       }
 
@@ -342,6 +395,12 @@ export default function ApplicationWizard({
       await saveDraft();
       setCurrentStep(currentStep + 1);
     } else {
+      // Check payment before submit
+       if (!isFeePaid && applicationFee > 0) {
+           // Should show error or redirect to pay
+           alert("Please pay the application fee to submit.");
+           return;
+       }
       handleSubmit();
     }
   };
@@ -436,6 +495,7 @@ export default function ApplicationWizard({
     }
   };
 
+  /*
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
     setApplicationData((prev) => ({
@@ -450,6 +510,7 @@ export default function ApplicationWizard({
       documents: prev.documents.filter((_, i) => i !== index),
     }));
   };
+  */
 
   const renderStep = () => {
     const step = updatedSteps[currentStep];
@@ -893,77 +954,7 @@ export default function ApplicationWizard({
           </div>
         );
 
-      case "documents":
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Required Documents
-              </h2>
-              <p className="text-gray-600">
-                Please upload the following documents
-              </p>
-            </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">
-                Required Documents:
-              </h3>
-              <ul className="text-sm text-blue-800 space-y-1">
-                <li>• CV/Resume (PDF format)</li>
-                <li>• Educational certificates (PDF/Image)</li>
-                <li>• Passport photo (JPG/PNG)</li>
-                <li>• National ID or Passport (PDF/Image)</li>
-              </ul>
-            </div>
-
-            <div>
-              <Label htmlFor="documents">Upload Documents</Label>
-              <Input
-                id="documents"
-                type="file"
-                multiple
-                accept=".pdf,.jpg,.jpeg,.png"
-                onChange={handleFileUpload}
-                className="mt-1"
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Supported formats: PDF, JPG, PNG. Max size: 10MB per file.
-              </p>
-            </div>
-
-            {applicationData.documents.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="font-medium">Uploaded Documents:</h3>
-                {applicationData.documents.map((file, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <span className="text-blue-600 text-sm">📄</span>
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm">{file.name}</p>
-                        <p className="text-xs text-gray-500">
-                          {(file.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => removeDocument(index)}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
 
       case "emergency":
         return (
@@ -1065,20 +1056,48 @@ export default function ApplicationWizard({
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Review Your Application
+                Review & Payment
               </h2>
               <p className="text-gray-600">
-                Please review your application before submitting
+                Please review your application and pay the application fee.
               </p>
             </div>
 
             <div className="space-y-6">
               <Card>
                 <CardHeader>
+                  <CardTitle className="text-lg">Fee Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Application Fee</span>
+                        <span className="font-bold text-lg">
+                            {new Intl.NumberFormat("en-GH", {
+                                style: "currency",
+                                currency: "GHS",
+                            }).format(applicationFee || 0)}
+                        </span>
+                    </div>
+                    {isFeePaid ? (
+                        <div className="bg-green-50 text-green-700 p-3 rounded-md flex items-center gap-2">
+                             <CheckCircle2 className="h-4 w-4" />
+                             Payment Verified
+                        </div>
+                    ) : (
+                        <div className="bg-yellow-50 text-yellow-700 p-3 rounded-md flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4" />
+                            Payment Pending
+                        </div>
+                    )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
                   <CardTitle className="text-lg">Course Information</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="font-medium">{courseTitle}</p>
+                   <p className="font-medium">{courseTitle}</p>
                 </CardContent>
               </Card>
 
@@ -1106,73 +1125,37 @@ export default function ApplicationWizard({
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Education</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p>
-                    <strong>Degree:</strong>{" "}
-                    {applicationData.education.highestDegree}
-                  </p>
-                  <p>
-                    <strong>Field:</strong>{" "}
-                    {applicationData.education.fieldOfStudy}
-                  </p>
-                  <p>
-                    <strong>Institution:</strong>{" "}
-                    {applicationData.education.institution}
-                  </p>
-                  <p>
-                    <strong>Year:</strong>{" "}
-                    {applicationData.education.yearCompleted}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Documents</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p>
-                    <strong>Uploaded:</strong>{" "}
-                    {applicationData.documents.length} file(s)
-                  </p>
-                  <div className="mt-2 space-y-1">
-                    {applicationData.documents.map((file, index) => (
-                      <p key={index} className="text-sm text-gray-600">
-                        • {file.name}
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                    <Checkbox
+                      id="termsAccepted"
+                      checked={applicationData.termsAccepted}
+                      onCheckedChange={(checked) =>
+                        setApplicationData((prev) => ({
+                          ...prev,
+                          termsAccepted: checked as boolean,
+                        }))
+                      }
+                    />
+                    <div>
+                      <Label htmlFor="termsAccepted" className="font-medium">
+                        I agree to the terms and conditions
+                      </Label>
+                      <p className="text-sm text-gray-600 mt-1">
+                        By submitting this application, I confirm that all
+                        information provided is accurate and I understand the course
+                        requirements and payment terms.
                       </p>
-                    ))}
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="termsAccepted"
-                  checked={applicationData.termsAccepted}
-                  onCheckedChange={(checked) =>
-                    setApplicationData((prev) => ({
-                      ...prev,
-                      termsAccepted: checked as boolean,
-                    }))
-                  }
-                />
-                <div>
-                  <Label htmlFor="termsAccepted" className="font-medium">
-                    I agree to the terms and conditions
-                  </Label>
-                  <p className="text-sm text-gray-600 mt-1">
-                    By submitting this application, I confirm that all
-                    information provided is accurate and I understand the course
-                    requirements and payment terms.
-                  </p>
-                </div>
               </div>
+
+               {paymentError && (
+                 <div className="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 mt-0.5" />
+                    <span>{paymentError}</span>
+                 </div>
+              )}
             </div>
           </div>
         );
@@ -1229,17 +1212,33 @@ export default function ApplicationWizard({
               <span className="text-sm text-gray-500">Saving draft...</span>
             )}
             <Button
-              onClick={handleNext}
-              disabled={!canProceed() || loading}
+              onClick={
+                  currentStep === steps.length - 1
+                    ? (!isFeePaid && applicationFee > 0 ? handlePayFee : handleNext)
+                    : handleNext
+              }
+              disabled={
+                  loading || isInitializingPayment ||
+                  (currentStep === steps.length - 1 && !isFeePaid && applicationFee > 0
+                    ? !applicationData.termsAccepted
+                    : !canProceed())
+              }
               className="min-w-[120px]"
             >
-              {loading ? (
+              {loading || isInitializingPayment ? (
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Submitting...</span>
+                  <span>{isInitializingPayment ? "Processing..." : "Submitting..."}</span>
                 </div>
               ) : currentStep === steps.length - 1 ? (
-                "Submit Application"
+                 !isFeePaid && applicationFee > 0 ? (
+                    <>
+                       <CreditCard className="h-4 w-4 mr-2" />
+                       Pay & Submit
+                    </>
+                 ) : (
+                    "Submit Application"
+                 )
               ) : (
                 "Next"
               )}

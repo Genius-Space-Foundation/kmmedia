@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bell, AlertCircle, Info, Calendar } from "lucide-react";
 
-interface Announcement {
+export interface Announcement {
   id: string;
   title: string;
   message: string;
@@ -12,33 +12,11 @@ interface Announcement {
   author: string;
 }
 
-export default function AnnouncementsWidget() {
-  const announcements: Announcement[] = [
-    {
-      id: "1",
-      title: "Class Cancelled - Photography Basics",
-      message: "Due to studio renovation, today's class is cancelled. Makeup session scheduled for Dec 2nd.",
-      type: "URGENT",
-      date: "2 hours ago",
-      author: "Admin Office"
-    },
-    {
-      id: "2",
-      title: "Guest Speaker: Jane Smith",
-      message: "Join us next week for a special workshop with renowned photographer Jane Smith.",
-      type: "EVENT",
-      date: "Yesterday",
-      author: "Department Head"
-    },
-    {
-      id: "3",
-      title: "Assignment Deadline Extended",
-      message: "The deadline for the Lighting Project has been extended by 24 hours.",
-      type: "INFO",
-      date: "2 days ago",
-      author: "John Doe"
-    }
-  ];
+interface AnnouncementsWidgetProps {
+    announcements?: Announcement[];
+}
+
+export default function AnnouncementsWidget({ announcements = [] }: AnnouncementsWidgetProps) {
 
   const getIcon = (type: string) => {
     switch (type) {

@@ -28,6 +28,22 @@ interface AssignmentFormData {
 
 export default function CreateAssignmentPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [courses, setCourses] = useState<Array<{ id: string; title: string }>>([]);
+
+  React.useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const response = await fetch("/api/instructor/courses");
+        const data = await response.json();
+        if (data.success) {
+          setCourses(data.data.courses.map((c: any) => ({ id: c.id, title: c.title })));
+        }
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      }
+    };
+    fetchCourses();
+  }, []);
 
   const handleSave = async (
     data: AssignmentFormData & { attachments?: UploadedFile[] }
@@ -73,7 +89,7 @@ export default function CreateAssignmentPage() {
         </div>
 
         <AssignmentCreator
-          courses={mockCourses}
+          courses={courses}
           onSave={handleSave}
           onPublish={handlePublish}
         />

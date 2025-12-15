@@ -118,7 +118,7 @@ export default function InstructorDashboardNew() {
 
       const result = await response.json();
       if (result.success) {
-        setNotifications(result.data || []);
+        setNotifications(result.data?.notifications || []);
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);

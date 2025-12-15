@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendEmail, emailTemplates } from "@/lib/notifications/email";
 import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
+import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -12,18 +13,32 @@ function isBuildTime() {
   return process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL;
 }
 
-export async function PUT(
-  request: NextRequest,
+export const PUT = withAdminAuth(async function PUT(
+  request: AuthenticatedRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (isBuildTime()) {
     return NextResponse.json({ success: true, building: true });
   }
 
+  let body: any;
+  let action: string | undefined;
+  let courseId: string;
+
   try {
-    const { id: courseId } = await params;
-    const body = await request.json();
-    const { action, comments, updatedAt } = body;
+    const paramsResolved = await params;
+    courseId = paramsResolved.id;
+    body = await request.json();
+    const { action: requestAction, comments, updatedAt } = body;
+    action = requestAction;
+
+    // Validate action exists and is a string
+    if (!action || typeof action !== 'string') {
+      return NextResponse.json(
+        { success: false, message: "Invalid or missing action parameter" },
+        { status: 400 }
+      );
+    }
 
     const validActions = ["APPROVE", "REJECT", "PUBLISH", "UNPUBLISH", "UPDATE_INSTALLMENTS"];
     if (!validActions.includes(action)) {
@@ -50,7 +65,7 @@ export async function PUT(
                 id: true,
                 name: true,
                 email: true,
-                avatar: true,
+                image: true,
               },
             },
             _count: {
@@ -77,7 +92,7 @@ export async function PUT(
                 id: true,
                 name: true,
                 email: true,
-                avatar: true,
+                image: true,
               },
             },
             _count: {
@@ -106,7 +121,7 @@ export async function PUT(
                 id: true,
                 name: true,
                 email: true,
-                avatar: true,
+                image: true,
               },
             },
             _count: {
@@ -142,7 +157,7 @@ export async function PUT(
                 id: true,
                 name: true,
                 email: true,
-                avatar: true,
+                image: true,
                 bio: true,
                 phone: true,
               },
@@ -180,7 +195,7 @@ export async function PUT(
                 id: true,
                 name: true,
                 email: true,
-                avatar: true,
+                image: true,
               },
             },
             _count: {
@@ -243,6 +258,11 @@ export async function PUT(
       });
     }
 
+    // Map image to avatar for frontend compatibility
+    if (updatedCourse && updatedCourse.instructor && (updatedCourse.instructor as any).image) {
+      (updatedCourse.instructor as any).avatar = (updatedCourse.instructor as any).image;
+    }
+
     return NextResponse.json({
       success: true,
       data: updatedCourse,
@@ -250,17 +270,27 @@ export async function PUT(
     });
   } catch (error) {
     console.error("Error updating course:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      courseId,
+      action: body?.action,
+    });
     return NextResponse.json(
-      { success: false, message: "Failed to update course" },
+      { 
+        success: false, 
+        message: "Failed to update course",
+        error: error instanceof Error ? error.message : String(error)
+      },
       { status: 500 }
     );
   }
-}
+});
 
-export async function GET(
-  request: NextRequest,
+export const GET = withAdminAuth(async (
+  request: AuthenticatedRequest,
   { params }: { params: Promise<{ id: string }> }
-) {
+) => {
   if (isBuildTime()) {
     return NextResponse.json({ success: true, building: true });
   }
@@ -276,7 +306,7 @@ export async function GET(
             id: true,
             name: true,
             email: true,
-            avatar: true,
+            image: true,
             bio: true,
             phone: true,
           },
@@ -309,6 +339,11 @@ export async function GET(
       );
     }
 
+    // Map image to avatar for frontend compatibility
+    if (course && course.instructor && (course.instructor as any).image) {
+      (course.instructor as any).avatar = (course.instructor as any).image;
+    }
+
     return NextResponse.json({
       success: true,
       data: course,
@@ -320,4 +355,4 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+});

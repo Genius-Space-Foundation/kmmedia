@@ -189,7 +189,13 @@ export default function LessonManagement() {
       );
       if (response.ok) {
         const data = await response.json();
-        setCourses(Array.isArray(data) ? data : data.data || []);
+        setCourses(
+          Array.isArray(data)
+            ? data
+            : Array.isArray(data.data)
+            ? data.data
+            : data.data?.courses || []
+        );
       }
     } catch (error) {
       console.error("Error fetching courses:", error);

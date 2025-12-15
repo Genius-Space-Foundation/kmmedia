@@ -5,12 +5,13 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 
 interface ApplyPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function ApplyPage({ params }: ApplyPageProps) {
+  const { id } = await params; // Await params here
   const session = await getServerSession(authOptions);
 
   if (!session) {
@@ -19,7 +20,7 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
 
   // Get course details
   const course = await prisma.course.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: {
       id: true,
       title: true,
@@ -41,7 +42,7 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
     notFound();
   }
 
-  if (course.status !== "APPROVED") {
+  if (course.status !== "APPROVED" && course.status !== "PUBLISHED") {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6 text-center">
@@ -110,15 +111,6 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
     );
   }
 
-  const handleApplicationSubmit = (data: any) => {
-    // Redirect to success page or dashboard
-    window.location.href = `/applications/success?course=${course.id}`;
-  };
-
-  const handleDraftLoad = (draft: any) => {
-    console.log("Draft loaded:", draft);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -151,8 +143,8 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
         <ApplicationForm
           courseId={course.id}
           courseName={course.title}
-          onSubmit={handleApplicationSubmit}
-          onDraftLoad={handleDraftLoad}
+          applicationFee={course.applicationFee || 0}
+          onSuccessRedirect={`/applications/success?course=${course.id}`}
         />
 
         {/* Help Section */}

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDebounce } from "./useDebounce";
+import { makeAuthenticatedRequest } from "@/lib/token-utils";
 
 export interface AutoSaveOptions {
   courseId: string;
@@ -35,6 +36,15 @@ export function useAutoSave({
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastSavedDataRef = useRef<string>("");
 
+  // Use refs for callbacks to avoid dependency changes
+  const onSaveSuccessRef = useRef(onSaveSuccess);
+  const onSaveErrorRef = useRef(onSaveError);
+
+  useEffect(() => {
+    onSaveSuccessRef.current = onSaveSuccess;
+    onSaveErrorRef.current = onSaveError;
+  }, [onSaveSuccess, onSaveError]);
+
   // Debounce the form data to avoid excessive API calls
   const debouncedFormData = useDebounce(formData, debounceMs);
   const debouncedStep = useDebounce(currentStep, debounceMs);
@@ -61,11 +71,8 @@ export function useAutoSave({
       setSaveStatus({ status: "saving" });
 
       try {
-        const response = await fetch("/api/applications/drafts", {
+        const response = await makeAuthenticatedRequest("/api/applications/drafts", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({
             courseId,
             currentStep: step,
@@ -88,7 +95,9 @@ export function useAutoSave({
           lastSaved: new Date(),
         });
 
-        onSaveSuccess?.(result.data);
+        if (onSaveSuccessRef.current) {
+          onSaveSuccessRef.current(result.data);
+        }
       } catch (error) {
         if (error instanceof Error && error.name === "AbortError") {
           // Request was aborted, don't update status
@@ -102,10 +111,12 @@ export function useAutoSave({
           error: errorMessage,
         });
 
-        onSaveError?.(error instanceof Error ? error : new Error(errorMessage));
+        if (onSaveErrorRef.current) {
+          onSaveErrorRef.current(error instanceof Error ? error : new Error(errorMessage));
+        }
       }
     },
-    [courseId, enabled, onSaveSuccess, onSaveError]
+    [courseId, enabled]
   );
 
   // Load existing draft on mount
@@ -113,7 +124,7 @@ export function useAutoSave({
     if (!courseId) return null;
 
     try {
-      const response = await fetch(
+      const response = await makeAuthenticatedRequest(
         `/api/applications/drafts?courseId=${courseId}`
       );
       const result = await response.json();
@@ -133,7 +144,7 @@ export function useAutoSave({
     if (!courseId) return;
 
     try {
-      const response = await fetch(
+      const response = await makeAuthenticatedRequest(
         `/api/applications/drafts?courseId=${courseId}`,
         {
           method: "DELETE",

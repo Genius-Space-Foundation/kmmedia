@@ -8,9 +8,10 @@ export const fetchCache = 'force-no-store';
 
 export async function getStudentProgress(
   req: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  props: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await props.params;  
     const instructorId = req.user!.userId;
     const studentId = params.id;
 

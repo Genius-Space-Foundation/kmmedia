@@ -43,6 +43,7 @@ import {
   ChevronLeft,
   Save,
 } from "lucide-react";
+import { makeAuthenticatedRequest } from "@/lib/token-utils";
 
 // Form validation schemas for each step
 const step1Schema = z.object({
@@ -78,28 +79,23 @@ const step3Schema = z.object({
   }),
 });
 
-const step4Schema = z.object({
-  documents: z.object({
-    resume: z.array(z.string()).optional(),
-    coverLetter: z.array(z.string()).optional(),
-    portfolio: z.array(z.string()).optional(),
-    certificates: z.array(z.string()).optional(),
-  }),
-});
+// Step 4 is now Review & Pay - no validation needed beyond payment check
+const step4Schema = z.object({});
 
 // Combined schema for final submission
 const applicationSchema = step1Schema
   .merge(step2Schema)
-  .merge(step3Schema)
-  .merge(step4Schema);
+  .merge(step3Schema);
 
 type ApplicationFormData = z.infer<typeof applicationSchema>;
 
 interface ApplicationFormProps {
   courseId: string;
   courseName: string;
+  applicationFee: number; // Added applicationFee prop
   onSubmit?: (data: ApplicationFormData) => void;
   onDraftLoad?: (draft: any) => void;
+  onSuccessRedirect?: string;
 }
 
 const STEPS = [
@@ -123,32 +119,25 @@ const STEPS = [
   },
   {
     id: 4,
-    title: "Documents",
-    description: "Supporting materials",
-    icon: FileText,
+    title: "Review & Pay",
+    description: "Application Fee",
+    icon: CreditCard,
   },
 ];
 
 export function ApplicationForm({
   courseId,
   courseName,
+  applicationFee,
   onSubmit,
   onDraftLoad,
+  onSuccessRedirect,
 }: ApplicationFormProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [uploadedDocuments, setUploadedDocuments] = useState<{
-    resume: UploadedFile[];
-    coverLetter: UploadedFile[];
-    portfolio: UploadedFile[];
-    certificates: UploadedFile[];
-  }>({
-    resume: [],
-    coverLetter: [],
-    portfolio: [],
-    certificates: [],
-  });
+  const [isFeePaid, setIsFeePaid] = useState(false);
+  const [isInitializingPayment, setIsInitializingPayment] = useState(false);
 
   const {
     register,
@@ -163,23 +152,9 @@ export function ApplicationForm({
     mode: "onChange",
   });
 
-  // Watch all form values for auto-save
-  const formData = watch();
+  // Document upload functionality removed
 
-  // Document upload functionality
-  const {
-    uploadFiles,
-    isUploading,
-    error: uploadError,
-  } = useDocumentUpload({
-    onUploadSuccess: (files) => {
-      console.log("Files uploaded successfully:", files);
-    },
-    onUploadError: (error) => {
-      console.error("Upload error:", error);
-      setError(`Upload failed: ${error}`);
-    },
-  });
+  const formData = watch();
 
   // Auto-save functionality
   const { saveStatus, loadDraft, deleteDraft, saveNow } = useAutoSave({
@@ -196,7 +171,7 @@ export function ApplicationForm({
     },
   });
 
-  // Load existing draft on component mount
+  // Load existing draft and check payment status on mount
   useEffect(() => {
     const loadExistingDraft = async () => {
       try {
@@ -214,6 +189,18 @@ export function ApplicationForm({
       }
     };
 
+    // Check URL for payment success
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("payment") === "success") {
+      setIsFeePaid(true);
+      if (params.get("step")) {
+         const step = parseInt(params.get("step")!);
+         setCurrentStep(step);
+      } else {
+         setCurrentStep(4);
+      }
+    }
+
     loadExistingDraft();
   }, [loadDraft, setValue, onDraftLoad]);
 
@@ -227,8 +214,6 @@ export function ApplicationForm({
       await currentStepSchema.parseAsync(currentData);
       if (currentStep < STEPS.length) {
         setCurrentStep(currentStep + 1);
-      } else {
-        await handleFinalSubmit();
       }
     } catch (validationError) {
       // Trigger validation to show errors
@@ -266,10 +251,46 @@ export function ApplicationForm({
         return { education: allData.education };
       case 3:
         return { experience: allData.experience };
-      case 4:
-        return { documents: allData.documents };
       default:
         return {};
+    }
+  };
+
+  const handlePayFee = async () => {
+    setIsInitializingPayment(true);
+    setError("");
+    try {
+      // Save draft first
+      await saveNow();
+
+      // Initialize payment
+      const response = await makeAuthenticatedRequest("/api/payments/initialize", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "APPLICATION_FEE",
+          amount: applicationFee,
+          courseId: courseId, 
+          callbackUrl: `${window.location.origin}${window.location.pathname}?payment=success&step=4`
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        // Redirect to Paystack
+         const authUrl = result.data.authorizationUrl || result.data.authorization_url;
+         if (authUrl) {
+           window.location.href = authUrl;
+         } else {
+            setError("Failed to get payment URL");
+         }
+      } else {
+        setError(result.message || "Payment initialization failed");
+      }
+    } catch (err) {
+      console.error("Payment error:", err);
+      setError("An error occurred while initializing payment");
+    } finally {
+      setIsInitializingPayment(false);
     }
   };
 
@@ -277,15 +298,18 @@ export function ApplicationForm({
     setIsLoading(true);
     setError("");
 
+    if (!isFeePaid && applicationFee > 0) {
+        setError("Please pay the application fee first.");
+        setIsLoading(false);
+        return;
+    }
+
     try {
       const formData = getValues();
 
       // Submit the application
-      const response = await fetch("/api/applications", {
+      const response = await makeAuthenticatedRequest("/api/applications", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           courseId,
           formData,
@@ -298,10 +322,16 @@ export function ApplicationForm({
         // Delete the draft after successful submission
         await deleteDraft();
         onSubmit?.(formData);
+        
+        if (onSuccessRedirect) {
+          window.location.href = onSuccessRedirect;
+        }
       } else {
+        console.error("Submission failed:", result); 
         setError(result.message || "Application submission failed");
       }
     } catch (error) {
+      console.error("Submission error:", error);
       setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
@@ -641,117 +671,56 @@ export function ApplicationForm({
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
               <div className="flex items-start gap-3">
-                <FileText className="h-5 w-5 text-blue-600 mt-0.5" />
+                <CreditCard className="h-5 w-5 text-blue-600 mt-0.5" />
                 <div>
                   <h3 className="font-semibold text-blue-900 mb-1">
-                    Document Upload
+                    Application Fee Payment
                   </h3>
                   <p className="text-sm text-blue-700">
-                    Upload your supporting documents. All documents are optional but
-                    recommended to strengthen your application.
+                    To process your application, a non-refundable application fee is required.
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Resume/CV</Label>
-                <FileUpload
-                  accept=".pdf,.doc,.docx"
-                  maxFiles={1}
-                  maxSize={5}
-                  multiple={false}
-                  onFilesChange={(files) => {
-                    setUploadedDocuments((prev) => ({
-                      ...prev,
-                      resume: files,
-                    }));
-                    const urls = files.filter((f) => f.url).map((f) => f.url!);
-                    setValue("documents.resume", urls);
-                  }}
-                  onUpload={uploadFiles}
-                  label="Upload Resume/CV"
-                  description="PDF, DOC, or DOCX (Max 5MB)"
-                  disabled={isUploading}
-                />
-              </div>
+            <Card className="border shadow-sm">
+                <CardHeader>
+                    <CardTitle className="text-lg">Fee Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Application Fee</span>
+                        <span className="font-bold text-lg">
+                            {new Intl.NumberFormat("en-GH", {
+                                style: "currency",
+                                currency: "GHS",
+                            }).format(applicationFee || 0)}
+                        </span>
+                    </div>
+                    {isFeePaid ? (
+                        <div className="bg-green-50 text-green-700 p-3 rounded-md flex items-center gap-2">
+                             <CheckCircle2 className="h-4 w-4" />
+                             Payment Verified
+                        </div>
+                    ) : (
+                        <div className="bg-yellow-50 text-yellow-700 p-3 rounded-md flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4" />
+                            Payment Pending
+                        </div>
+                    )}
+                </CardContent>
+            </Card>
 
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Cover Letter</Label>
-                <FileUpload
-                  accept=".pdf,.doc,.docx"
-                  maxFiles={1}
-                  maxSize={5}
-                  multiple={false}
-                  onFilesChange={(files) => {
-                    setUploadedDocuments((prev) => ({
-                      ...prev,
-                      coverLetter: files,
-                    }));
-                    const urls = files.filter((f) => f.url).map((f) => f.url!);
-                    setValue("documents.coverLetter", urls);
-                  }}
-                  onUpload={uploadFiles}
-                  label="Upload Cover Letter"
-                  description="PDF, DOC, or DOCX (Max 5MB)"
-                  disabled={isUploading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-600">
-                  Portfolio (Optional)
-                </Label>
-                <FileUpload
-                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.mp4,.mov"
-                  maxFiles={3}
-                  maxSize={10}
-                  multiple={true}
-                  onFilesChange={(files) => {
-                    setUploadedDocuments((prev) => ({
-                      ...prev,
-                      portfolio: files,
-                    }));
-                    const urls = files.filter((f) => f.url).map((f) => f.url!);
-                    setValue("documents.portfolio", urls);
-                  }}
-                  onUpload={uploadFiles}
-                  label="Upload Portfolio"
-                  description="Documents, images, or videos (Max 10MB each, up to 3 files)"
-                  disabled={isUploading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-600">
-                  Certificates (Optional)
-                </Label>
-                <FileUpload
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  maxFiles={5}
-                  maxSize={5}
-                  multiple={true}
-                  onFilesChange={(files) => {
-                    setUploadedDocuments((prev) => ({
-                      ...prev,
-                      certificates: files,
-                    }));
-                    const urls = files.filter((f) => f.url).map((f) => f.url!);
-                    setValue("documents.certificates", urls);
-                  }}
-                  onUpload={uploadFiles}
-                  label="Upload Certificates"
-                  description="PDF or images (Max 5MB each, up to 5 files)"
-                  disabled={isUploading}
-                />
-              </div>
+            <div className="space-y-4">
+                <p className="text-sm text-gray-500 text-center">
+                    By submitting this application, you confirm that all information provided is accurate.
+                </p>
             </div>
-
-            {uploadError && (
+            
+             {error && (
               <div className="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 mt-0.5" />
-                <span>{uploadError}</span>
+                <span>{error}</span>
               </div>
             )}
           </div>
@@ -877,20 +846,31 @@ export function ApplicationForm({
                 </Button>
                 <Button
                   type="button"
-                  onClick={handleNext}
-                  disabled={isLoading}
+                  onClick={
+                    currentStep === STEPS.length
+                      ? (!isFeePaid && applicationFee > 0 ? handlePayFee : handleFinalSubmit)
+                      : handleNext
+                  }
+                  disabled={isLoading || isInitializingPayment}
                   className="h-11 px-8 bg-blue-600 hover:bg-blue-700"
                 >
-                  {isLoading ? (
+                  {isLoading || isInitializingPayment ? (
                     <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Submitting...</span>
+                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                       <span>Processing...</span>
                     </div>
                   ) : currentStep === STEPS.length ? (
-                    <>
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Submit Application
-                    </>
+                    !isFeePaid && applicationFee > 0 ? (
+                        <>
+                            <CreditCard className="h-4 w-4 mr-2" />
+                            Pay Application Fee
+                        </>
+                    ) : (
+                        <>
+                            <CheckCircle2 className="h-4 w-4 mr-2" />
+                            Submit Application
+                        </>
+                    )
                   ) : (
                     <>
                       Next

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
+import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
@@ -59,4 +59,4 @@ async function uploadHandler(req: AuthenticatedRequest) {
   }
 }
 
-export const POST = withInstructorAuth(uploadHandler);
+export const POST = withAuth(uploadHandler);

@@ -113,14 +113,15 @@ export default function PersonalizedOverview({
       {/* Hybrid Dashboard Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Row 1: Schedule & Attendance */}
+        {/* Row 1: Schedule & Attendance */}
         <div className="lg:col-span-2">
           <ClassScheduleWidget onViewClassDetails={onViewClassDetails} />
         </div>
         <div className="lg:col-span-1">
           <AttendanceTracker 
-            attendanceRate={92} 
-            totalClasses={25} 
-            attendedClasses={23} 
+            attendanceRate={0} 
+            totalClasses={0} 
+            attendedClasses={0} 
           />
         </div>
 
@@ -133,7 +134,7 @@ export default function PersonalizedOverview({
           />
         </div>
         <div className="lg:col-span-1">
-          <AnnouncementsWidget />
+          <AnnouncementsWidget announcements={[]} />
         </div>
 
         {/* Row 3: Grades */}

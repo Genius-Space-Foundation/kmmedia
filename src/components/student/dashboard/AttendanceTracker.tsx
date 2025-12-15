@@ -20,19 +20,13 @@ interface AttendanceTrackerProps {
 }
 
 export default function AttendanceTracker({
-  attendanceRate = 92,
-  totalClasses = 25,
-  attendedClasses = 23,
+  attendanceRate = 0,
+  totalClasses = 0,
+  attendedClasses = 0,
   history = [],
 }: AttendanceTrackerProps) {
   
-  // Mock history if none provided
-  const displayHistory: AttendanceRecord[] = history.length > 0 ? history : [
-    { id: "1", date: "2024-11-28", courseName: "Photography Basics", status: "PRESENT" },
-    { id: "2", date: "2024-11-25", courseName: "Lighting Techniques", status: "PRESENT" },
-    { id: "3", date: "2024-11-21", courseName: "Video Editing", status: "LATE", notes: "Traffic" },
-    { id: "4", date: "2024-11-18", courseName: "Photography Basics", status: "ABSENT", notes: "Sick leave" },
-  ];
+  const displayHistory: AttendanceRecord[] = history;
 
   const getStatusColor = (status: string) => {
     switch (status) {

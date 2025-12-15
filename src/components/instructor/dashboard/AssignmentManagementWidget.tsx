@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Plus,
@@ -170,11 +171,14 @@ export default function AssignmentManagementWidget() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Quick Assignment Creation</DialogTitle>
+                <DialogDescription className="hidden">
+                  Create a new assignment quickly
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <p className="text-sm text-gray-600">
+                <DialogDescription className="text-sm text-gray-600">
                   Use the full assignment creator for detailed setup.
-                </p>
+                </DialogDescription>
                 <div className="flex gap-2">
                   <Link href="/assignments/create" className="flex-1">
                     <Button

@@ -140,6 +140,8 @@ export default function AssignmentSubmissionPortal({
       
       const data = await response.json();
       
+      console.log("DEBUG: Frontend Assignments Response", data);
+
       if (data.success && data.data && Array.isArray(data.data.assignments)) {
         // Transform data to match our interface
         const transformedAssignments = data.data.assignments.map((a: any) => ({

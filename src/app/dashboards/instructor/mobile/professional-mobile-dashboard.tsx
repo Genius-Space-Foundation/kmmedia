@@ -144,7 +144,9 @@ export default function ProfessionalMobileInstructorDashboard() {
       }
       const result = await response.json();
       if (result.success) {
-        setNotifications(result.data || []);
+        // The API returns data: { notifications: [], ... }
+        // We need to extract the notifications array
+        setNotifications(result.data?.notifications || []);
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);

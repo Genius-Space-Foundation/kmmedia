@@ -49,8 +49,13 @@ async function getStudentAssignments(request: AuthenticatedRequest) {
       isPublished: true,
     };
 
-    // Get assignments with student's submissions
-    const [assignments, total] = await Promise.all([
+    console.log("DEBUG: Student Assignments Fetch", {
+        studentId,
+        enrolledCourseIds,
+        whereClause: JSON.stringify(where)
+    });
+
+    const [assignments, assessments] = await Promise.all([
       prisma.assignment.findMany({
         where,
         include: {
@@ -88,10 +93,29 @@ async function getStudentAssignments(request: AuthenticatedRequest) {
         orderBy: {
           dueDate: "asc",
         },
-        skip: (page - 1) * limit,
-        take: limit,
       }),
-      prisma.assignment.count({ where }),
+      prisma.assessment.findMany({
+        where: {
+          courseId: courseId ? courseId : { in: enrolledCourseIds },
+          isPublished: true,
+          type: "ASSIGNMENT",
+        },
+        include: {
+          course: {
+             select: {
+              id: true,
+              title: true,
+              instructor: {
+                 select: { id: true, name: true }
+              }
+             }
+          },
+          submissions: {
+             where: { studentId }
+          }
+        },
+        orderBy: { dueDate: "asc" }
+      })
     ]);
 
     // Transform assignments to include student-specific data
@@ -104,29 +128,7 @@ async function getStudentAssignments(request: AuthenticatedRequest) {
         !submission && new Date(effectiveDueDate) < now && assignment.allowLateSubmission === false;
       const isPending = !submission && new Date(effectiveDueDate) >= now;
       const isLate = submission?.isLate || false;
-
-      // Filter by status if provided
-      let shouldInclude = true;
-      if (status) {
-        switch (status) {
-          case "pending":
-            shouldInclude = isPending;
-            break;
-          case "submitted":
-            shouldInclude = !!submission && submission.status === "SUBMITTED";
-            break;
-          case "graded":
-            shouldInclude = !!submission && submission.status === "GRADED";
-            break;
-          case "overdue":
-            shouldInclude = isOverdue;
-            break;
-          case "late":
-            shouldInclude = isLate;
-            break;
-        }
-      }
-
+      
       return {
         id: assignment.id,
         title: assignment.title,
@@ -163,29 +165,123 @@ async function getStudentAssignments(request: AuthenticatedRequest) {
         status: submission?.status || (isOverdue ? "OVERDUE" : "PENDING"),
         isOverdue,
         isPending,
-        shouldInclude,
+        // Helper for filtering
+        shouldInclude: true,
+        isAssessment: false
       };
     });
 
-    // Filter by status if provided
-    const filteredAssignments = status
-      ? transformedAssignments.filter((a) => a.shouldInclude)
-      : transformedAssignments;
+    // Transform Assessments to look like Assignments
+    const transformedAssessments = assessments.map(assessment => {
+        const submission = assessment.submissions[0];
+        const effectiveDueDate = assessment.dueDate || new Date();
+        const now = new Date();
+        const isOverdue = !submission && new Date(effectiveDueDate) < now;
+        const isPending = !submission && new Date(effectiveDueDate) >= now;
+
+        return {
+            id: assessment.id,
+            title: assessment.title,
+            description: assessment.description || "",
+            instructions: assessment.instructions || "",
+            dueDate: effectiveDueDate instanceof Date ? effectiveDueDate.toISOString() : new Date(effectiveDueDate).toISOString(),
+            originalDueDate: effectiveDueDate instanceof Date ? effectiveDueDate.toISOString() : new Date(effectiveDueDate).toISOString(),
+            hasExtension: false,
+            extensionGrantedBy: null,
+            maxFileSize: 10485760, // Default 10MB
+            allowedFormats: [],
+            maxFiles: 5,
+            allowLateSubmission: true,
+            latePenalty: 0,
+            totalPoints: assessment.totalPoints,
+            attachments: assessment.attachments,
+            course: assessment.course,
+            submission: submission ? {
+                id: submission.id,
+                submittedAt: submission.submittedAt.toISOString(),
+                status: submission.status === "GRADED" ? "GRADED" : "SUBMITTED",
+                grade: submission.score,
+                feedback: submission.feedback,
+                isLate: false,
+                daysLate: 0,
+                files: [], // AssessmentSubmission needs files field or mapped from answers
+                submissionText: "",
+                gradedAt: submission.gradedAt?.toISOString(),
+                gradedBy: submission.gradedBy,
+                resubmissionCount: 0
+            } : null,
+            status: submission ? (submission.status === "GRADED" ? "GRADED" : "SUBMITTED") : (isOverdue ? "OVERDUE" : "PENDING"),
+            isOverdue,
+            isPending,
+            shouldInclude: true,
+            isAssessment: true
+        };
+    });
+
+    const allItems = [...transformedAssignments, ...transformedAssessments].sort((a, b) => 
+        new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+    );
+
+    console.log("DEBUG: Fetched Items", {
+        assignmentsCount: assignments.length,
+        assessmentsCount: assessments.length,
+        totalTransformed: allItems.length
+    });
+
+    // Filter by status if provided (using the merged list)
+       const statusMappedItems = allItems.map(item => {
+        let shouldInclude = true;
+          if (status) {
+            switch (status) {
+              case "pending":
+                shouldInclude = item.isPending;
+                break;
+              case "submitted":
+                shouldInclude = item.submission?.status === "SUBMITTED";
+                break;
+              case "graded":
+                shouldInclude = item.submission?.status === "GRADED";
+                break;
+              case "overdue":
+                shouldInclude = item.isOverdue;
+                break;
+              case "late":
+                shouldInclude = item.submission?.isLate || false;
+                break;
+            }
+          }
+          return { ...item, shouldInclude };
+       });
+
+    // Calculate priority and filter
+    const finalItems = statusMappedItems.map(item => {
+        const daysUntilDue = Math.ceil((new Date(item.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+        let priority = "LOW";
+        if (daysUntilDue <= 3) priority = "HIGH";
+        else if (daysUntilDue <= 7) priority = "MEDIUM";
+        
+        return {
+            ...item,
+            priority
+        };
+    });
+
+    const filteredAssignments = finalItems.filter((a) => a.shouldInclude);
 
     // Remove the shouldInclude field from response
-    const finalAssignments = filteredAssignments.map(
+    const finalResponse = filteredAssignments.slice((page - 1) * limit, page * limit).map(
       ({ shouldInclude, ...assignment }) => assignment
     );
 
     return NextResponse.json({
       success: true,
       data: {
-        assignments: finalAssignments,
+        assignments: finalResponse,
         pagination: {
           page,
           limit,
-          total: status ? finalAssignments.length : total,
-          pages: Math.ceil((status ? finalAssignments.length : total) / limit),
+          total: filteredAssignments.length,
+          pages: Math.ceil(filteredAssignments.length / limit),
         },
       },
     });

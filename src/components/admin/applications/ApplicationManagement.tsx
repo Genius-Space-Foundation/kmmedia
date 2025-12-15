@@ -135,6 +135,7 @@ export default function ApplicationManagement({
             // Prioritize seeing a successful payment, regardless of subsequent failed attempts (redundant checks etc)
             paymentStatus: successfulPayment?.status || latestPayment?.status || "PENDING",
             paymentReference: successfulPayment?.reference || latestPayment?.reference,
+            documents: app.documents || [],
           };
         });
         
@@ -464,10 +465,10 @@ export default function ApplicationManagement({
                               application.appliedAt
                             ).toLocaleDateString()}
                           </p>
-                          {application.documents.length > 0 && (
+                          {application.documents?.length > 0 && (
                             <p className="text-sm text-gray-600 mt-1">
                               <FileText className="h-4 w-4 inline mr-1" />
-                              {application.documents.length} document(s)
+                              {application.documents?.length || 0} document(s)
                               uploaded
                             </p>
                           )}
@@ -602,7 +603,7 @@ export default function ApplicationManagement({
               </Card>
 
               {/* Documents */}
-              {selectedApplication.documents.length > 0 && (
+              {(selectedApplication.documents?.length || 0) > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
@@ -612,7 +613,7 @@ export default function ApplicationManagement({
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {selectedApplication.documents.map((doc) => (
+                      {selectedApplication.documents?.map((doc) => (
                         <div
                           key={doc.id}
                           className="flex items-center justify-between p-2 border rounded"

@@ -688,6 +688,7 @@ model AssessmentSubmission {
   timeSpent       Int // in minutes
   submittedAt     DateTime  @default(now())
   status          String    @default("PENDING") // PENDING, GRADED
+  files           Json?     // Array of file metadata for file upload assignments
   feedback        String? // Instructor feedback
   manualScore     Int? // Manual score override
   finalScore      Int? // Final score after manual grading
