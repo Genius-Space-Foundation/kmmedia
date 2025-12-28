@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -40,7 +40,7 @@ import { Label } from "@/components/ui/label";
 import StudentAssessments from "@/components/student-assessments";
 import StudentProgressTracking from "@/components/student-progress-tracking";
 import UserDropdown from "@/components/user-dropdown";
-// import { makeAuthenticatedRequest, clearAuthTokens } from "@/lib/token-utils";
+import { makeAuthenticatedRequest, clearAuthTokens } from "@/lib/token-utils";
 import { safeJsonParse } from "@/lib/api-utils";
 import { formatCurrency } from "@/lib/currency";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
@@ -50,12 +50,15 @@ import AchievementSystem from "@/components/gamification/AchievementSystem";
 import NotificationSystem from "@/components/mobile/NotificationSystem";
 import { AdaptiveCourseTab } from "@/components/student/dashboard/AdaptiveCourseTab";
 import PaymentDashboard from "@/components/student/payments/PaymentDashboard";
+import UnifiedPaymentFlow from "@/components/student/payments/UnifiedPaymentFlow";
 import StudentLayout from "@/components/student/layout/StudentLayout";
 import StudentSettings from "@/components/student/settings/StudentSettings";
 import StudentProfile from "@/components/student/profile/StudentProfile";
 import PersonalizedOverview from "@/components/student/dashboard/PersonalizedOverview";
 import CourseProgressVisualization from "@/components/student/dashboard/CourseProgressVisualization";
 import DeadlinesAndReminders from "@/components/student/dashboard/DeadlinesAndReminders";
+import AttendanceReport from "@/components/student/dashboard/AttendanceReport";
+import { toast } from "sonner";
 
 import AchievementProgressTracking from "@/components/student/dashboard/AchievementProgressTracking";
 import AssignmentSubmissionPortal from "@/components/student/dashboard/AssignmentSubmissionPortal";
@@ -68,7 +71,6 @@ interface Course {
   description: string;
   category: string;
   duration: number;
-  price: number;
   price: number;
   applicationFee: number;
   installmentEnabled?: boolean;
@@ -114,8 +116,8 @@ interface Application {
   reviewedAt?: string;
   reviewNotes?: string;
   payments: {
-    applicationFee: Payment;
-    tuition?: Payment;
+    applicationFee: any;
+    tuition?: any;
   };
   documents: ApplicationDocument[];
 }
@@ -241,6 +243,12 @@ export default function StudentDashboard() {
       unit: "hours" as const,
     },
   });
+  const [attendanceData, setAttendanceData] = useState<any>({
+    records: [],
+    summary: [],
+    overallRate: 0,
+    totalCheckIns: 0,
+  });
   // Course Catalog States
   const [courseFilter, setCourseFilter] = useState({
     category: "ALL",
@@ -277,14 +285,17 @@ export default function StudentDashboard() {
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedPaymentPlan, setSelectedPaymentPlan] = useState<string>("");
   const [paymentMethod, setPaymentMethod] = useState("PAYSTACK");
-  const [payments, setPayments] = useState<Payment[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [installmentStatus, setInstallmentStatus] = useState<any[]>([]);
   const [dashboardStats, setDashboardStats] = useState<any>(null);
-
-  // Learning States
-  const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
-  const [showLessonViewer, setShowLessonViewer] = useState(false);
-  const [bookmarks, setBookmarks] = useState<string[]>([]);
+  const [showUnifiedPayment, setShowUnifiedPayment] = useState(false);
+  const [paymentContext, setPaymentContext] = useState<{
+    amount: number;
+    courseId?: string;
+    courseName?: string;
+    applicationId?: string;
+    type: "APPLICATION_FEE" | "TUITION" | "INSTALLMENT";
+  } | null>(null);
 
   // Support States
   const [showSupportForm, setShowSupportForm] = useState(false);
@@ -394,17 +405,49 @@ export default function StudentDashboard() {
             ...statsData.data
         }));
         // Also update streak if available in stats
-        if (statsData.data.currentStreak !== undefined) {
+        if (statsData.data && typeof statsData.data === 'object' && 'currentStreak' in statsData.data) {
              setLearningStreak({
-                 current: statsData.data.currentStreak,
-                 longest: statsData.data.longestStreak || statsData.data.currentStreak,
-                 lastActivity: "Today" // You might want to format this based on lastActivityAt
+                 current: Number((statsData.data as any).currentStreak) || 0,
+                 longest: Number((statsData.data as any).longestStreak) || Number((statsData.data as any).currentStreak) || 0,
+                 lastActivity: "Today"
              });
+        }
+
+        const attendanceRes = await safeFetch("/api/student/attendance");
+        const attendanceJson = await safeJsonParse(attendanceRes, { success: false });
+        
+        if (attendanceJson?.success && attendanceJson.data) {
+          setAttendanceData({
+            records: attendanceJson.data.checkIns || [],
+            summary: attendanceJson.data.summary || [],
+            overallRate: attendanceJson.data.overallAttendanceRate || 0,
+            totalCheckIns: attendanceJson.data.totalCheckIns || 0,
+          });
         }
       }
 
     } catch (error) {
       console.error("Error fetching enhanced dashboard data:", error);
+    }
+  };
+
+  const handleAttendanceCheckIn = async (courseId: string, notes?: string) => {
+    try {
+      const response = await makeAuthenticatedRequest("/api/student/attendance/check-in", {
+        method: "POST",
+        body: JSON.stringify({ courseId, notes }),
+      });
+      const result = await response.json();
+      if (result.success) {
+        toast.success("Checked in successfully!");
+        // Refresh dashboard data to update attendance stats and history
+        fetchEnhancedDashboardData();
+      } else {
+        toast.error(result.error || "Check-in failed");
+      }
+    } catch (error) {
+      console.error("Check-in error:", error);
+      toast.error("An error occurred during check-in");
     }
   };
 
@@ -552,18 +595,19 @@ export default function StudentDashboard() {
 
       if (
         paymentsData.success &&
-        paymentsData.data
+        paymentsData.data &&
+        typeof paymentsData.data === 'object'
       ) {
         console.log("Payments API Data:", paymentsData.data); // Debug logging
-        setPayments(paymentsData.data.transactions || []);
-        setInstallmentStatus(paymentsData.data.installmentStatus || []);
-        console.log("Installment Status Set:", paymentsData.data.installmentStatus); // Debug logging
+        setPayments((paymentsData.data as any).transactions || []);
+        setInstallmentStatus((paymentsData.data as any).installmentStatus || []);
+        console.log("Installment Status Set:", (paymentsData.data as any).installmentStatus); // Debug logging
         
         // Update stats with payment summary
-        if (paymentsData.data.summary) {
+        if ((paymentsData.data as any).summary) {
            setDashboardStats((prev: any) => ({
              ...prev,
-             paymentSummary: paymentsData.data.summary
+             paymentSummary: (paymentsData.data as any).summary
            }));
         }
       } else {
@@ -653,7 +697,7 @@ export default function StudentDashboard() {
 
   const handleOnboardingComplete = (profile: any) => {
     setShowOnboarding(false);
-    setUser((prev) => ({
+    setUser((prev: any) => ({
       ...prev,
       learningProfile: {
         ...prev.learningProfile,
@@ -667,7 +711,7 @@ export default function StudentDashboard() {
 
   const handleOnboardingSkip = () => {
     setShowOnboarding(false);
-    setUser((prev) => ({
+    setUser((prev: any) => ({
       ...prev,
       learningProfile: {
         ...prev.learningProfile,
@@ -794,6 +838,17 @@ export default function StudentDashboard() {
     } catch (error) {
       console.error("Error downloading receipt:", error);
     }
+  };
+
+  const handleShowUnifiedPayment = (context: {
+    amount: number;
+    courseId?: string;
+    courseName?: string;
+    applicationId?: string;
+    type: "APPLICATION_FEE" | "TUITION" | "INSTALLMENT";
+  }) => {
+    setPaymentContext(context);
+    setShowUnifiedPayment(true);
   };
 
   // Learning Experience Functions
@@ -965,8 +1020,8 @@ export default function StudentDashboard() {
   // Enhanced Dashboard Handlers
   const handleContinueCourse = (courseId: string) => {
     console.log("Continue course:", courseId);
-    // Navigate to course content or open course modal
-    setActiveTab("learning");
+    // Navigate to course content
+    setActiveTab("courses");
   };
 
   const handleViewDeadlines = () => {
@@ -975,6 +1030,10 @@ export default function StudentDashboard() {
 
   const handleViewAchievements = () => {
     setActiveTab("achievements");
+  };
+
+  const handleViewAttendance = () => {
+    setActiveTab("attendance");
   };
 
   const handleSetReminder = (deadlineId: string) => {
@@ -1059,13 +1118,13 @@ export default function StudentDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="flex items-center justify-center min-h-screen bg-slate-50">
         <div className="text-center space-y-6">
           <div className="relative">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-3xl flex items-center justify-center mx-auto shadow-2xl">
+            <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center mx-auto shadow-2xl">
               <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
             </div>
-            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-3xl blur opacity-30 animate-pulse"></div>
+            <div className="absolute -inset-1 bg-blue-600/30 rounded-3xl blur animate-pulse"></div>
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-gray-800">
@@ -1197,13 +1256,20 @@ export default function StudentDashboard() {
               user={user}
               enrollments={enrollments}
               upcomingDeadlines={upcomingDeadlines}
-              recentActivity={recentActivity}
-              achievements={achievements}
-              onContinueCourse={handleContinueCourse}
               onViewDeadlines={handleViewDeadlines}
-              onViewAchievements={handleViewAchievements}
               onViewAssessmentDetails={handleViewAssessmentDetails}
               onViewClassDetails={handleViewClassDetails}
+              attendanceData={attendanceData}
+              onCheckIn={handleAttendanceCheckIn}
+              onViewAttendance={handleViewAttendance}
+            />
+          )}
+
+          {/* Attendance Report Tab */}
+          {activeTab === "attendance" && (
+            <AttendanceReport 
+              data={attendanceData} 
+              onBack={() => setActiveTab("overview")} 
             />
           )}
 
@@ -1221,119 +1287,21 @@ export default function StudentDashboard() {
                   handleInitializePayment("INSTALLMENT", 0, "");
                 }
               }}
+              onShowUnifiedPayment={handleShowUnifiedPayment}
               onLessonClick={(lessonId) => {
                 // Navigate to lesson viewer or open lesson modal
                 console.log("View lesson:", lessonId);
               }}
               onAssignmentClick={() => {
-                setActiveTab("assessments");
-                setAssessmentFilter("ASSIGNMENTS");
+                // Now handled contextually within the course view
+                toast.info("Assignments are now managed within each individual course");
               }}
               onAssessmentClick={() => {
-                setActiveTab("assessments");
-                setAssessmentFilter("QUIZZES");
+                // Now handled contextually within the course view
+                toast.info("Assessments are now managed within each individual course");
               }}
               formatCurrency={formatCurrency}
             />
-          )}
-
-          {/* Assessments Tab (Merged Assessments & Deadlines) */}
-          {activeTab === "assessments" && (
-            <div className="space-y-6">
-              {/* Sub-navigation for Assessments */}
-              <div className="flex space-x-4 border-b border-gray-200 pb-2">
-                <button
-                  className={`pb-2 px-1 ${
-                    assessmentFilter === "ALL"
-                      ? "border-b-2 border-brand-primary text-brand-primary font-medium"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                  onClick={() => setAssessmentFilter("ALL")}
-                >
-                  Overview
-                </button>
-                <button
-                  className={`pb-2 px-1 ${
-                    assessmentFilter === "ASSIGNMENTS"
-                      ? "border-b-2 border-brand-primary text-brand-primary font-medium"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                  onClick={() => setAssessmentFilter("ASSIGNMENTS")}
-                >
-                  Assignments
-                </button>
-                <button
-                  className={`pb-2 px-1 ${
-                    assessmentFilter === "QUIZZES"
-                      ? "border-b-2 border-brand-primary text-brand-primary font-medium"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                  onClick={() => setAssessmentFilter("QUIZZES")}
-                >
-                  Quizzes & Exams
-                </button>
-              </div>
-
-              {/* Overview View */}
-              {assessmentFilter === "ALL" && (
-                <div className="space-y-8">
-                  <DeadlinesAndReminders
-                    deadlines={upcomingDeadlines}
-                    onSetReminder={handleSetReminder}
-                    onViewDeadline={handleViewDeadline}
-                    onAddReminder={handleAddReminder}
-                  />
-
-                  <div className="grid grid-cols-1 gap-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Recent Assignments</CardTitle>
-                        <CardDescription>
-                          Your latest assignment tasks
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <AssignmentSubmissionPortal userId={user?.id || ""} />
-                      </CardContent>
-                    </Card>
-
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Upcoming Quizzes</CardTitle>
-                        <CardDescription>
-                          Scheduled quizzes and exams
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <StudentAssessments
-                          assessments={assessments}
-                          submissions={assessmentSubmissions}
-                          onTakeAssessment={handleTakeAssessment}
-                          onViewSubmission={handleViewSubmission}
-                          onViewAssessmentDetails={handleViewAssessmentDetails}
-                        />
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-              )}
-
-              {/* Assignments View */}
-              {assessmentFilter === "ASSIGNMENTS" && (
-                <AssignmentSubmissionPortal userId={user?.id || ""} />
-              )}
-
-              {/* Quizzes View */}
-              {assessmentFilter === "QUIZZES" && (
-                <StudentAssessments
-                  assessments={assessments}
-                  submissions={assessmentSubmissions}
-                  onTakeAssessment={handleTakeAssessment}
-                  onViewSubmission={handleViewSubmission}
-                  onViewAssessmentDetails={handleViewAssessmentDetails}
-                />
-              )}
-            </div>
           )}
 
           {/* Achievements Tab */}
@@ -1367,7 +1335,10 @@ export default function StudentDashboard() {
                   <h2 className="text-2xl font-bold text-gray-800">My Payments</h2>
                   <p className="text-gray-500">View your transaction history and payment status</p>
                 </div>
-                <Button onClick={() => setActiveTab("applications")} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={() => handleShowUnifiedPayment({
+                  amount: 0,
+                  type: "TUITION"
+                })} className="bg-blue-600 hover:bg-blue-700">
                   <CreditCard className="w-4 h-4 mr-2" />
                   Make a Payment
                 </Button>
@@ -1376,7 +1347,7 @@ export default function StudentDashboard() {
               {/* Payment Summary */}
               {dashboardStats?.paymentSummary && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-100">
+                  <Card className="bg-green-50/50 border-green-100">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
@@ -1392,7 +1363,7 @@ export default function StudentDashboard() {
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-100">
+                  <Card className="bg-yellow-50/50 border-yellow-100">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
@@ -1473,25 +1444,13 @@ export default function StudentDashboard() {
                              {!plan.isFullyPaid && (
                                <Button 
                                 className="w-full mt-2" 
-                                onClick={async () => {
-                                  try {
-                                    const response = await fetch("/api/payments/installment/initialize", {
-                                      method: "POST",
-                                      credentials: "include",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ enrollmentId: plan.enrollmentId }),
-                                    });
-                                    const result = await response.json();
-                                    if (result.success && result.data.authorizationUrl) {
-                                      window.location.href = result.data.authorizationUrl;
-                                    } else {
-                                      alert(result.message || "Failed to initialize payment");
-                                    }
-                                  } catch (error) {
-                                    console.error("Payment initialization error:", error);
-                                    alert("An error occurred while processing payment");
-                                  }
-                                }}
+                                onClick={() => handleShowUnifiedPayment({
+                                  amount: plan.remainingBalance,
+                                  courseId: plan.courseId,
+                                  courseName: plan.courseTitle,
+                                  applicationId: plan.enrollmentId,
+                                  type: "INSTALLMENT"
+                                })}
                                >
                                  Pay Next Installment
                                </Button>
@@ -1606,7 +1565,7 @@ export default function StudentDashboard() {
                 </Card>
               ) : (
                 <div className="grid gap-6">
-                  {applications.map((app) => (
+                  {applications.map((app: any) => (
                     <Card key={app.id} className="overflow-hidden">
                       <div className="p-6 flex flex-col md:flex-row gap-6">
                         {/* Course Info */}
@@ -1650,7 +1609,13 @@ export default function StudentDashboard() {
                                   </div>
                                   <Button 
                                     className="w-full bg-green-600 hover:bg-green-700" 
-                                    onClick={() => handleInitializePayment("TUITION", app.course.price, app.course.id)}
+                                    onClick={() => handleShowUnifiedPayment({
+                                      amount: app.course.price,
+                                      courseId: app.course.id,
+                                      courseName: app.course.title,
+                                      applicationId: app.id,
+                                      type: "TUITION"
+                                    })}
                                   >
                                     Pay Tuition ({formatCurrency(app.course.price)})
                                   </Button>
@@ -1661,7 +1626,13 @@ export default function StudentDashboard() {
                                       <Button 
                                         className="w-full bg-blue-600 hover:bg-blue-700" 
                                         variant="outline"
-                                        onClick={() => handleInitializePayment("INSTALLMENT", 0, app.course.id)}
+                                        onClick={() => handleShowUnifiedPayment({
+                                          amount: app.course.price,
+                                          courseId: app.course.id,
+                                          courseName: app.course.title,
+                                          applicationId: app.id,
+                                          type: "INSTALLMENT"
+                                        })}
                                       >
                                         Pay in Installments
                                       </Button>
@@ -1743,6 +1714,34 @@ export default function StudentDashboard() {
         onJoinClass={(id) => console.log("Join class", id)}
         onAddToCalendar={(id) => console.log("Add to calendar", id)}
       />
+
+      {/* Unified Payment Flow Modal */}
+      {showUnifiedPayment && paymentContext && (
+        <Dialog open={showUnifiedPayment} onOpenChange={setShowUnifiedPayment}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Payment Options</DialogTitle>
+            </DialogHeader>
+            <UnifiedPaymentFlow
+              amount={paymentContext.amount}
+              courseId={paymentContext.courseId}
+              courseName={paymentContext.courseName}
+              applicationId={paymentContext.applicationId}
+              type={paymentContext.type}
+              onSuccess={(paymentData) => {
+                setShowUnifiedPayment(false);
+                setPaymentContext(null);
+                // Refresh payment data
+                fetchDashboardData();
+              }}
+              onCancel={() => {
+                setShowUnifiedPayment(false);
+                setPaymentContext(null);
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </StudentLayout>
   );
 }

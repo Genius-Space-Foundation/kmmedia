@@ -16,22 +16,24 @@ interface PersonalizedOverviewProps {
   user: any;
   enrollments: any[];
   upcomingDeadlines: any[];
-  achievements: any[];
   onViewDeadlines: () => void;
-  onViewAchievements: () => void;
   onViewAssessmentDetails?: (assessment: any) => void;
   onViewClassDetails?: (classSession: any) => void;
+  attendanceData?: any;
+  onCheckIn?: (courseId: string, notes?: string) => Promise<void>;
+  onViewAttendance?: () => void;
 }
 
 export default function PersonalizedOverview({
   user,
   enrollments,
   upcomingDeadlines,
-  achievements,
   onViewDeadlines,
-  onViewAchievements,
   onViewAssessmentDetails,
   onViewClassDetails,
+  attendanceData,
+  onCheckIn,
+  onViewAttendance,
 }: PersonalizedOverviewProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -119,9 +121,13 @@ export default function PersonalizedOverview({
         </div>
         <div className="lg:col-span-1">
           <AttendanceTracker 
-            attendanceRate={0} 
-            totalClasses={0} 
-            attendedClasses={0} 
+            attendanceRate={attendanceData?.overallRate || 0} 
+            totalClasses={attendanceData?.summary?.[0]?.totalLessons || 0} 
+            attendedClasses={attendanceData?.summary?.[0]?.completedLessons || 0} 
+            history={attendanceData?.records || []}
+            enrolledCourses={Array.from(new Map((enrollments || []).filter(e => e?.course?.id && e.status === 'ACTIVE').map(e => [e.course.id, e])).values()).map((e: any) => ({ id: e.course.id, title: e.course?.title || "Unknown" }))}
+            onCheckIn={onCheckIn}
+            onViewFullReport={onViewAttendance}
           />
         </div>
 
@@ -139,7 +145,7 @@ export default function PersonalizedOverview({
 
         {/* Row 3: Grades */}
         <div className="lg:col-span-3">
-          <RecentGradesWidget enrollments={enrollments} />
+          <RecentGradesWidget />
         </div>
       </div>
     </div>

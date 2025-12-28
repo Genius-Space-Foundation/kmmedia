@@ -63,58 +63,81 @@ async function createApplication(req: AuthenticatedRequest) {
       );
     }
 
-    // ONE COURSE PER COHORT: Check if user has any application/enrollment in the same cohort
-    if (course.cohort) {
-      const existingInCohort = await prisma.application.findFirst({
+    // DEADLINE ENFORCEMENT: Check if enrollment deadline has passed
+    if (course.enrollmentDeadline && new Date() > new Date(course.enrollmentDeadline)) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: `Enrollment for this cohort closed on ${new Date(course.enrollmentDeadline).toLocaleDateString()}.` 
+        },
+        { status: 400 }
+      );
+    }
+
+    // PROFESSIONAL COHORT ENFORCEMENT (6-Month Cycle)
+    // If course has a startDate, check for any overlapping enrollment/application in a 6-month window
+    if (course.startDate) {
+      const cohortStart = new Date(course.startDate);
+      // We define the cycle as 6 months from the start date
+      const cohortEnd = course.endDate ? new Date(course.endDate) : new Date(cohortStart.getTime() + 180 * 24 * 60 * 60 * 1000);
+
+      // Check for overlapping applications
+      const overlappingApplication = await prisma.application.findFirst({
         where: {
           userId,
+          status: { in: ["PENDING", "APPROVED"] },
           course: {
-            cohort: course.cohort,
-          },
+            OR: [
+              {
+                // New course starts during an existing course's window
+                startDate: { lte: cohortStart },
+                endDate: { gte: cohortStart }
+              },
+              {
+                // Existing course starts during this new course's window
+                startDate: { gte: cohortStart, lte: cohortEnd }
+              }
+            ]
+          }
         },
-        include: {
-          course: {
-            select: {
-              title: true,
-              cohort: true,
-            },
-          },
-        },
+        include: { course: true }
       });
 
-      if (existingInCohort) {
+      if (overlappingApplication) {
         return NextResponse.json(
           {
             success: false,
-            message: `You already have an application for "${existingInCohort.course.title}" in the ${course.cohort} cohort. Only one course per cohort is allowed.`,
+            message: `You already have an active application for "${overlappingApplication.course.title}" which runs during this period. Students can only enroll in one course per 6-month cohort cycle.`,
           },
           { status: 400 }
         );
       }
 
-      // Also check enrollments
-      const existingEnrollmentInCohort = await prisma.enrollment.findFirst({
+      // Check for overlapping enrollments
+      const overlappingEnrollment = await prisma.enrollment.findFirst({
         where: {
           userId,
+          status: "ACTIVE",
           course: {
-            cohort: course.cohort,
-          },
+            OR: [
+              {
+                startDate: { lte: cohortStart },
+                endDate: { gte: cohortStart }
+              },
+              {
+                startDate: { gte: cohortStart, lte: cohortEnd }
+              }
+            ]
+          }
         },
-        include: {
-          course: {
-            select: {
-              title: true,
-              cohort: true,
-            },
-          },
-        },
+        include: { course: true }
       });
 
-      if (existingEnrollmentInCohort) {
+      if (overlappingEnrollment) {
         return NextResponse.json(
           {
             success: false,
-            message: `You are already enrolled in "${existingEnrollmentInCohort.course.title}" for the ${course.cohort} cohort. Only one course per cohort is allowed.`,
+            message: `You are currently enrolled in "${overlappingEnrollment.course.title}" which runs during this period. Students can only enroll in one course per 6-month cohort cycle.`,
           },
           { status: 400 }
         );

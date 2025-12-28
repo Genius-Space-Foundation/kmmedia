@@ -225,7 +225,7 @@ export default function CourseRecommendationEngine({
             {filteredRecommendations.map((recommendation) => (
               <div
                 key={recommendation.courseId}
-                className="relative bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+                className="relative bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
               >
                 {/* Dismiss Button */}
                 <Button
@@ -313,7 +313,7 @@ export default function CourseRecommendationEngine({
                 {/* Action Button */}
                 <Button
                   onClick={() => onApplyCourse(recommendation.courseId)}
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                 >
                   Apply Now
                 </Button>

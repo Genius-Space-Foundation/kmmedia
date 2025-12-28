@@ -127,7 +127,7 @@ function CourseCard({ course, onApply }: { course: Course; onApply: (id: string)
   return (
     <Card className="border-0 shadow-md hover:shadow-xl transition-all duration-300 rounded-xl overflow-hidden group h-full flex flex-col">
       {/* Course Image/Icon */}
-      <div className="h-48 bg-gradient-to-br from-blue-50 to-indigo-50 relative overflow-hidden">
+      <div className="h-48 bg-neutral-100 relative overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center text-6xl group-hover:scale-110 transition-transform duration-500">
           📚
         </div>

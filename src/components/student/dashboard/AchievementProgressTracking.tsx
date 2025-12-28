@@ -76,15 +76,15 @@ export default function AchievementProgressTracking({
   const getRarityColor = (rarity: string) => {
     switch (rarity) {
       case "common":
-        return "from-gray-400 to-gray-500";
+        return "bg-gray-500";
       case "rare":
-        return "from-blue-400 to-blue-600";
+        return "bg-blue-600";
       case "epic":
-        return "from-purple-400 to-purple-600";
+        return "bg-purple-600";
       case "legendary":
-        return "from-yellow-400 to-orange-500";
+        return "bg-yellow-600";
       default:
-        return "from-gray-400 to-gray-500";
+        return "bg-gray-500";
     }
   };
 
@@ -148,11 +148,11 @@ export default function AchievementProgressTracking({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="bg-gradient-to-r from-purple-50 via-pink-50 to-yellow-50 border-0 shadow-lg">
+      <Card className="bg-purple-50 border-0 shadow-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
                 <Trophy className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -252,7 +252,7 @@ export default function AchievementProgressTracking({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-20 h-20 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-white text-2xl font-bold">
                   {learningStreak.current}
                 </span>
@@ -302,7 +302,7 @@ export default function AchievementProgressTracking({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-white text-lg font-bold">
                   {Math.round(
                     (learningStats.weeklyGoal.current /
@@ -354,7 +354,7 @@ export default function AchievementProgressTracking({
               {recentAchievements.map((achievement) => (
                 <div
                   key={achievement.id}
-                  className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-100 hover:shadow-md transition-all duration-300 cursor-pointer"
+                  className="p-4 bg-yellow-50 rounded-lg border border-yellow-100 hover:shadow-md transition-all duration-300 cursor-pointer"
                   onClick={() => onViewAchievement(achievement.id)}
                 >
                   <div className="text-center">
@@ -428,7 +428,7 @@ export default function AchievementProgressTracking({
                 >
                   <div className="flex items-start space-x-3">
                     <div
-                      className={`w-12 h-12 bg-gradient-to-br ${getRarityColor(
+                      className={`w-12 h-12 ${getRarityColor(
                         achievement.rarity
                       )} rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}
                     >

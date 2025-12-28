@@ -21,6 +21,7 @@ interface ModernHeaderProps {
   onSettingsClick: () => void;
   onLogout: () => void;
   notificationCount?: number;
+  additionalActions?: React.ReactNode;
 }
 
 export function ModernHeader({
@@ -31,6 +32,7 @@ export function ModernHeader({
   onSettingsClick,
   onLogout,
   notificationCount = 0,
+  additionalActions,
 }: ModernHeaderProps) {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-sm">
@@ -54,6 +56,12 @@ export function ModernHeader({
                 className="pl-12 pr-4 py-3 w-80 border-2 border-gray-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-gray-50 hover:bg-white"
               />
             </div>
+
+            {additionalActions && (
+              <div className="hidden md:flex items-center">
+                {additionalActions}
+              </div>
+            )}
 
             {/* Notifications */}
             <Button

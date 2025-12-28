@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -137,11 +137,11 @@ export default function DeadlinesAndReminders({
   return (
     <div className="space-y-6">
       {/* Header with Stats */}
-      <Card className="bg-gradient-to-r from-orange-50 via-red-50 to-pink-50 border-0 shadow-lg">
+      <Card className="bg-orange-50 border-0 shadow-lg">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center">
                 <Calendar className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -154,7 +154,7 @@ export default function DeadlinesAndReminders({
             <Button
               onClick={onAddReminder}
               size="sm"
-              className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700"
+              className="bg-orange-600 hover:bg-orange-700"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Reminder
@@ -352,7 +352,7 @@ export default function DeadlinesAndReminders({
                       <Button
                         onClick={() => onViewDeadline(deadline.id)}
                         size="sm"
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                        className="bg-blue-600 hover:bg-blue-700"
                       >
                         View Details
                       </Button>

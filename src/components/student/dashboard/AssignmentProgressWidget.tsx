@@ -312,7 +312,7 @@ export default function AssignmentProgressWidget() {
 
         {/* Weekly Goal */}
         {progressStats?.weeklyGoal && (
-          <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+          <div className="mt-4 p-3 bg-blue-50/50 rounded-lg border border-blue-100">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-700">
                 Weekly Goal

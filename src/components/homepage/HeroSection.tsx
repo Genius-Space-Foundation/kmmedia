@@ -64,7 +64,7 @@ export default function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="mt-10 flex flex-col sm:flex-row gap-4">
-            <Link href={user ? "/dashboards" : "/auth/register"}>
+            <Link href={user ? `/dashboards/${user.role.toLowerCase()}` : "/auth/register"}>
               <Button className="w-full sm:w-auto flex items-center justify-center px-8 py-4 text-base font-semibold rounded-lg text-white bg-brand-primary hover:bg-brand-secondary shadow-lg hover:shadow-xl transition-all duration-300">
                 {user ? "Go to Dashboard" : "Get Started"}
                 <ArrowRight className="ml-2 h-5 w-5" />

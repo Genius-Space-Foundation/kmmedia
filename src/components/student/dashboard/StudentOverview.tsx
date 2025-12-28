@@ -158,7 +158,7 @@ export default function StudentOverview({
           </Card>
 
           {/* Learning Streak */}
-          <Card className="border-0 shadow-lg rounded-xl overflow-hidden bg-gradient-to-br from-orange-50 to-yellow-50">
+          <Card className="border-0 shadow-lg rounded-xl overflow-hidden bg-brand-primary/5">
             <CardContent className="p-6">
               <div className="text-center">
                 <div className="text-5xl mb-3">🔥</div>

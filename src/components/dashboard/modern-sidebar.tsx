@@ -11,6 +11,7 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   badge?: number | null;
+  className?: string;
 }
 
 interface ModernSidebarProps {
@@ -92,7 +93,8 @@ export function ModernSidebar({
                 "w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all group font-medium",
                 isActive
                   ? "bg-brand-primary text-white shadow-sm"
-                  : "text-neutral-700 hover:bg-neutral-100"
+                  : "text-neutral-700 hover:bg-neutral-100",
+                item.className
               )}
             >
               <Icon

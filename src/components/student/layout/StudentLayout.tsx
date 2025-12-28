@@ -9,15 +9,14 @@ import { ModernHeader } from "@/components/dashboard/modern-header";
 import {
   LayoutDashboard,
   BookOpen,
-  FileText,
   CreditCard,
   MessageSquare,
   Settings,
   Award,
-  Calendar,
-  Target,
   User,
 } from "lucide-react";
+import { TourButton } from "@/components/tours/TourButton";
+import { StudentDashboardTour } from "@/components/tours/StudentDashboardTour";
 
 interface StudentLayoutProps {
   children: React.ReactNode;
@@ -79,18 +78,17 @@ export default function StudentLayout({
   };
 
   const navigationItems = [
-    { id: "overview", label: "Overview", icon: LayoutDashboard, badge: null },
-    { id: "courses", label: "My Course", icon: BookOpen, badge: null },
-    { id: "assessments", label: "Assessments", icon: FileText, badge: null },
-    { id: "achievements", label: "Achievements", icon: Award, badge: null },
-    { id: "payments", label: "Payments", icon: CreditCard, badge: null },
+    { id: "overview", label: "Overview", icon: LayoutDashboard, badge: null, className: "overview-tab" },
+    { id: "courses", label: "My Courses", icon: BookOpen, badge: null, className: "courses-tab" },
+    { id: "attendance", label: "Attendance", icon: Award, badge: null, className: "attendance-tab" },
+    { id: "payments", label: "Payments", icon: CreditCard, badge: null, className: "payments-tab" },
     {
       id: "notifications",
       label: "Notifications",
       icon: MessageSquare,
       badge: null,
     },
-    { id: "profile", label: "My Profile", icon: User, badge: null },
+    { id: "profile", label: "My Profile", icon: User, badge: null, className: "profile-menu" },
     { id: "settings", label: "Settings", icon: Settings, badge: null },
   ];
 
@@ -125,7 +123,13 @@ export default function StudentLayout({
           onSettingsClick={() => onTabChange("settings")}
           onLogout={handleLogout}
           notificationCount={0}
+          additionalActions={
+            <TourButton tourName="student-dashboard" />
+          }
         />
+
+        {/* Tour Component */}
+        <StudentDashboardTour />
 
         {/* Page Content */}
         <main className={`px-8 py-8 ${className}`}>{children}</main>

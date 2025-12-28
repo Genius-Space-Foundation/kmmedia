@@ -1,8 +1,12 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, XCircle, AlertTriangle, Clock } from "lucide-react";
+import { CheckCircle, XCircle, AlertTriangle, Clock, Send, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 interface AttendanceRecord {
   id: string;
@@ -17,6 +21,9 @@ interface AttendanceTrackerProps {
   totalClasses: number;
   attendedClasses: number;
   history?: AttendanceRecord[];
+  enrolledCourses?: { id: string; title: string }[];
+  onCheckIn?: (courseId: string, notes?: string) => Promise<void>;
+  onViewFullReport?: () => void;
 }
 
 export default function AttendanceTracker({
@@ -24,7 +31,38 @@ export default function AttendanceTracker({
   totalClasses = 0,
   attendedClasses = 0,
   history = [],
+  enrolledCourses = [],
+  onCheckIn,
+  onViewFullReport,
 }: AttendanceTrackerProps) {
+  const [selectedCourseId, setSelectedCourseId] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notes, setNotes] = useState("");
+
+  // Auto-select course if only one is available
+  useEffect(() => {
+    if (enrolledCourses.length === 1 && !selectedCourseId) {
+      setSelectedCourseId(enrolledCourses[0].id);
+    }
+  }, [enrolledCourses, selectedCourseId]);
+
+
+  const handleCheckIn = async () => {
+    const courseToCheckIn = selectedCourseId || (enrolledCourses.length === 1 ? enrolledCourses[0].id : "");
+    if (!courseToCheckIn || !onCheckIn) return;
+    setIsSubmitting(true);
+    try {
+      await onCheckIn(courseToCheckIn, notes);
+      setNotes("");
+      if (enrolledCourses.length > 1) {
+        setSelectedCourseId("");
+      }
+    } catch (error) {
+      console.error("Check-in failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   const displayHistory: AttendanceRecord[] = history;
 
@@ -59,27 +97,96 @@ export default function AttendanceTracker({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 space-y-6">
-        {/* Overall Stats */}
+        {/* Attendance Statistics */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-neutral-600">
-            <span>Overall Attendance</span>
-            <span>{attendedClasses}/{totalClasses} Classes</span>
+            <span>Overall Attendance (Lessons)</span>
+            <span>{attendedClasses}/{totalClasses} Completed</span>
           </div>
           <Progress value={attendanceRate} className="h-2" />
-          {attendanceRate < 80 && (
-            <div className="flex items-start gap-2 mt-2 text-xs text-red-600 bg-red-50 p-2 rounded-lg">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              <span>Warning: Your attendance is below 80%. Please contact your instructor.</span>
-            </div>
-          )}
+        </div>
+
+        {/* Check-in Section */}
+        <div className="bg-brand-primary/5 p-4 rounded-xl border border-brand-primary/10 space-y-3">
+          <div className="flex items-center gap-2 text-brand-primary mb-1">
+            <ShieldCheck className="h-4 w-4" />
+            <span className="text-sm font-bold uppercase tracking-wider">
+              {enrolledCourses.length <= 1 ? "Daily Check-in" : "Quick Check-in"}
+            </span>
+          </div>
+          
+          <div className="space-y-3">
+            {enrolledCourses.length > 1 && (
+              <Select value={selectedCourseId} onValueChange={setSelectedCourseId}>
+                <SelectTrigger className="w-full bg-white">
+                  <SelectValue placeholder="Select a course..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {(enrolledCourses || []).filter(c => c && c.id).map((course, index) => (
+                    <SelectItem key={`${course.id}-${index}`} value={course.id}>
+                      {course.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {enrolledCourses.length === 1 && (
+              <div className="text-sm font-medium text-neutral-700 bg-white p-2 rounded border border-neutral-100">
+                Course: <span className="text-brand-primary">{enrolledCourses[0].title}</span>
+              </div>
+            )}
+
+            {enrolledCourses.length === 0 && (
+              <div className="text-xs text-neutral-500 italic">
+                No active enrollments for check-in.
+              </div>
+            )}
+
+            {enrolledCourses.length > 0 && (
+              <div className="space-y-4 pt-2">
+                <div className="relative group">
+                  <Input 
+                    placeholder="Add a note (optional)..." 
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="bg-white border-neutral-200 focus:ring-brand-primary h-11 pl-10"
+                  />
+                  <Send className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-focus-within:text-brand-primary transition-colors" />
+                </div>
+                
+                <Button 
+                  onClick={handleCheckIn} 
+                  className="w-full h-12 bg-brand-primary hover:bg-brand-secondary text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all duration-300 active:scale-[0.98] group disabled:opacity-50 disabled:grayscale border-b-4 border-brand-secondary active:border-b-0"
+                  disabled={(!selectedCourseId && enrolledCourses.length !== 1) || isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span className="animate-pulse">Verifying Identity...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center gap-2">
+                      <CheckCircle className="h-5 w-5 group-hover:scale-125 transition-transform duration-300" />
+                      <span>{enrolledCourses.length === 1 ? "Confirm Daily Presence" : "Mark Attendance Now"}</span>
+                    </div>
+                  )}
+                </Button>
+                
+                <p className="text-[10px] text-center text-neutral-400 uppercase tracking-widest font-medium">
+                  Secure Identity verification enabled
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Recent History */}
         <div>
           <h3 className="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-3">Recent History</h3>
           <div className="space-y-3">
-            {displayHistory.map((record) => (
-              <div key={record.id} className="flex items-center justify-between p-3 rounded-lg border border-neutral-100 hover:bg-neutral-50 transition-colors">
+            {(displayHistory || []).map((record, index) => (
+              <div key={record.id || index} className="flex items-center justify-between p-3 rounded-lg border border-neutral-100 hover:bg-neutral-50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-full ${getStatusColor(record.status)}`}>
                     {getStatusIcon(record.status)}
@@ -98,7 +205,10 @@ export default function AttendanceTracker({
         </div>
 
         <div className="pt-2">
-          <button className="w-full py-2 text-sm text-brand-primary font-medium hover:text-brand-secondary transition-colors">
+          <button 
+            onClick={onViewFullReport}
+            className="w-full py-2 text-sm text-brand-primary font-medium hover:text-brand-secondary transition-colors"
+          >
             View Full Attendance Report
           </button>
         </div>

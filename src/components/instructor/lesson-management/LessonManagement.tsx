@@ -62,7 +62,7 @@ interface Lesson {
   id: string;
   title: string;
   description: string;
-  type: "LESSON" | "ASSIGNMENT" | "QUIZ" | "PROJECT";
+  type: "VIDEO" | "TEXT" | "QUIZ" | "ASSIGNMENT" | "LIVE_SESSION";
   duration: number; // in minutes
   order: number;
   isRequired: boolean;
@@ -103,23 +103,29 @@ interface Course {
 
 const LESSON_TYPES = [
   {
-    value: "LESSON",
-    label: "Lesson",
+    value: "VIDEO",
+    label: "Video Lesson",
+    icon: Video,
+    description: "Educational video content",
+  },
+  {
+    value: "TEXT",
+    label: "Text Lesson",
     icon: BookOpen,
-    description: "Educational content",
+    description: "Educational text content",
   },
   {
     value: "ASSIGNMENT",
     label: "Assignment",
     icon: FileText,
-    description: "Student work",
+    description: "Student work to be graded",
   },
   { value: "QUIZ", label: "Quiz", icon: Target, description: "Assessment" },
   {
-    value: "PROJECT",
-    label: "Project",
+    value: "LIVE_SESSION",
+    label: "Live Session",
     icon: Users,
-    description: "Group work",
+    description: "Real-time interactive session",
   },
 ];
 
@@ -145,7 +151,7 @@ export default function LessonManagement() {
   const [newLesson, setNewLesson] = useState({
     title: "",
     description: "",
-    type: "LESSON" as const,
+    type: "VIDEO" as const,
     duration: 30,
     isRequired: true,
     content: "",
@@ -390,7 +396,7 @@ export default function LessonManagement() {
     setNewLesson({
       title: "",
       description: "",
-      type: "LESSON",
+      type: "VIDEO",
       duration: 30,
       isRequired: true,
       content: "",
@@ -789,265 +795,49 @@ export default function LessonManagement() {
             <TabsTrigger value="resources">Resources</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="basic" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Lesson Title *</Label>
-                <Input
-                  id="title"
-                  value={newLesson.title}
-                  onChange={(e) =>
-                    setNewLesson((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  placeholder="Enter lesson title"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="type">Lesson Type</Label>
-                <Select
-                  value={newLesson.type}
-                  onValueChange={(value: any) =>
-                    setNewLesson((prev) => ({ ...prev, type: value }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LESSON_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        <div className="flex items-center gap-2">
-                          <type.icon className="w-4 h-4" />
-                          <div>
-                            <div className="font-medium">{type.label}</div>
-                            <div className="text-xs text-gray-500">
-                              {type.description}
-                            </div>
-                          </div>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={newLesson.description}
-                onChange={(e) =>
-                  setNewLesson((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder="Describe what students will learn in this lesson"
-                rows={3}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="duration">Duration (minutes)</Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  value={newLesson.duration}
-                  onChange={(e) =>
-                    setNewLesson((prev) => ({
-                      ...prev,
-                      duration: parseInt(e.target.value) || 0,
-                    }))
-                  }
-                  placeholder="30"
-                />
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isRequired"
-                  checked={newLesson.isRequired}
-                  onCheckedChange={(checked) =>
-                    setNewLesson((prev) => ({
-                      ...prev,
-                      isRequired: checked as boolean,
-                    }))
-                  }
-                />
-                <Label htmlFor="isRequired">Required lesson</Label>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="content" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="content">Lesson Content</Label>
-              <Textarea
-                id="content"
-                value={newLesson.content}
-                onChange={(e) =>
-                  setNewLesson((prev) => ({ ...prev, content: e.target.value }))
-                }
-                placeholder="Write your lesson content here..."
-                rows={10}
-              />
-              <p className="text-sm text-gray-500">
-                You can use markdown formatting for rich text content
-              </p>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="objectives" className="space-y-4">
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium mb-2">Learning Objectives</h4>
-                <div className="space-y-2">
-                  {newLesson.objectives.map((objective, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 p-2 bg-blue-50 rounded"
-                    >
-                      <Target className="w-4 h-4 text-blue-500" />
-                      <span className="flex-1 text-sm">{objective}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeObjective(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    value={newObjective}
-                    onChange={(e) => setNewObjective(e.target.value)}
-                    placeholder="Add learning objective"
-                    onKeyPress={(e) => e.key === "Enter" && addObjective()}
-                  />
-                  <Button
-                    onClick={addObjective}
-                    disabled={!newObjective.trim()}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-2">Prerequisites</h4>
-                <div className="space-y-2">
-                  {newLesson.prerequisites.map((prerequisite, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center gap-2 p-2 bg-gray-50 rounded"
-                    >
-                      <BookOpen className="w-4 h-4 text-gray-500" />
-                      <span className="flex-1 text-sm">{prerequisite}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removePrerequisite(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex gap-2 mt-2">
-                  <Input
-                    value={newPrerequisite}
-                    onChange={(e) => setNewPrerequisite(e.target.value)}
-                    placeholder="Add prerequisite"
-                    onKeyPress={(e) => e.key === "Enter" && addPrerequisite()}
-                  />
-                  <Button
-                    onClick={addPrerequisite}
-                    disabled={!newPrerequisite.trim()}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="resources" className="space-y-4">
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium mb-2">Lesson Resources</h4>
-                <div className="space-y-2">
-                  {newLesson.resources.map((resource) => {
-                    const IconComponent = getResourceTypeIcon(resource.type);
-                    return (
-                      <div
-                        key={resource.id}
-                        className="flex items-center gap-2 p-2 bg-gray-50 rounded"
-                      >
-                        <IconComponent className="w-4 h-4 text-gray-500" />
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{resource.name}</p>
-                          {resource.description && (
-                            <p className="text-xs text-gray-600">
-                              {resource.description}
-                            </p>
-                          )}
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeResource(resource.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <h5 className="font-medium mb-2">Add Resource</h5>
+          <TabsContent value="basic" className="mt-6">
+            <Card className="border-2">
+              <CardHeader className="bg-gray-50">
+                <CardTitle className="text-lg">Basic Information</CardTitle>
+                <CardDescription>Configure the essential details for this lesson</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="resourceName">Resource Name</Label>
+                    <Label htmlFor="title" className="text-sm font-semibold">Lesson Title *</Label>
                     <Input
-                      id="resourceName"
-                      value={newResource.name}
+                      id="title"
+                      value={newLesson.title}
                       onChange={(e) =>
-                        setNewResource((prev) => ({
-                          ...prev,
-                          name: e.target.value,
-                        }))
+                        setNewLesson((prev) => ({ ...prev, title: e.target.value }))
                       }
-                      placeholder="Enter resource name"
+                      placeholder="Enter lesson title"
+                      className="border-2"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="resourceType">Type</Label>
+                    <Label htmlFor="type" className="text-sm font-semibold">Lesson Type</Label>
                     <Select
-                      value={newResource.type}
+                      value={newLesson.type}
                       onValueChange={(value: any) =>
-                        setNewResource((prev) => ({ ...prev, type: value }))
+                        setNewLesson((prev) => ({ ...prev, type: value }))
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="border-2">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {RESOURCE_TYPES.map((type) => (
+                        {LESSON_TYPES.map((type) => (
                           <SelectItem key={type.value} value={type.value}>
                             <div className="flex items-center gap-2">
                               <type.icon className="w-4 h-4" />
-                              {type.label}
+                              <div>
+                                <div className="font-medium">{type.label}</div>
+                                <div className="text-xs text-gray-500">
+                                  {type.description}
+                                </div>
+                              </div>
                             </div>
                           </SelectItem>
                         ))}
@@ -1056,47 +846,333 @@ export default function LessonManagement() {
                   </div>
                 </div>
 
-                <div className="space-y-2 mt-4">
-                  <Label htmlFor="resourceUrl">URL</Label>
-                  <Input
-                    id="resourceUrl"
-                    value={newResource.url}
-                    onChange={(e) =>
-                      setNewResource((prev) => ({
-                        ...prev,
-                        url: e.target.value,
-                      }))
-                    }
-                    placeholder="https://example.com"
-                  />
-                </div>
-
-                <div className="space-y-2 mt-4">
-                  <Label htmlFor="resourceDescription">Description</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="description" className="text-sm font-semibold">Description</Label>
                   <Textarea
-                    id="resourceDescription"
-                    value={newResource.description}
+                    id="description"
+                    value={newLesson.description}
                     onChange={(e) =>
-                      setNewResource((prev) => ({
+                      setNewLesson((prev) => ({
                         ...prev,
                         description: e.target.value,
                       }))
                     }
-                    placeholder="Describe this resource"
-                    rows={2}
+                    placeholder="Describe what students will learn in this lesson"
+                    rows={3}
+                    className="border-2"
                   />
                 </div>
 
-                <Button
-                  onClick={addResource}
-                  disabled={!newResource.name.trim() || !newResource.url.trim()}
-                  className="mt-4"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Resource
-                </Button>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="duration" className="text-sm font-semibold">Duration (minutes)</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      value={newLesson.duration}
+                      onChange={(e) =>
+                        setNewLesson((prev) => ({
+                          ...prev,
+                          duration: parseInt(e.target.value) || 0,
+                        }))
+                      }
+                      placeholder="30"
+                      className="border-2"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-8">
+                    <Checkbox
+                      id="isRequired"
+                      checked={newLesson.isRequired}
+                      onCheckedChange={(checked) =>
+                        setNewLesson((prev) => ({
+                          ...prev,
+                          isRequired: checked as boolean,
+                        }))
+                      }
+                    />
+                    <Label htmlFor="isRequired" className="text-sm font-semibold">Mark as required lesson</Label>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="content" className="mt-6">
+            <Card className="border-2">
+              <CardHeader className="bg-gray-50">
+                <CardTitle className="text-lg">Lesson Content</CardTitle>
+                <CardDescription>Write the main content that students will learn</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="content" className="text-sm font-semibold">Content Body</Label>
+                  <Textarea
+                    id="content"
+                    value={newLesson.content}
+                    onChange={(e) =>
+                      setNewLesson((prev) => ({ ...prev, content: e.target.value }))
+                    }
+                    placeholder="Write your lesson content here...\n\nYou can include:\n- Key concepts\n- Examples\n- Instructions\n- Additional notes"
+                    rows={12}
+                    className="border-2 font-mono text-sm"
+                  />
+                  <p className="text-sm text-gray-500 flex items-center gap-2">
+                    <Info className="w-4 h-4" />
+                    You can use markdown formatting for rich text content
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="objectives" className="mt-6">
+            <div className="space-y-4">
+              <Card className="border-2">
+                <CardHeader className="bg-blue-50">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Target className="w-5 h-5 text-blue-600" />
+                    Learning Objectives
+                  </CardTitle>
+                  <CardDescription>Define what students will be able to do after completing this lesson</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-4">
+                  <div className="space-y-2">
+                    {newLesson.objectives.map((objective, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 p-3 bg-blue-50 border-2 border-blue-200 rounded-lg"
+                      >
+                        <Target className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                        <span className="flex-1 text-sm font-medium">{objective}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeObjective(index)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {newLesson.objectives.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">No objectives added yet</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Input
+                      value={newObjective}
+                      onChange={(e) => setNewObjective(e.target.value)}
+                      placeholder="e.g., Understand the basics of React hooks"
+                      onKeyPress={(e) => e.key === "Enter" && addObjective()}
+                      className="border-2"
+                    />
+                    <Button
+                      onClick={addObjective}
+                      disabled={!newObjective.trim()}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-2">
+                <CardHeader className="bg-gray-50">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-gray-600" />
+                    Prerequisites
+                  </CardTitle>
+                  <CardDescription>List any knowledge or skills students need before starting</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-4">
+                  <div className="space-y-2">
+                    {newLesson.prerequisites.map((prerequisite, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 p-3 bg-gray-50 border-2 border-gray-200 rounded-lg"
+                      >
+                        <BookOpen className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                        <span className="flex-1 text-sm font-medium">{prerequisite}</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removePrerequisite(index)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    {newLesson.prerequisites.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">No prerequisites added</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Input
+                      value={newPrerequisite}
+                      onChange={(e) => setNewPrerequisite(e.target.value)}
+                      placeholder="e.g., Basic JavaScript knowledge"
+                      onKeyPress={(e) => e.key === "Enter" && addPrerequisite()}
+                      className="border-2"
+                    />
+                    <Button
+                      onClick={addPrerequisite}
+                      disabled={!newPrerequisite.trim()}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
+          </TabsContent>
+
+          <TabsContent value="resources" className="mt-6">
+            <Card className="border-2">
+              <CardHeader className="bg-purple-50">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-purple-600" />
+                  Lesson Resources
+                </CardTitle>
+                <CardDescription>Add downloadable files, videos, and links for students</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-6">
+                {/* Existing Resources List */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-gray-700">Added Resources ({newLesson.resources.length})</h4>
+                  {newLesson.resources.length > 0 ? (
+                    <div className="space-y-2">
+                      {newLesson.resources.map((resource) => {
+                        const IconComponent = getResourceTypeIcon(resource.type);
+                        return (
+                          <div
+                            key={resource.id}
+                            className="flex items-center gap-3 p-3 bg-purple-50 border-2 border-purple-200 rounded-lg"
+                          >
+                            <IconComponent className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-gray-900 truncate">{resource.name}</p>
+                              {resource.description && (
+                                <p className="text-xs text-gray-600 truncate">
+                                  {resource.description}
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-500 mt-1 truncate">{resource.url}</p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeResource(resource.id)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 flex-shrink-0"
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed">
+                      No resources added yet. Add your first resource below.
+                    </p>
+                  )}
+                </div>
+
+                {/* Add New Resource Form */}
+                <div className="border-t-2 pt-6 space-y-4">
+                  <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add New Resource
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="resourceName" className="text-sm font-semibold">Resource Name *</Label>
+                      <Input
+                        id="resourceName"
+                        value={newResource.name}
+                        onChange={(e) =>
+                          setNewResource((prev) => ({
+                            ...prev,
+                            name: e.target.value,
+                          }))
+                        }
+                        placeholder="e.g., Course Syllabus PDF"
+                        className="border-2"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="resourceType" className="text-sm font-semibold">Type *</Label>
+                      <Select
+                        value={newResource.type}
+                        onValueChange={(value: any) =>
+                          setNewResource((prev) => ({ ...prev, type: value }))
+                        }
+                      >
+                        <SelectTrigger className="border-2">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {RESOURCE_TYPES.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              <div className="flex items-center gap-2">
+                                <type.icon className="w-4 h-4" />
+                                {type.label}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="resourceUrl" className="text-sm font-semibold">URL *</Label>
+                    <Input
+                      id="resourceUrl"
+                      value={newResource.url}
+                      onChange={(e) =>
+                        setNewResource((prev) => ({
+                          ...prev,
+                          url: e.target.value,
+                        }))
+                      }
+                      placeholder="https://example.com/resource.pdf"
+                      className="border-2"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="resourceDescription" className="text-sm font-semibold">Description (Optional)</Label>
+                    <Textarea
+                      id="resourceDescription"
+                      value={newResource.description}
+                      onChange={(e) =>
+                        setNewResource((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                      placeholder="Brief description of this resource"
+                      rows={2}
+                      className="border-2"
+                    />
+                  </div>
+
+                  <Button
+                    onClick={addResource}
+                    disabled={!newResource.name.trim() || !newResource.url.trim()}
+                    className="w-full bg-purple-600 hover:bg-purple-700"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Resource to Lesson
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 
@@ -1163,7 +1239,7 @@ export default function LessonManagement() {
           <Label htmlFor="editDescription">Description</Label>
           <Textarea
             id="editDescription"
-            value={editingLesson.description}
+            value={editingLesson.description ?? ""}
             onChange={(e) =>
               setEditingLesson((prev) =>
                 prev ? { ...prev, description: e.target.value } : null
@@ -1216,7 +1292,7 @@ export default function LessonManagement() {
           <Label htmlFor="editContent">Lesson Content</Label>
           <Textarea
             id="editContent"
-            value={editingLesson.content}
+            value={editingLesson.content ?? ""}
             onChange={(e) =>
               setEditingLesson((prev) =>
                 prev ? { ...prev, content: e.target.value } : null

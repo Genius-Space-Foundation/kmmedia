@@ -19,6 +19,8 @@ import AdminLayout from "@/components/admin/layout/AdminLayout";
 import EnhancedDashboard from "@/components/admin/dashboard/EnhancedDashboard";
 import MobileOptimizedTable from "@/components/admin/responsive/MobileOptimizedTable";
 import { makeAuthenticatedRequest, clearAuthTokens } from "@/lib/token-utils";
+import { TourButton } from "@/components/tours/TourButton";
+import { AdminDashboardTour } from "@/components/tours/AdminDashboardTour";
 import {
   Select,
   SelectContent,
@@ -1241,6 +1243,7 @@ export default function AdminDashboard() {
             </div>
             {user && (
               <div className="flex items-center space-x-4">
+                <TourButton tourName="admin-dashboard" />
                 {/* Notification Center */}
                 <div className="relative">
                   <Button
@@ -1455,7 +1458,7 @@ export default function AdminDashboard() {
             <TabsList className="grid w-full grid-cols-6 bg-brand-surface/80 backdrop-blur-xl border border-brand-border/50 rounded-2xl p-2 shadow-xl">
               <TabsTrigger
                 value="overview"
-                className="data-[state=active]:bg-brand-gradient-hero data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl font-semibold transition-all duration-300 hover:scale-105"
+                className="overview-tab data-[state=active]:bg-brand-gradient-hero data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl font-semibold transition-all duration-300 hover:scale-105"
               >
                 <span className="flex items-center space-x-2">
                   <span>📊</span>
@@ -1464,7 +1467,7 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger
                 value="users"
-                className="data-[state=active]:bg-brand-gradient-hero data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl font-semibold transition-all duration-300 hover:scale-105"
+                className="users-tab data-[state=active]:bg-brand-gradient-hero data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl font-semibold transition-all duration-300 hover:scale-105"
               >
                 <span className="flex items-center space-x-2">
                   <span>👥</span>
@@ -1473,7 +1476,7 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger
                 value="courses"
-                className="data-[state=active]:bg-brand-gradient-hero data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl font-semibold transition-all duration-300 hover:scale-105"
+                className="courses-tab data-[state=active]:bg-brand-gradient-hero data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl font-semibold transition-all duration-300 hover:scale-105"
               >
                 <span className="flex items-center space-x-2">
                   <span>📚</span>
@@ -1482,7 +1485,7 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger
                 value="applications"
-                className="data-[state=active]:bg-brand-gradient-hero data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl font-semibold transition-all duration-300 hover:scale-105"
+                className="applications-tab data-[state=active]:bg-brand-gradient-hero data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl font-semibold transition-all duration-300 hover:scale-105"
               >
                 <span className="flex items-center space-x-2">
                   <span>📋</span>
@@ -1491,7 +1494,7 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger
                 value="payments"
-                className="data-[state=active]:bg-brand-gradient-hero data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl font-semibold transition-all duration-300 hover:scale-105"
+                className="payments-tab data-[state=active]:bg-brand-gradient-hero data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl font-semibold transition-all duration-300 hover:scale-105"
               >
                 <span className="flex items-center space-x-2">
                   <span>💳</span>
@@ -1500,7 +1503,7 @@ export default function AdminDashboard() {
               </TabsTrigger>
               <TabsTrigger
                 value="settings"
-                className="data-[state=active]:bg-brand-gradient-hero data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl font-semibold transition-all duration-300 hover:scale-105"
+                className="settings-tab data-[state=active]:bg-brand-gradient-hero data-[state=active]:text-white data-[state=active]:shadow-lg rounded-xl font-semibold transition-all duration-300 hover:scale-105"
               >
                 <span className="flex items-center space-x-2">
                   <span>⚙️</span>
@@ -1509,6 +1512,8 @@ export default function AdminDashboard() {
               </TabsTrigger>
             </TabsList>
           </div>
+
+          <AdminDashboardTour />
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-8">

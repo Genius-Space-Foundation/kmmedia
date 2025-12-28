@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { withStudentAuth } from "@/lib/middleware";
+import { withStudentAuth, AuthenticatedRequest } from "@/lib/middleware";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -10,108 +10,105 @@ export const fetchCache = 'force-no-store';
  * GET /api/student/attendance
  * Get student's own attendance records
  */
-async function handleGet(req: NextRequest, userId: string) {
+async function handleGet(req: AuthenticatedRequest) {
   try {
+    const userId = req.user!.userId;
     const { searchParams } = new URL(req.url);
     const courseId = searchParams.get("courseId");
 
-    const where: any = {
-      userId,
-      completed: true,
-      completedAt: { not: null },
-    };
-
-    if (courseId) {
-      where.lesson = {
-        courseId,
-      };
-    }
-
-    const attendanceRecords = await db.lessonCompletion.findMany({
-      where,
+    // 1. Fetch check-in records (The new attendance system)
+    const checkInRecords = await db.attendance.findMany({
+      where: {
+        userId,
+        ...(courseId ? { courseId } : {}),
+      },
       include: {
-        lesson: {
-          select: {
-            id: true,
-            title: true,
-            description: true,
-            type: true,
-            course: {
-              select: {
-                id: true,
-                title: true,
-              },
-            },
-          },
-        },
+        course: {
+          select: { id: true, title: true }
+        }
       },
-      orderBy: {
-        completedAt: "desc",
-      },
+      orderBy: { date: "desc" }
     });
 
-    // Group by course for summary
-    const summaryByCourse: Record<
-      string,
-      {
-        courseId: string;
-        courseTitle: string;
-        totalLessons: number;
-        completedLessons: number;
-        attendanceRate: number;
-      }
-    > = {};
+    // 2. Fetch lesson completions (The academic progress system)
+    const lessonRecords = await db.lessonCompletion.findMany({
+      where: {
+        userId,
+        ...(courseId ? { lesson: { courseId } } : {}),
+      },
+      include: {
+        lesson: {
+          include: {
+            course: true
+          }
+        }
+      },
+      orderBy: { completedAt: "desc" }
+    });
 
-    // Get total lessons per course
-    const courseIds = [
-      ...new Set(attendanceRecords.map((r) => r.lesson.course.id)),
-    ];
-    
-    for (const cId of courseIds) {
-      const totalLessons = await db.lesson.count({
-        where: { courseId: cId, published: true },
-      });
+    // 3. Generate summary per course
+    // We'll base the "attendance rate" on lesson completions vs total lessons
+    // as that's a more traditional academic metric, but we'll show check-ins in history.
+    const enrolledCourses = await db.enrollment.findMany({
+        where: { userId, status: "ACTIVE" },
+        include: { 
+            course: {
+                include: {
+                    _count: {
+                        select: { lessons: { where: { isPublished: true } } }
+                    }
+                }
+            }
+        }
+    });
 
-      const completedCount = attendanceRecords.filter(
-        (r) => r.lesson.course.id === cId
-      ).length;
+    const summary = enrolledCourses.map((enrollment: any) => {
+        const courseId = enrollment.courseId;
+        const totalLessons = enrollment.course?._count?.lessons || 0;
+        const completedLessons = lessonRecords.filter((r: any) => r.lesson?.course?.id === courseId).length;
+        const checkInCount = checkInRecords.filter((r: any) => r.courseId === courseId).length;
 
-      const courseRecord = attendanceRecords.find(
-        (r) => r.lesson.course.id === cId
-      );
-
-      summaryByCourse[cId] = {
-        courseId: cId,
-        courseTitle: courseRecord?.lesson.course.title || "Unknown",
-        totalLessons,
-        completedLessons: completedCount,
-        attendanceRate:
-          totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0,
-      };
-    }
+        return {
+            courseId,
+            courseTitle: enrollment.course?.title || "Unknown",
+            totalLessons,
+            completedLessons,
+            checkInCount,
+            attendanceRate: totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0,
+        };
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        records: attendanceRecords.map((r) => ({
+        checkIns: checkInRecords.map((r: any) => ({
+          id: r.id,
+          date: r.date,
+          day: r.day,
+          courseId: r.courseId,
+          courseName: r.course?.title || "Unknown Course",
+          status: r.status,
+          notes: r.notes
+        })),
+        lessonCompletions: lessonRecords.map((r: any) => ({
           id: r.id,
           lessonId: r.lessonId,
-          lessonTitle: r.lesson.title,
-          lessonType: r.lesson.type,
-          courseId: r.lesson.course.id,
-          courseTitle: r.lesson.course.title,
+          lessonTitle: r.lesson?.title,
+          courseId: r.lesson?.course?.id,
+          courseName: r.lesson?.course?.title,
           completedAt: r.completedAt,
-          timeSpent: r.timeSpent,
-          notes: r.notes,
         })),
-        summary: Object.values(summaryByCourse),
-        totalAttended: attendanceRecords.length,
+        summary,
+        totalCheckIns: checkInRecords.length,
+        overallAttendanceRate: summary.length > 0 
+            ? Math.round(summary.reduce((acc, curr) => acc + curr.attendanceRate, 0) / summary.length) 
+            : 0
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Get student attendance error:", error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { success: false, message: "Internal server error" },
       { status: 500 }
     );
   }

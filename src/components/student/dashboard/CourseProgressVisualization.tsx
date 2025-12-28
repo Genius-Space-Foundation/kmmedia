@@ -30,10 +30,10 @@ export default function CourseProgressVisualization({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const getProgressColor = (progress: number) => {
-    if (progress >= 80) return "from-green-500 to-emerald-600";
-    if (progress >= 50) return "from-blue-500 to-indigo-600";
-    if (progress >= 25) return "from-yellow-500 to-orange-600";
-    return "from-gray-400 to-gray-500";
+    if (progress >= 80) return "bg-green-600";
+    if (progress >= 50) return "bg-blue-600";
+    if (progress >= 25) return "bg-yellow-600";
+    return "bg-gray-500";
   };
 
   const getStatusBadge = (status: string, progress: number) => {
@@ -94,7 +94,7 @@ export default function CourseProgressVisualization({
           <p className="text-gray-600 mb-4">
             Start your learning journey by enrolling in a course!
           </p>
-          <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+          <Button className="bg-blue-600 hover:bg-blue-700">
             Browse Courses
           </Button>
         </CardContent>
@@ -109,7 +109,7 @@ export default function CourseProgressVisualization({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
                 <BarChart3 className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -141,7 +141,7 @@ export default function CourseProgressVisualization({
 
       {/* Progress Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-lg">
+        <Card className="bg-blue-50 border-0 shadow-lg">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -157,7 +157,7 @@ export default function CourseProgressVisualization({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-lg">
+        <Card className="bg-green-50 border-0 shadow-lg">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -173,7 +173,7 @@ export default function CourseProgressVisualization({
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-50 to-red-50 border-0 shadow-lg">
+        <Card className="bg-orange-50 border-0 shadow-lg">
           <CardContent className="p-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -220,7 +220,7 @@ export default function CourseProgressVisualization({
                     </div>
                     <div className="text-right">
                       <div
-                        className={`w-12 h-12 bg-gradient-to-br ${getProgressColor(
+                        className={`w-12 h-12 ${getProgressColor(
                           enrollment.progress || 0
                         )} rounded-lg flex items-center justify-center text-white font-bold`}
                       >
@@ -277,14 +277,14 @@ export default function CourseProgressVisualization({
                   {/* Action Buttons */}
                   <div className="flex space-x-2">
                     {enrollment.status === "ACTIVE" && (
-                      <Button
-                        onClick={() => onContinueCourse(enrollment.course.id)}
-                        className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                        size="sm"
-                      >
-                        <PlayCircle className="h-4 w-4 mr-2" />
-                        Continue
-                      </Button>
+                        <Button
+                          onClick={() => onContinueCourse(enrollment.course.id)}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700"
+                          size="sm"
+                        >
+                          <PlayCircle className="h-4 w-4 mr-2" />
+                          Continue
+                        </Button>
                     )}
                     <Button
                       onClick={() => onViewCourse(enrollment.course.id)}
@@ -323,7 +323,7 @@ export default function CourseProgressVisualization({
                 >
                   <div className="flex items-center space-x-4">
                     <div
-                      className={`w-16 h-16 bg-gradient-to-br ${getProgressColor(
+                      className={`w-16 h-16 ${getProgressColor(
                         enrollment.progress || 0
                       )} rounded-lg flex items-center justify-center text-white font-bold text-lg`}
                     >
@@ -390,7 +390,7 @@ export default function CourseProgressVisualization({
                         <Button
                           onClick={() => onContinueCourse(enrollment.course.id)}
                           size="sm"
-                          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                          className="bg-blue-600 hover:bg-blue-700"
                         >
                           <PlayCircle className="h-4 w-4 mr-2" />
                           Continue

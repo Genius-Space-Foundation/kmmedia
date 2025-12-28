@@ -189,10 +189,10 @@ export default function MobilePersonalizedOverview({
   return (
     <div className="space-y-4 md:space-y-6">
       {/* Mobile Welcome Header - Compact */}
-      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200 shadow-lg">
+      <Card className="bg-blue-50 border-blue-200 shadow-lg">
         <CardContent className={compactMode ? "p-4" : "p-6"}>
           <div className="flex items-center space-x-3 md:space-x-4">
-            <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+            <div className="w-12 h-12 md:w-16 md:h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
               <span className="text-white text-xl md:text-2xl font-bold">
                 {user?.name ? user.name.charAt(0).toUpperCase() : "S"}
               </span>
@@ -290,7 +290,7 @@ export default function MobilePersonalizedOverview({
                 id: "continue-learning",
                 title: "Continue",
                 icon: PlayCircle,
-                color: "from-blue-500 to-blue-600",
+                color: "bg-blue-600",
                 count: activeCourses,
                 onClick: () => onContinueCourse(""),
               },
@@ -298,7 +298,7 @@ export default function MobilePersonalizedOverview({
                 id: "deadlines",
                 title: "Deadlines",
                 icon: Clock,
-                color: "from-orange-500 to-orange-600",
+                color: "bg-orange-600",
                 count: upcomingDeadlines.length,
                 onClick: onViewDeadlines,
               },
@@ -306,7 +306,7 @@ export default function MobilePersonalizedOverview({
                 id: "achievements",
                 title: "Achievements",
                 icon: Award,
-                color: "from-purple-500 to-purple-600",
+                color: "bg-purple-600",
                 count: achievements.length,
                 onClick: onViewAchievements,
               },
@@ -314,7 +314,7 @@ export default function MobilePersonalizedOverview({
                 id: "courses",
                 title: "Courses",
                 icon: BookOpen,
-                color: "from-green-500 to-green-600",
+                color: "bg-green-600",
                 count: enrollments.length,
                 onClick: () => {},
               },
@@ -334,7 +334,7 @@ export default function MobilePersonalizedOverview({
             </CardTitle>
           </CardHeader>
           <CardContent className={compactMode ? "px-4 pb-4" : ""}>
-            <div className="p-3 md:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+            <div className="p-3 md:p-4 bg-blue-50 rounded-lg border border-blue-100">
               <div className="flex items-center justify-between mb-2 md:mb-3">
                 <h4 className="font-semibold text-gray-900 text-sm md:text-base truncate flex-1">
                   {nextLesson.course.title}
@@ -357,7 +357,7 @@ export default function MobilePersonalizedOverview({
               </div>
               <Button
                 onClick={() => onContinueCourse(nextLesson.course.id)}
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 h-11 md:h-12 text-sm md:text-base"
+                className="w-full bg-blue-600 hover:bg-blue-700 h-11 md:h-12 text-sm md:text-base"
                 style={{ minHeight: "44px" }}
               >
                 Continue Learning
@@ -450,9 +450,9 @@ export default function MobilePersonalizedOverview({
               {achievements.slice(0, 3).map((achievement, index) => (
                 <div
                   key={index}
-                  className="text-center p-3 md:p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-100"
+                  className="text-center p-3 md:p-4 bg-purple-50 rounded-lg border border-purple-100"
                 >
-                  <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-3">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-2 md:mb-3">
                     <Star className="h-5 w-5 md:h-6 md:w-6 text-white" />
                   </div>
                   <h4 className="font-semibold text-gray-900 mb-1 text-sm md:text-base">

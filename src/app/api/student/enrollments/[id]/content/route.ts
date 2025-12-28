@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withStudentAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 
@@ -17,7 +17,7 @@ async function getEnrollmentContent(
     const studentId = req.user!.userId;
 
     // Verify enrollment belongs to student
-    const enrollment = await prisma.enrollment.findFirst({
+    const enrollment = (await prisma.enrollment.findFirst({
       where: {
         id: enrollmentId,
         userId: studentId,
@@ -47,10 +47,39 @@ async function getEnrollmentContent(
                 },
               },
             },
+            assignments: {
+              where: { isPublished: true },
+              orderBy: { dueDate: 'asc' },
+              include: {
+                submissions: {
+                  where: { studentId: studentId },
+                  select: {
+                    id: true,
+                    status: true,
+                    grade: true,
+                    submittedAt: true,
+                  },
+                },
+              },
+            },
+            assessments: {
+              where: { isPublished: true },
+              include: {
+                submissions: {
+                  where: { studentId: studentId },
+                  select: {
+                    id: true,
+                    status: true,
+                    score: true,
+                    submittedAt: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
-    });
+    })) as any;
 
     if (!enrollment) {
       return NextResponse.json(
@@ -60,7 +89,7 @@ async function getEnrollmentContent(
     }
 
     // Transform lessons to include completion status
-    const lessons = enrollment.course.lessons.map((lesson) => ({
+    const lessons = enrollment.course.lessons.map((lesson: any) => ({
       id: lesson.id,
       title: lesson.title,
       description: lesson.description,
@@ -73,7 +102,7 @@ async function getEnrollmentContent(
       isCompleted: lesson.completions.length > 0,
       completedAt: lesson.completions[0]?.completedAt,
       timeSpent: lesson.completions[0]?.timeSpent,
-      resources: lesson.resources.map((resource) => ({
+      resources: lesson.resources.map((resource: any) => ({
         id: resource.id,
         name: resource.name,
         type: resource.type,
@@ -85,13 +114,13 @@ async function getEnrollmentContent(
 
     // Calculate course statistics
     const totalLessons = lessons.length;
-    const completedLessons = lessons.filter((l) => l.isCompleted).length;
+    const completedLessons = lessons.filter((l: any) => l.isCompleted).length;
     const progressPercentage = totalLessons > 0 
       ? Math.round((completedLessons / totalLessons) * 100) 
       : 0;
 
     // Find next lesson to study
-    const nextLesson = lessons.find((l) => !l.isCompleted && l.isPublished);
+    const nextLesson = lessons.find((l: any) => !l.isCompleted && l.isPublished);
 
     return NextResponse.json({
       success: true,
@@ -119,12 +148,24 @@ async function getEnrollmentContent(
           timeSpent: enrollment.timeSpent,
         },
         nextLesson: nextLesson || null,
+        assignments: enrollment.course.assignments.map((a: any) => ({
+          ...a,
+          hasSubmission: a.submissions.length > 0,
+          submission: a.submissions[0] || null,
+          score: a.submissions[0]?.grade || null,
+        })),
+        assessments: enrollment.course.assessments.map((a: any) => ({
+          ...a,
+          hasSubmission: a.submissions.length > 0,
+          submission: a.submissions[0] || null,
+          score: a.submissions[0]?.score || null,
+        })),
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching enrollment content:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to fetch course content" },
+      { success: false, message: "Failed to fetch course content", error: error.message },
       { status: 500 }
     );
   }

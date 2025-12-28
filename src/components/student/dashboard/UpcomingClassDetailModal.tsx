@@ -74,13 +74,13 @@ export default function UpcomingClassDetailModal({
   const getTypeColor = (type: string) => {
     switch (type) {
       case "LIVE":
-        return "from-green-500 to-emerald-600";
+        return "bg-green-600";
       case "RECORDED":
-        return "from-blue-500 to-indigo-600";
+        return "bg-blue-600";
       case "HYBRID":
-        return "from-purple-500 to-violet-600";
+        return "bg-purple-600";
       default:
-        return "from-gray-500 to-gray-600";
+        return "bg-gray-600";
     }
   };
 
@@ -139,7 +139,7 @@ export default function UpcomingClassDetailModal({
           <div className="flex items-center justify-between p-6">
             <div className="flex items-center gap-3 flex-wrap flex-1">
               <Badge
-                className={`bg-gradient-to-r ${getTypeColor(classSession.type)} text-white border-0`}
+                className={`${getTypeColor(classSession.type)} text-white border-0`}
               >
                 {classSession.type}
               </Badge>
@@ -167,10 +167,10 @@ export default function UpcomingClassDetailModal({
         </div>
 
         {/* Time Card */}
-        <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+        <div className="p-6 bg-blue-50 border-b">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -188,7 +188,7 @@ export default function UpcomingClassDetailModal({
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
                 <Clock className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -211,13 +211,13 @@ export default function UpcomingClassDetailModal({
         {/* Instructor Card */}
         <div className="p-6">
           <h3 className="text-xl font-semibold mb-4 text-gray-900">Instructor</h3>
-          <div className="flex items-start gap-4 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
+          <div className="flex items-start gap-4 p-4 bg-emerald-50 rounded-xl border border-emerald-100">
             <Avatar className="w-16 h-16 border-2 border-white shadow-md">
               <AvatarImage
                 src={classSession.instructor.photo}
                 alt={classSession.instructor.name}
               />
-              <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-xl font-semibold">
+              <AvatarFallback className="bg-emerald-600 text-white text-xl font-semibold">
                 {classSession.instructor.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
@@ -327,7 +327,7 @@ export default function UpcomingClassDetailModal({
                   key={index}
                   className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg border border-purple-100"
                 >
-                  <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-violet-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                  <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
                     {index + 1}
                   </div>
                   <span className="text-gray-700 flex-1">{item}</span>
@@ -350,7 +350,7 @@ export default function UpcomingClassDetailModal({
                   className="flex items-center justify-between p-4 bg-white rounded-xl border border-gray-200 hover:border-blue-300 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                       <FileText className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
@@ -380,7 +380,7 @@ export default function UpcomingClassDetailModal({
             {timeUntil.canJoin && classSession.meetingLink && (
               <Button
                 onClick={() => onJoinClass?.(classSession.id)}
-                className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 h-12"
+                className="flex-1 bg-green-600 hover:bg-green-700 h-12"
               >
                 <Video className="w-5 h-5 mr-2" />
                 Join Class Now

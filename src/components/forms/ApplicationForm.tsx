@@ -42,8 +42,16 @@ import {
   ChevronRight,
   ChevronLeft,
   Save,
+  CreditCard,
 } from "lucide-react";
 import { makeAuthenticatedRequest } from "@/lib/token-utils";
+import UnifiedPaymentFlow from "@/components/student/payments/UnifiedPaymentFlow";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Form validation schemas for each step
 const step1Schema = z.object({
@@ -98,6 +106,15 @@ interface ApplicationFormProps {
   onSuccessRedirect?: string;
 }
 
+// Add this interface for payment context
+interface PaymentContext {
+  amount: number;
+  courseId?: string;
+  courseName?: string;
+  applicationId?: string;
+  type: "APPLICATION_FEE" | "TUITION" | "INSTALLMENT";
+}
+
 const STEPS = [
   {
     id: 1,
@@ -138,6 +155,9 @@ export function ApplicationForm({
   const [error, setError] = useState("");
   const [isFeePaid, setIsFeePaid] = useState(false);
   const [isInitializingPayment, setIsInitializingPayment] = useState(false);
+  // Add these new state variables for payment flow
+  const [showPaymentFlow, setShowPaymentFlow] = useState(false);
+  const [paymentContext, setPaymentContext] = useState<PaymentContext | null>(null);
 
   const {
     register,
@@ -263,6 +283,17 @@ export function ApplicationForm({
       // Save draft first
       await saveNow();
 
+      // Set up payment context for unified flow
+      setPaymentContext({
+        amount: applicationFee,
+        courseId: courseId,
+        courseName: courseName,
+        type: "APPLICATION_FEE"
+      });
+      setShowPaymentFlow(true);
+      
+      /* 
+      // Original payment initialization code - commented out
       // Initialize payment
       const response = await makeAuthenticatedRequest("/api/payments/initialize", {
         method: "POST",
@@ -286,6 +317,7 @@ export function ApplicationForm({
       } else {
         setError(result.message || "Payment initialization failed");
       }
+      */
     } catch (err) {
       console.error("Payment error:", err);
       setError("An error occurred while initializing payment");
@@ -298,7 +330,8 @@ export function ApplicationForm({
     setIsLoading(true);
     setError("");
 
-    if (!isFeePaid && applicationFee > 0) {
+    // Check if application fee is required and not paid
+    if (applicationFee > 0 && !isFeePaid) {
         setError("Please pay the application fee first.");
         setIsLoading(false);
         return;
@@ -336,6 +369,23 @@ export function ApplicationForm({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Add this function to handle payment success
+  const handlePaymentSuccess = (paymentData: any) => {
+    setShowPaymentFlow(false);
+    setPaymentContext(null);
+    setIsFeePaid(true);
+    // Move to next step after payment
+    if (currentStep < STEPS.length) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  // Add this function to handle payment cancellation
+  const handlePaymentCancel = () => {
+    setShowPaymentFlow(false);
+    setPaymentContext(null);
   };
 
   const renderStep = () => {
@@ -700,12 +750,12 @@ export function ApplicationForm({
                     {isFeePaid ? (
                         <div className="bg-green-50 text-green-700 p-3 rounded-md flex items-center gap-2">
                              <CheckCircle2 className="h-4 w-4" />
-                             Payment Verified
+                             Payment Verified - You can now submit your application
                         </div>
                     ) : (
                         <div className="bg-yellow-50 text-yellow-700 p-3 rounded-md flex items-center gap-2">
                             <AlertCircle className="h-4 w-4" />
-                            Payment Pending
+                            Payment Pending - Please pay the application fee to proceed
                         </div>
                     )}
                 </CardContent>
@@ -883,6 +933,25 @@ export function ApplicationForm({
           </form>
         </CardContent>
       </Card>
+
+      {/* Unified Payment Flow Dialog */}
+      {showPaymentFlow && paymentContext && (
+        <Dialog open={showPaymentFlow} onOpenChange={setShowPaymentFlow}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Payment Options</DialogTitle>
+            </DialogHeader>
+            <UnifiedPaymentFlow
+              amount={paymentContext.amount}
+              courseId={paymentContext.courseId}
+              courseName={paymentContext.courseName}
+              type={paymentContext.type}
+              onSuccess={handlePaymentSuccess}
+              onCancel={handlePaymentCancel}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

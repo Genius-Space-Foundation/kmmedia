@@ -35,7 +35,6 @@ async function handler(req: AuthenticatedRequest) {
     }
 
     // 1. Get user's active cohorts (via applications or enrollments)
-    // We want to exclude courses from cohorts the student is already in
     const [activeApplications, activeEnrollments] = await Promise.all([
       prisma.application.findMany({
         where: { userId },
@@ -96,9 +95,9 @@ async function handler(req: AuthenticatedRequest) {
 
     return NextResponse.json({
       success: true,
-      data: formattedCourses,
+      data: { courses: formattedCourses },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Fetch courses error:", error);
     return NextResponse.json(
       { success: false, message: "Failed to fetch courses" },

@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-export async function GET(request: AuthenticatedRequest) {
+async function handler(request: AuthenticatedRequest) {
   try {
     if (!request.user) {
       return NextResponse.json(
@@ -290,3 +290,5 @@ export async function GET(request: AuthenticatedRequest) {
     );
   }
 }
+
+export const GET = withStudentAuth(handler);

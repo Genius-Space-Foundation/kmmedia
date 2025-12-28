@@ -28,6 +28,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AssignmentGradingDashboard from "./instructor/grading/AssignmentGradingDashboard";
+
 
 interface Assessment {
   id: string;
@@ -290,130 +292,143 @@ export default function AssessmentManagement({
         </TabsContent>
 
         <TabsContent value="submissions" className="space-y-4">
-          {selectedAssessment && (
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold">
-                Submissions for: {selectedAssessment.title}
-              </h3>
+          {selectedAssessment ? (
+            selectedAssessment.type === "ASSIGNMENT" ? (
+              <AssignmentGradingDashboard 
+                assignmentId={selectedAssessment.id} 
+                onClose={() => setActiveTab("assessments")}
+              />
+            ) : (
+              <>
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold">
+                    Submissions for: {selectedAssessment.title}
+                  </h3>
+                </div>
+
+                {statistics && (
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          Total Submissions
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {statistics.totalSubmissions}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          Average Score
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {statistics.averageScore}
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          Pass Rate
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {statistics.passRate}%
+                        </div>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium">
+                          Avg Time
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">
+                          {statistics.averageTimeSpent} min
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  {submissions.map((submission) => (
+                    <Card key={submission.id} className="hover:bg-gray-50">
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-4">
+                              <div>
+                                <h4 className="font-medium">
+                                  {submission.student.name}
+                                </h4>
+                                <p className="text-sm text-gray-600">
+                                  {submission.student.email}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  Submitted:{" "}
+                                  {new Date(submission.submittedAt).toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-4">
+                            <div className="text-right">
+                              <div className="font-semibold">
+                                {submission.score}/
+                                {selectedAssessment?.totalPoints || 0} points
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {submission.percentage.toFixed(1)}%
+                              </div>
+                              <div className="flex space-x-2 mt-1">
+                                <Badge className={getStatusColor(submission.status)}>
+                                  {submission.status}
+                                </Badge>
+                                <Badge
+                                  className={
+                                    submission.passed
+                                      ? "bg-green-100 text-green-800"
+                                      : "bg-red-100 text-red-800"
+                                  }
+                                >
+                                  {submission.passed ? "PASSED" : "FAILED"}
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex space-x-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedSubmission(submission);
+                                  setShowGradeDialog(true);
+                                }}
+                              >
+                                Grade
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </>
+            )
+          ) : (
+            <div className="py-12 text-center text-gray-500">
+              <p>Select an assessment to view submissions</p>
             </div>
           )}
-
-          {statistics && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Total Submissions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {statistics.totalSubmissions}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Average Score
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {statistics.averageScore}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Pass Rate
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {statistics.passRate}%
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Avg Time
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {statistics.averageTimeSpent} min
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            {submissions.map((submission) => (
-              <Card key={submission.id} className="hover:bg-gray-50">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-4">
-                        <div>
-                          <h4 className="font-medium">
-                            {submission.student.name}
-                          </h4>
-                          <p className="text-sm text-gray-600">
-                            {submission.student.email}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Submitted:{" "}
-                            {new Date(submission.submittedAt).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <div className="font-semibold">
-                          {submission.score}/
-                          {selectedAssessment?.totalPoints || 0} points
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {submission.percentage.toFixed(1)}%
-                        </div>
-                        <div className="flex space-x-2 mt-1">
-                          <Badge className={getStatusColor(submission.status)}>
-                            {submission.status}
-                          </Badge>
-                          <Badge
-                            className={
-                              submission.passed
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }
-                          >
-                            {submission.passed ? "PASSED" : "FAILED"}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedSubmission(submission);
-                            setShowGradeDialog(true);
-                          }}
-                        >
-                          Grade
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </TabsContent>
       </Tabs>
 

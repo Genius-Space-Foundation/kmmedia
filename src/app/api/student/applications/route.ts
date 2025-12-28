@@ -128,6 +128,68 @@ async function createApplication(req: AuthenticatedRequest) {
       );
     }
 
+    // Check for cohort overlap - prevent applying to courses in same cohort
+    if (course.cohort) {
+      const [existingApplicationsInCohort, existingEnrollmentsInCohort] = await Promise.all([
+        prisma.application.findFirst({
+          where: {
+            userId,
+            course: {
+              cohort: course.cohort,
+            },
+            status: {
+              in: ['PENDING', 'APPROVED'],
+            },
+          },
+          include: {
+            course: {
+              select: {
+                title: true,
+              },
+            },
+          },
+        }),
+        prisma.enrollment.findFirst({
+          where: {
+            userId,
+            course: {
+              cohort: course.cohort,
+            },
+            status: {
+              in: ['ACTIVE', 'COMPLETED'],
+            },
+          },
+          include: {
+            course: {
+              select: {
+                title: true,
+              },
+            },
+          },
+        }),
+      ]);
+
+      if (existingApplicationsInCohort) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `You already have an application for "${existingApplicationsInCohort.course.title}" which is in the same cohort. You cannot apply to multiple courses in the same cohort.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      if (existingEnrollmentsInCohort) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `You are already enrolled in "${existingEnrollmentsInCohort.course.title}" which is in the same cohort. You cannot apply to another course in the same cohort.`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Create application
     const application = await prisma.application.create({
       data: {
@@ -190,10 +252,7 @@ async function createApplication(req: AuthenticatedRequest) {
     return NextResponse.json(
       {
         success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Application submission failed",
+        message: "Application submission failed",
       },
       { status: 500 }
     );
@@ -355,7 +414,7 @@ async function getStudentApplications(req: AuthenticatedRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: `Failed to fetch applications: ${errorMessage}`,
+        message: "Failed to fetch applications",
       },
       { status: 500 }
     );

@@ -75,6 +75,7 @@ model User {
   // Assignment relations
   instructorAssignments Assignment[]           @relation("InstructorAssignments")
   studentSubmissions    AssignmentSubmission[] @relation("StudentSubmissions")
+  attendance            Attendance[]
   assignmentExtensions  AssignmentExtension[]  @relation("AssignmentExtensions")
   gradingHistory        GradingHistory[]       @relation("GradingHistory")
 
@@ -334,7 +335,10 @@ model Course {
   status         CourseStatus     @default(DRAFT)
   applicationFee Float            @default(0)
   difficulty     CourseDifficulty @default(BEGINNER)
-  cohort         String?          // e.g., "2025-Q1", "January 2025"
+  cohort             String? // e.g., "2025-Q1", "January 2025"
+  startDate          DateTime?
+  endDate            DateTime?
+  enrollmentDeadline DateTime?
 
   // Installment configuration
   installmentEnabled Boolean @default(false)
@@ -368,6 +372,7 @@ model Course {
   paymentPlans      PaymentPlan[]
   applicationDrafts ApplicationDraft[]
   assignments       Assignment[]
+  attendance        Attendance[]
 
   @@map("courses")
 }
@@ -447,6 +452,9 @@ model AssignmentSubmission {
   gradingHistory GradingHistory[]
 
   @@unique([assignmentId, studentId])
+  @@index([studentId, status])
+  @@index([assignmentId, status])
+  @@index([submittedAt])
   @@map("assignment_submissions")
 }
 
@@ -544,6 +552,9 @@ model Enrollment {
   lessonCompletions LessonCompletion[]
 
   @@unique([userId, courseId])
+  @@index([userId, status])
+  @@index([courseId, status])
+  @@index([lastActivityAt])
   @@map("enrollments")
 }
 
@@ -631,6 +642,8 @@ model LessonCompletion {
   enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
 
   @@unique([userId, lessonId])
+  @@index([userId, completedAt])
+  @@index([enrollmentId])
   @@map("lesson_completions")
 }
 
@@ -706,6 +719,9 @@ model AssessmentSubmission {
   answers Answer[]
 
   @@unique([studentId, assessmentId])
+  @@index([studentId, status])
+  @@index([assessmentId, status])
+  @@index([submittedAt])
   @@map("assessment_submissions")
 }
 
@@ -1167,3 +1183,32 @@ model AuditLog {
   @@index([createdAt])
   @@map("audit_logs")
 }
+
+model Attendance {
+  id        String           @id @default(cuid())
+  date      DateTime         @default(now())
+  day       String           // "YYYY-MM-DD" for uniqueness
+  status    AttendanceStatus @default(PRESENT)
+  notes     String?
+  
+  // Relations
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  courseId  String
+  course    Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId, day])
+  @@map("attendance")
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+

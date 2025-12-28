@@ -82,6 +82,7 @@ async function createLesson(
     console.error("Create lesson error:", error);
 
     if (error instanceof z.ZodError) {
+      console.error("Lesson validation error:", error.issues);
       return NextResponse.json(
         { success: false, message: "Invalid input", errors: error.issues },
         { status: 400 }

@@ -1,6 +1,7 @@
 // Adaptive "My Course" Tab Component
 // This replaces both "Courses" and "Applications" tabs with a single adaptive view
 
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +21,13 @@ interface AdaptiveCourseTabProps {
   // Handlers
   onApplyForCourse: (courseId: string) => void;
   onPayTuition: (applicationId: string, type: "FULL" | "INSTALLMENT") => void;
+  onShowUnifiedPayment?: (context: {
+    amount: number;
+    courseId?: string;
+    courseName?: string;
+    applicationId?: string;
+    type: "TUITION" | "INSTALLMENT";
+  }) => void;
   onLessonClick?: (lessonId: string) => void;
   onAssignmentClick?: (assignmentId: string) => void;
   onAssessmentClick?: (assessmentId: string) => void;
@@ -34,11 +42,20 @@ export function AdaptiveCourseTab({
   enrollments,
   onApplyForCourse,
   onPayTuition,
+  onShowUnifiedPayment,
   onLessonClick = () => {},
   onAssignmentClick = () => {},
   onAssessmentClick = () => {},
   formatCurrency,
 }: AdaptiveCourseTabProps) {
+  const [selectedEnrollmentId, setSelectedEnrollmentId] = useState(enrollments[0]?.id || "");
+  
+  // Ensure selectedEnrollmentId is valid
+  useEffect(() => {
+    if (enrollments.length > 0 && (!selectedEnrollmentId || !enrollments.find(e => e.id === selectedEnrollmentId))) {
+      setSelectedEnrollmentId(enrollments[0].id);
+    }
+  }, [enrollments, selectedEnrollmentId]);
   
   // Determine current state
   const hasEnrollment = enrollments.length > 0;
@@ -48,14 +65,33 @@ export function AdaptiveCourseTab({
   
   // STATE 4: ENROLLED - Show full course content
   if (hasEnrollment) {
-    const enrollment = enrollments[0];
+    const enrollment = enrollments.find(e => e.id === selectedEnrollmentId) || enrollments[0];
     return (
-      <EnrolledCourseView
-        enrollment={enrollment}
-        onLessonClick={onLessonClick}
-        onAssignmentClick={onAssignmentClick}
-        onAssessmentClick={onAssessmentClick}
-      />
+      <div className="space-y-6">
+        {enrollments.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            {enrollments.map((e: any) => (
+              <Button
+                key={e.id}
+                variant={selectedEnrollmentId === e.id ? "default" : "outline"}
+                size="sm"
+                className="whitespace-nowrap rounded-xl"
+                onClick={() => setSelectedEnrollmentId(e.id)}
+              >
+                {e.course.title}
+              </Button>
+            ))}
+          </div>
+        )}
+        <EnrolledCourseView
+          enrollment={enrollment}
+          onLessonClick={onLessonClick}
+          onAssignmentClick={onAssignmentClick}
+          onAssessmentClick={onAssessmentClick}
+        />
+        
+        {/* Still show catalog below if needed, or in a separate space */}
+      </div>
     );
   }
   
@@ -65,7 +101,7 @@ export function AdaptiveCourseTab({
     return (
       <div className="space-y-6">
         <h2 className="text-2xl font-bold">Complete Your Enrollment</h2>
-        <Card className="border-blue-200 bg-blue-50">
+        <Card className="border-brand-primary/20 bg-brand-primary/5">
           <CardHeader>
             <CardTitle>{app.course.title}</CardTitle>
             <CardDescription>Your application has been approved!</CardDescription>
@@ -79,7 +115,19 @@ export function AdaptiveCourseTab({
             <div className="grid gap-3">
               <Button 
                 className="w-full" 
-                onClick={() => onPayTuition(app.id, "FULL")}
+                onClick={() => {
+                  if (onShowUnifiedPayment) {
+                    onShowUnifiedPayment({
+                      amount: app.course.price,
+                      courseId: app.course.id,
+                      courseName: app.course.title,
+                      applicationId: app.id,
+                      type: "TUITION"
+                    });
+                  } else {
+                    onPayTuition(app.id, "FULL");
+                  }
+                }}
               >
                 <CreditCard className="mr-2 h-4 w-4" />
                 Pay Full Tuition
@@ -89,7 +137,19 @@ export function AdaptiveCourseTab({
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => onPayTuition(app.id, "INSTALLMENT")}
+                  onClick={() => {
+                    if (onShowUnifiedPayment) {
+                      onShowUnifiedPayment({
+                        amount: app.course.price,
+                        courseId: app.course.id,
+                        courseName: app.course.title,
+                        applicationId: app.id,
+                        type: "INSTALLMENT"
+                      });
+                    } else {
+                      onPayTuition(app.id, "INSTALLMENT");
+                    }
+                  }}
                 >
                   Pay in Installments
                   {app.course.installmentPlan && (
@@ -111,13 +171,13 @@ export function AdaptiveCourseTab({
     const app = pendingApplication;
     return (
       <div className="space-y-6">
-        <Card className="border-yellow-200 bg-yellow-50">
+        <Card className="border-neutral-200 bg-neutral-50">
           <CardHeader>
             <div className="flex items-center gap-3">
-              <Clock className="h-10 w-10 text-yellow-600" />
+              <Clock className="h-10 w-10 text-neutral-500" />
               <div>
-                <CardTitle className="text-yellow-900">Application Under Review</CardTitle>
-                <CardDescription className="text-yellow-700">
+                <CardTitle className="text-neutral-900">Application Under Review</CardTitle>
+                <CardDescription className="text-neutral-600">
                   {app.course.title}
                 </CardDescription>
               </div>
@@ -127,7 +187,7 @@ export function AdaptiveCourseTab({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Status:</span>
-                <Badge className="bg-yellow-100 text-yellow-800">
+                <Badge className="bg-neutral-100 text-neutral-800">
                   {app.status}
                 </Badge>
               </div>
@@ -164,9 +224,38 @@ export function AdaptiveCourseTab({
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course: any) => (
-            <Card key={course.id} className="hover:shadow-lg transition-shadow">
+          {courses.filter((course: any) => {
+            // FILTER: Check if enrollment deadline has passed
+            if (course.enrollmentDeadline && new Date() > new Date(course.enrollmentDeadline)) return false;
+            
+            // FILTER: Check for cohort overlaps
+            if (course.startDate) {
+              const cohortStart = new Date(course.startDate);
+              const cohortEnd = course.endDate ? new Date(course.endDate) : new Date(cohortStart.getTime() + 180 * 24 * 60 * 60 * 1000);
+              
+              const hasOverlap = enrollments.some((e: any) => {
+                if (!e.course.startDate) return false;
+                const eStart = new Date(e.course.startDate);
+                const eEnd = e.course.endDate ? new Date(e.course.endDate) : new Date(eStart.getTime() + 180 * 24 * 60 * 60 * 1000);
+                return (eStart <= cohortStart && eEnd >= cohortStart) || (eStart >= cohortStart && eStart <= cohortEnd);
+              });
+              
+              if (hasOverlap) return false;
+            }
+            return true;
+          }).map((course: any) => (
+            <Card key={course.id} className="hover:shadow-md transition-shadow border-neutral-200">
               <CardHeader>
+                <div className="flex justify-between items-start mb-2">
+                  <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-wider text-brand-primary border-brand-primary/20 bg-brand-primary/5">
+                    {course.cohort || "Upcoming"}
+                  </Badge>
+                  {course.enrollmentDeadline && (
+                    <span className="text-[10px] text-neutral-500 font-medium">
+                      Deadline: {new Date(course.enrollmentDeadline).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
                 <CardTitle className="text-lg">{course.title}</CardTitle>
                 <CardDescription className="line-clamp-2">
                   {course.description}
@@ -182,15 +271,15 @@ export function AdaptiveCourseTab({
                     <span className="text-gray-600">Price:</span>
                     <span className="font-semibold">{formatCurrency(course.price)}</span>
                   </div>
-                  {course.cohort && (
+                  {course.startDate && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Cohort:</span>
-                      <Badge variant="outline">{course.cohort}</Badge>
+                      <span className="text-gray-600">Starts:</span>
+                      <span className="text-brand-primary font-medium">{new Date(course.startDate).toLocaleDateString()}</span>
                     </div>
                   )}
                 </div>
                 <Button 
-                  className="w-full" 
+                  className="w-full bg-brand-primary hover:bg-brand-secondary text-white rounded-xl shadow-sm" 
                   onClick={() => onApplyForCourse(course.id)}
                 >
                   Apply Now
