@@ -60,6 +60,18 @@ const FORMAT_LABELS: Record<string, string> = {
   avi: "AVI Videos",
 };
 
+/**
+ * AssignmentPreview component displays a preview of assignment details before publishing
+ * 
+ * @param {AssignmentPreviewData} data - Assignment data to preview
+ * @param {boolean} isOpen - Whether the preview modal is open
+ * @param {Function} onClose - Callback to close the preview
+ * @param {Function} [onPublish] - Callback to publish the assignment
+ * @param {Function} [onEdit] - Callback to return to edit mode
+ * @param {boolean} [isPublishing=false] - Whether publishing is in progress
+ * @param {string} [courseName] - Name of the associated course
+ * @returns {JSX.Element} Assignment preview modal component
+ */
 export function AssignmentPreview({
   data,
   isOpen,
@@ -69,11 +81,11 @@ export function AssignmentPreview({
   isPublishing = false,
   courseName,
 }: AssignmentPreviewProps) {
-  const formatFileSize = (mb: number) => {
+  const formatFileSize = React.useCallback((mb: number) => {
     return mb >= 1000 ? `${mb / 1000}GB` : `${mb}MB`;
-  };
+  }, []);
 
-  const getTimeUntilDue = () => {
+  const getTimeUntilDue = React.useCallback(() => {
     if (!data.dueDate) return "No due date set";
     const now = new Date();
     const timeDiff = data.dueDate.getTime() - now.getTime();
@@ -83,9 +95,9 @@ export function AssignmentPreview({
     if (days === 0) return "Due today";
     if (days === 1) return "Due tomorrow";
     return `Due in ${days} days`;
-  };
+  }, [data.dueDate]);
 
-  const isValidForPublishing = () => {
+  const isValidForPublishing = React.useCallback(() => {
     return (
       data.title &&
       data.description &&
@@ -93,7 +105,7 @@ export function AssignmentPreview({
       data.totalPoints > 0 &&
       data.allowedFormats.length > 0
     );
-  };
+  }, [data.title, data.description, data.dueDate, data.totalPoints, data.allowedFormats.length]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

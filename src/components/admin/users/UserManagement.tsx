@@ -688,6 +688,146 @@ export default function UserManagement({ onRefresh }: UserManagementProps) {
         ]}
         commentPlaceholder="Add comments for bulk action (optional)..."
       />
+
+      <CreateUserDialog 
+        open={showCreateUser}
+        onOpenChange={setShowCreateUser}
+        onSuccess={() => {
+          fetchUsers();
+          setShowCreateUser(false);
+        }}
+      />
     </div>
+  );
+}
+
+function CreateUserDialog({ open, onOpenChange, onSuccess }: { open: boolean; onOpenChange: (open: boolean) => void; onSuccess: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [role, setRole] = useState("STUDENT"); // Default to student
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "", // Temporary password for instructor
+    phone: "",
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      let endpoint = "/api/auth/register-student"; // Default for students (though ideally admin should just use one endpoint)
+      
+      // We will use the new specialized endpoint for instructors
+      if (role === "INSTRUCTOR") {
+        endpoint = "/api/admin/instructors/create";
+      } else {
+        // Fallback for students if needed, or implement admin-student-create
+        // For now, let's assume we might implement admin-student-create later or reuse public register with adjustments 
+        // BUT strict requirement is about INSTRUCTOR provisioning.
+        // Let's implement logic just for INSTRUCTOR here as requested.
+        toast.error("Student provisioning not yet implemented in this modal");
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        toast.success(`${role} provisioned successfully`);
+        onSuccess();
+      } else {
+        toast.error(result.message || "Failed to create user");
+      }
+    } catch (error) {
+      toast.error("An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Provision New User</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <Label>Role</Label>
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="STUDENT">Student</SelectItem>
+                <SelectItem value="INSTRUCTOR">Instructor</SelectItem>
+                <SelectItem value="ADMIN">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="name">Full Name</Label>
+            <Input 
+              id="name" 
+              required 
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input 
+              id="email" 
+              type="email" 
+              required 
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+            />
+          </div>
+
+          {role === "INSTRUCTOR" && (
+            <div className="space-y-2">
+              <Label htmlFor="password">Temporary Password</Label>
+              <Input 
+                id="password" 
+                type="text" 
+                required 
+                minLength={6}
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                placeholder="Set a temporary password"
+              />
+              <p className="text-xs text-muted-foreground">
+                The instructor will be forced to change this on first login.
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number (Optional)</Label>
+            <Input 
+              id="phone" 
+              value={formData.phone}
+              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Provisioning..." : "Create User"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

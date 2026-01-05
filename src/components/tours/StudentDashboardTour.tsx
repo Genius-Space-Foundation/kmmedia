@@ -19,16 +19,6 @@ const steps: Step[] = [
     placement: 'bottom',
   },
   {
-    target: '.assignments-tab',
-    content: 'View and submit your assignments here. Keep track of deadlines and submission status.',
-    placement: 'bottom',
-  },
-  {
-    target: '.assessments-tab',
-    content: 'Take quizzes and assessments to test your knowledge. Your scores are recorded automatically.',
-    placement: 'bottom',
-  },
-  {
     target: '.attendance-tab',
     content: 'Track your attendance records and check-in to live sessions from here.',
     placement: 'bottom',
@@ -46,8 +36,14 @@ const steps: Step[] = [
 ];
 
 export function StudentDashboardTour() {
-  const { currentTour, stopTour, markTourComplete } = useTour();
+  const { currentTour, stopTour, markTourComplete, runTour, isTourComplete, isInitialized } = useTour();
   const isRunning = currentTour === TOUR_NAME;
+
+  React.useEffect(() => {
+    if (isInitialized && !isTourComplete(TOUR_NAME) && !isRunning) {
+      runTour(TOUR_NAME);
+    }
+  }, [isInitialized, isTourComplete, isRunning, runTour]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, type } = data;

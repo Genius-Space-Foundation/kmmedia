@@ -261,7 +261,7 @@ export default function AdvancedReporting() {
               change: 12.5,
               trend: "up",
               target: 100000,
-              unit: "$",
+              unit: "GH₵",
             },
             {
               name: "Active Users",

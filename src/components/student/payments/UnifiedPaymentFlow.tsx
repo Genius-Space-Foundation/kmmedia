@@ -42,6 +42,7 @@ interface UnifiedPaymentFlowProps {
   courseId?: string;
   courseName?: string;
   applicationId?: string;
+  enrollmentId?: string;
   type: "APPLICATION_FEE" | "TUITION" | "INSTALLMENT";
   onSuccess?: (paymentData: any) => void;
   onCancel?: () => void;
@@ -53,6 +54,7 @@ export default function UnifiedPaymentFlow({
   courseId,
   courseName,
   applicationId,
+  enrollmentId,
   type,
   onSuccess,
   onCancel,
@@ -169,12 +171,24 @@ export default function UnifiedPaymentFlow({
       let endpoint = "/api/payments/initialize";
       
       // Use specific endpoints for tuition and installment payments
-      if (type === "TUITION" && applicationId) {
-        endpoint = "/api/payments/tuition/initialize";
-        paymentData = { applicationId };
-      } else if (type === "INSTALLMENT" && applicationId) {
-        endpoint = "/api/payments/installment/initialize";
-        paymentData = { applicationId };
+      if (type === "TUITION") {
+        if (enrollmentId) {
+          // This case might not be common if tuition is always tied to application
+          // but we support it for completeness if the backend does
+          endpoint = "/api/payments/tuition/initialize";
+          paymentData = { enrollmentId };
+        } else if (applicationId) {
+          endpoint = "/api/payments/tuition/initialize";
+          paymentData = { applicationId };
+        }
+      } else if (type === "INSTALLMENT") {
+        if (enrollmentId) {
+          endpoint = "/api/payments/installment/initialize";
+          paymentData = { enrollmentId };
+        } else if (applicationId) {
+          endpoint = "/api/payments/installment/initialize";
+          paymentData = { applicationId };
+        }
       }
 
       const response = await fetch(endpoint, {

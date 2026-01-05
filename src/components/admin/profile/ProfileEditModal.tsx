@@ -118,8 +118,10 @@ export default function ProfileEditModal({
       });
 
       if (response.ok) {
+        // The API returns { success: true, user: ... } or { success: true, data: ... }
+        // We need to handle both cases to be safe
         const updatedUser = await safeJsonParse(response, { data: null });
-        onUpdate(updatedUser.data);
+        onUpdate(updatedUser.user || updatedUser.data);
         toast.success("Profile updated successfully!");
         onClose();
       } else {

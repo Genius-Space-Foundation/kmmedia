@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -21,12 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft,
-  ArrowRight,
   Plus,
   Trash2,
   Upload,
@@ -34,16 +30,25 @@ import {
   Clock,
   DollarSign,
   Users,
+  User,
   BookOpen,
   Target,
   FileText,
   Image,
   Video,
+  Volume2,
   Link,
-  CheckCircle,
   AlertCircle,
   Info,
+  Layers,
+  Settings2,
+  CheckCircle2,
+  Sparkles,
+  ChevronRight,
+  Shield,
+  Zap,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface CourseData {
   // Basic Information
@@ -53,6 +58,7 @@ interface CourseData {
   category: string;
   difficulty: string;
   language: string;
+  instructorId?: string; // New field for admin mode
 
   // Pricing & Duration
   price: number;
@@ -167,7 +173,19 @@ const INSTALLMENT_PLANS = [
   { value: "CUSTOM", label: "Custom", description: "Custom payment schedule" },
 ];
 
-export default function CourseCreationWizard() {
+interface CourseCreationWizardProps {
+  adminMode?: boolean;
+  instructors?: Array<{ id: string; name: string; email: string }>;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}
+
+export default function CourseCreationWizard({ 
+  adminMode = false, 
+  instructors = [],
+  onSuccess,
+  onCancel 
+}: CourseCreationWizardProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -202,6 +220,7 @@ export default function CourseCreationWizard() {
     enableDiscussion: true,
     enableLiveSessions: false,
     enableAssessments: true,
+    instructorId: "",
   });
 
   const [newPrerequisite, setNewPrerequisite] = useState("");
@@ -260,6 +279,8 @@ export default function CourseCreationWizard() {
 
     switch (step) {
       case 1:
+        if (adminMode && !courseData.instructorId)
+          newErrors.instructorId = "Instructor assignment is required";
         if (!courseData.title.trim())
           newErrors.title = "Course title is required";
         if (!courseData.description.trim())
@@ -373,22 +394,7 @@ export default function CourseCreationWizard() {
     }));
   };
 
-  const reorderOutlineItems = (fromIndex: number, toIndex: number) => {
-    const newOutline = [...courseData.courseOutline];
-    const [movedItem] = newOutline.splice(fromIndex, 1);
-    newOutline.splice(toIndex, 0, movedItem);
 
-    // Update order numbers
-    const updatedOutline = newOutline.map((item, index) => ({
-      ...item,
-      order: index + 1,
-    }));
-
-    setCourseData((prev) => ({
-      ...prev,
-      courseOutline: updatedOutline,
-    }));
-  };
 
   const handleFileUpload = (file: File, type: "thumbnail" | "material") => {
     if (type === "thumbnail") {
@@ -446,7 +452,7 @@ export default function CourseCreationWizard() {
       });
 
       const response = await fetch(
-        "/api/instructor/courses/create",
+        adminMode ? "/api/admin/courses/create" : "/api/instructor/courses/create",
         {
           method: "POST",
           body: formData,
@@ -455,9 +461,15 @@ export default function CourseCreationWizard() {
 
       if (response.ok) {
         const result = await response.json();
-        router.push(
-          `/dashboards/instructor?tab=courses&created=${result.data.id}`
-        );
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push(
+            adminMode 
+              ? "/dashboards/admin?tab=courses" 
+              : `/dashboards/instructor?tab=courses&created=${result.data.id}`
+          );
+        }
       } else {
         const error = await response.json();
         setErrors({ submit: error.message || "Failed to create course" });
@@ -472,149 +484,228 @@ export default function CourseCreationWizard() {
   const progress = (currentStep / steps.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+    <div className="flex h-screen w-full bg-[#030712] overflow-hidden text-slate-200">
+      {/* Mesh Gradient Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-900/20 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[10%] right-[-5%] w-[35%] h-[35%] bg-violet-900/20 blur-[120px] rounded-full" />
+        <div className="absolute top-[20%] right-[10%] w-[25%] h-[25%] bg-blue-900/10 blur-[100px] rounded-full" />
+      </div>
+
+      {/* Sidebar Stepper */}
+      <aside className="w-80 border-r border-white/5 bg-black/40 backdrop-blur-xl flex flex-col z-10">
+        <div className="p-8 border-b border-white/5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Create New Course
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Build an engaging and comprehensive course for your students
+              <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                Course Builder
+              </h2>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                Professional Wizard
               </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => router.back()}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Dashboard
-            </Button>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">
-                Step {currentStep} of {steps.length}
-              </span>
-              <span className="text-sm text-gray-500">
-                {Math.round(progress)}% Complete
-              </span>
-            </div>
-            <Progress value={progress} className="h-2" />
-          </div>
-
-          {/* Step Navigation */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              {steps.map((step, index) => (
-                <div
-                  key={step.id}
-                  className={`flex items-center space-x-2 ${
-                    currentStep >= step.id ? "text-blue-600" : "text-gray-400"
-                  }`}
-                >
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      currentStep >= step.id
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 text-gray-500"
-                    }`}
-                  >
-                    {currentStep > step.id ? (
-                      <CheckCircle className="w-4 h-4" />
-                    ) : (
-                      step.id
-                    )}
-                  </div>
-                  <div className="hidden md:block">
-                    <p className="text-sm font-medium">{step.title}</p>
-                    <p className="text-xs text-gray-500">{step.description}</p>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <nav className="flex-1 overflow-y-auto py-8 px-4 custom-scrollbar">
+          <div className="space-y-2">
+            {steps.map((step) => {
+              const isActive = currentStep === step.id;
+              const isCompleted = currentStep > step.id;
+              
+              return (
+                <button
+                  key={step.id}
+                  onClick={() => currentStep > step.id && setCurrentStep(step.id)}
+                  className={cn(
+                    "w-full flex items-start gap-4 p-4 rounded-2xl transition-all duration-300 group text-left",
+                    isActive 
+                      ? "bg-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-md" 
+                      : "hover:bg-white/5"
+                  )}
+                >
+                  <div className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300",
+                    isActive 
+                      ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/40 scale-110" 
+                      : isCompleted 
+                        ? "bg-emerald-500/20 text-emerald-400" 
+                        : "bg-slate-800 text-slate-500 group-hover:bg-slate-700"
+                  )}>
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <span className="text-sm font-bold">{step.id}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 mt-0.5">
+                    <p className={cn(
+                      "text-sm font-bold transition-colors duration-300",
+                      isActive ? "text-white" : isCompleted ? "text-slate-300" : "text-slate-500"
+                    )}>
+                      {step.title}
+                    </p>
+                    <p className="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
+                      {step.description}
+                    </p>
+                  </div>
+                  {isActive && (
+                    <div className="h-1.5 w-1.5 rounded-full bg-indigo-500 self-center shadow-[0_0_8px_rgba(99,102,241,0.8)]" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+
+        {/* Quick Stats Panel */}
+        <div className="p-6 border-t border-white/5 bg-black/20">
+          <h4 className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-4">
+            Course Summary
+          </h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+              <p className="text-[10px] text-slate-500 font-bold mb-1 uppercase">Price</p>
+              <p className="text-white font-bold">GH₵ {courseData.price}</p>
+            </div>
+            <div className="p-3 rounded-xl bg-white/5 border border-white/5">
+              <p className="text-[10px] text-slate-500 font-bold mb-1 uppercase">Duration</p>
+              <p className="text-white font-bold">{courseData.duration} Weeks</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 relative flex flex-col h-full bg-[#0a0f1d]/50">
+        {/* Top bar */}
+        <header className="h-20 border-b border-white/5 flex items-center justify-between px-10 backdrop-blur-md z-10">
+          <div>
+            <h1 className="text-xl font-bold text-white">
               {steps[currentStep - 1].title}
-            </CardTitle>
-            <CardDescription>
+            </h1>
+            <p className="text-xs text-slate-400">
               {steps[currentStep - 1].description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>{renderStepContent()}</CardContent>
-        </Card>
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              onClick={() => onCancel ? onCancel() : router.back()}
+              className="text-slate-400 hover:text-white hover:bg-white/5 rounded-xl px-6"
+            >
+              Cancel
+            </Button>
+            <div className="h-8 w-[1px] bg-white/5 mx-2" />
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-slate-500 uppercase">Progress</span>
+              <div className="w-32 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-500" 
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className="text-xs font-bold text-white ml-2">{Math.round(progress)}%</span>
+            </div>
+          </div>
+        </header>
 
-        {/* Navigation Buttons */}
-        <div className="flex items-center justify-between">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentStep === 1}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Previous
-          </Button>
+        {/* Content Section */}
+        <div className="flex-1 overflow-y-auto p-10 custom-scrollbar relative">
+          <div className="max-w-4xl mx-auto">
+            {/* Step content wrapped in Glass Card */}
+            <div className="min-h-[500px] bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                <Sparkles className="w-12 h-12 text-indigo-400" />
+              </div>
+              
+              {renderStepContent()}
 
-          <div className="flex items-center gap-2">
-            {currentStep < steps.length ? (
-              <Button onClick={handleNext} className="flex items-center gap-2">
-                Next
-                <ArrowRight className="w-4 h-4" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Creating Course...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4" />
-                    Create Course
-                  </>
-                )}
-              </Button>
+              {/* Navigation Footer Inside Card */}
+              <div className="mt-16 flex items-center justify-between pt-10 border-t border-white/5">
+                <Button
+                  variant="ghost"
+                  onClick={handlePrevious}
+                  disabled={currentStep === 1}
+                  className="flex items-center gap-3 text-slate-400 hover:text-white hover:bg-white/10 rounded-2xl py-6 px-8 transition-all"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span className="font-bold">Back</span>
+                </Button>
+
+                <div className="flex items-center gap-4">
+                  {currentStep < steps.length ? (
+                    <Button 
+                      onClick={handleNext} 
+                      className="group flex items-center gap-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl py-6 px-10 transition-all shadow-xl shadow-indigo-600/20"
+                    >
+                      <span className="font-bold">Continue</span>
+                      <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleSubmit}
+                      disabled={loading}
+                      className="flex items-center gap-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl py-6 px-12 transition-all shadow-xl shadow-emerald-600/20"
+                    >
+                      {loading ? (
+                        <>
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Finalizing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="w-5 h-5 fill-white" />
+                          <span className="font-bold">Publish Course</span>
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Error Display */}
+            {Object.keys(errors).length > 0 && (
+              <div className="mt-8 bg-rose-500/10 backdrop-blur-xl border border-rose-500/20 rounded-3xl p-6 flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-6 h-6 text-rose-500" />
+                </div>
+                <div>
+                  <h5 className="font-bold text-rose-500 mb-1">Incomplete Information</h5>
+                  <ul className="list-disc list-inside space-y-0.5">
+                    {Object.entries(errors).map(([key, message]) => (
+                      <li key={key} className="text-xs text-rose-400/80 font-medium">
+                        {message}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Error Display */}
-        {Object.keys(errors).length > 0 && (
-          <Card className="mt-6 border-red-200 bg-red-50">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 text-red-600 mb-2">
-                <AlertCircle className="w-5 h-5" />
-                <span className="font-medium">
-                  Please fix the following errors:
-                </span>
-              </div>
-              <ul className="list-disc list-inside space-y-1">
-                {Object.entries(errors).map(([key, message]) => (
-                  <li key={key} className="text-sm text-red-600">
-                    {message}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        )}
-      </div>
+        {/* Global CSS for scrollbars */}
+        <style jsx global>{`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.1);
+          }
+        `}</style>
+      </main>
     </div>
   );
 
@@ -641,53 +732,114 @@ export default function CourseCreationWizard() {
 
   function renderBasicInformation() {
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="title">Course Title *</Label>
+      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {adminMode && (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <User className="w-4 h-4 text-indigo-400" />
+              <Label htmlFor="instructorId" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                Assign Instructor
+              </Label>
+            </div>
+            <Select
+              value={courseData.instructorId}
+              onValueChange={(value) =>
+                setCourseData((prev) => ({ ...prev, instructorId: value }))
+              }
+            >
+              <SelectTrigger className={cn(
+                "h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-indigo-500/50 transition-all",
+                errors.instructorId && "border-rose-500/50 bg-rose-500/5"
+              )}>
+                <SelectValue placeholder="Select faculty member" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
+                {instructors.map((instructor) => (
+                  <SelectItem key={instructor.id} value={instructor.id} className="focus:bg-indigo-600 focus:text-white">
+                    {instructor.name} ({instructor.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.instructorId && (
+              <p className="text-xs text-rose-500 font-medium ml-2">{errors.instructorId}</p>
+            )}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="w-4 h-4 text-indigo-400" />
+              <Label htmlFor="title" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                Course Title
+              </Label>
+            </div>
             <Input
               id="title"
               value={courseData.title}
               onChange={(e) =>
                 setCourseData((prev) => ({ ...prev, title: e.target.value }))
               }
-              placeholder="Enter course title"
-              className={errors.title ? "border-red-500" : ""}
+              placeholder="e.g. Advanced Digital Marketing 2024"
+              className={cn(
+                "h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-indigo-500/50 transition-all placeholder:text-slate-600",
+                errors.title && "border-rose-500/50 bg-rose-500/5"
+              )}
             />
             {errors.title && (
-              <p className="text-sm text-red-500">{errors.title}</p>
+              <p className="text-xs text-rose-500 font-medium ml-2">{errors.title}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="category">Category *</Label>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Layers className="w-4 h-4 text-indigo-400" />
+              <Label htmlFor="category" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                Category
+              </Label>
+            </div>
             <Select
               value={courseData.category}
               onValueChange={(value) =>
                 setCourseData((prev) => ({ ...prev, category: value }))
               }
             >
-              <SelectTrigger
-                className={errors.category ? "border-red-500" : ""}
-              >
-                <SelectValue placeholder="Select category" />
+              <SelectTrigger className={cn(
+                "h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-indigo-500/50 transition-all",
+                errors.category && "border-rose-500/50 bg-rose-500/5"
+              )}>
+                <SelectValue placeholder="Select course domain" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
                 {COURSE_CATEGORIES.map((category) => (
-                  <SelectItem key={category} value={category}>
+                  <SelectItem key={category} value={category} className="focus:bg-indigo-600 focus:text-white">
                     {category}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {errors.category && (
-              <p className="text-sm text-red-500">{errors.category}</p>
+              <p className="text-xs text-rose-500 font-medium ml-2">{errors.category}</p>
             )}
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="shortDescription">Short Description *</Label>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Info className="w-4 h-4 text-indigo-400" />
+              <Label htmlFor="shortDescription" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                Elevator Pitch
+              </Label>
+            </div>
+            <span className={cn(
+              "text-[10px] font-bold px-2 py-0.5 rounded-full",
+              courseData.shortDescription.length > 140 ? "bg-amber-500/20 text-amber-500" : "bg-white/5 text-slate-500"
+            )}>
+              {courseData.shortDescription.length} / 160
+            </span>
+          </div>
           <Input
             id="shortDescription"
             value={courseData.shortDescription}
@@ -697,20 +849,25 @@ export default function CourseCreationWizard() {
                 shortDescription: e.target.value,
               }))
             }
-            placeholder="Brief description (max 160 characters)"
+            placeholder="A punchy one-liner that sells the course..."
             maxLength={160}
-            className={errors.shortDescription ? "border-red-500" : ""}
+            className={cn(
+              "h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-indigo-500/50 transition-all placeholder:text-slate-600",
+              errors.shortDescription && "border-rose-500/50 bg-rose-500/5"
+            )}
           />
-          <p className="text-sm text-gray-500">
-            {courseData.shortDescription.length}/160 characters
-          </p>
           {errors.shortDescription && (
-            <p className="text-sm text-red-500">{errors.shortDescription}</p>
+            <p className="text-xs text-rose-500 font-medium ml-2">{errors.shortDescription}</p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description">Full Description *</Label>
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <BookOpen className="w-4 h-4 text-indigo-400" />
+            <Label htmlFor="description" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+              Deep Dive Description
+            </Label>
+          </div>
           <Textarea
             id="description"
             value={courseData.description}
@@ -720,61 +877,73 @@ export default function CourseCreationWizard() {
                 description: e.target.value,
               }))
             }
-            placeholder="Detailed course description"
+            placeholder="Tell a story about what students will achieve..."
             rows={6}
-            className={errors.description ? "border-red-500" : ""}
+            className={cn(
+              "bg-white/5 border-white/10 text-white rounded-3xl focus:ring-indigo-500/50 transition-all placeholder:text-slate-600 p-6 leading-relaxed",
+              errors.description && "border-rose-500/50 bg-rose-500/5"
+            )}
           />
           {errors.description && (
-            <p className="text-sm text-red-500">{errors.description}</p>
+            <p className="text-xs text-rose-500 font-medium ml-2">{errors.description}</p>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="difficulty">Difficulty Level *</Label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Shield className="w-4 h-4 text-indigo-400" />
+              <Label htmlFor="difficulty" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                Expertise Level
+              </Label>
+            </div>
             <Select
               value={courseData.difficulty}
               onValueChange={(value) =>
                 setCourseData((prev) => ({ ...prev, difficulty: value }))
               }
             >
-              <SelectTrigger
-                className={errors.difficulty ? "border-red-500" : ""}
-              >
-                <SelectValue placeholder="Select difficulty" />
+              <SelectTrigger className={cn(
+                "h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-indigo-500/50 transition-all",
+                errors.difficulty && "border-rose-500/50 bg-rose-500/5"
+              )}>
+                <SelectValue placeholder="Select level" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
                 {DIFFICULTY_LEVELS.map((level) => (
-                  <SelectItem key={level.value} value={level.value}>
-                    <div>
-                      <div className="font-medium">{level.label}</div>
-                      <div className="text-sm text-gray-500">
-                        {level.description}
-                      </div>
+                  <SelectItem key={level.value} value={level.value} className="focus:bg-indigo-600 focus:text-white py-3">
+                    <div className="flex flex-col">
+                      <span className="font-bold">{level.label}</span>
+                      <span className="text-[10px] text-slate-500 leading-tight">{level.description}</span>
                     </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             {errors.difficulty && (
-              <p className="text-sm text-red-500">{errors.difficulty}</p>
+              <p className="text-xs text-rose-500 font-medium ml-2">{errors.difficulty}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="language">Language</Label>
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="w-4 h-4 text-indigo-400" />
+              <Label htmlFor="language" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                Instruction Language
+              </Label>
+            </div>
             <Select
               value={courseData.language}
               onValueChange={(value) =>
                 setCourseData((prev) => ({ ...prev, language: value }))
               }
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select language" />
+              <SelectTrigger className="h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-indigo-500/50 transition-all">
+                <SelectValue placeholder="English" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
                 {LANGUAGES.map((language) => (
-                  <SelectItem key={language} value={language}>
+                  <SelectItem key={language} value={language} className="focus:bg-indigo-600 focus:text-white">
                     {language}
                   </SelectItem>
                 ))}
@@ -788,12 +957,19 @@ export default function CourseCreationWizard() {
 
   function renderPricingDuration() {
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="price">Course Price ($)</Label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <DollarSign className="w-4 h-4 text-indigo-400" />
+              <Label htmlFor="price" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                Course Tuition (GH₵)
+              </Label>
+            </div>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-500 group-focus-within:text-white transition-colors">
+                <span className="font-bold">$</span>
+              </div>
               <Input
                 id="price"
                 type="number"
@@ -804,19 +980,29 @@ export default function CourseCreationWizard() {
                     price: parseFloat(e.target.value) || 0,
                   }))
                 }
+                className={cn(
+                  "h-16 pl-12 bg-white/5 border-white/10 text-xl font-bold text-white rounded-2xl focus:ring-indigo-500/50 transition-all placeholder:text-slate-600",
+                  errors.price && "border-rose-500/50 bg-rose-500/5"
+                )}
                 placeholder="0.00"
-                className="pl-10"
               />
             </div>
             {errors.price && (
-              <p className="text-sm text-red-500">{errors.price}</p>
+              <p className="text-xs text-rose-500 font-medium ml-2">{errors.price}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="applicationFee">Application Fee ($)</Label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <ChevronRight className="w-4 h-4 text-indigo-400" />
+              <Label htmlFor="applicationFee" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                Application Fee (GH₵)
+              </Label>
+            </div>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-slate-500 group-focus-within:text-white transition-colors">
+                <span className="font-bold text-slate-400 text-xs">GH₵</span>
+              </div>
               <Input
                 id="applicationFee"
                 type="number"
@@ -827,18 +1013,80 @@ export default function CourseCreationWizard() {
                     applicationFee: parseFloat(e.target.value) || 0,
                   }))
                 }
+                className="h-16 pl-12 bg-white/5 border-white/10 text-xl font-bold text-white rounded-2xl focus:ring-indigo-500/50 transition-all placeholder:text-slate-600"
                 placeholder="0.00"
-                className="pl-10"
               />
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="duration">Duration (weeks) *</Label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <div className="p-8 rounded-[2rem] bg-indigo-500/5 border border-indigo-500/10 space-y-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-indigo-400" />
+            </div>
+            <div>
+              <Label className="text-sm font-bold text-white uppercase tracking-wider">Installment Plan</Label>
+              <p className="text-xs text-slate-500 font-medium">Allow students to pay in multiple parts</p>
+            </div>
+            <div className="ml-auto">
+              <Checkbox
+                id="installmentEnabled"
+                checked={courseData.installmentEnabled}
+                onCheckedChange={(checked) =>
+                  setCourseData((prev) => ({
+                    ...prev,
+                    installmentEnabled: checked as boolean,
+                  }))
+                }
+                className="w-6 h-6 rounded-lg border-white/20 data-[state=checked]:bg-indigo-500 data-[state=checked]:border-indigo-500"
+              />
+            </div>
+          </div>
+
+          {courseData.installmentEnabled && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in zoom-in-95 duration-300">
+              <div className="space-y-4">
+                <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">Payment Frequency</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {INSTALLMENT_PLANS.map((plan) => (
+                    <button
+                      key={plan.value}
+                      onClick={() => setCourseData(prev => ({ ...prev, installmentPlan: plan.value }))}
+                      className={cn(
+                        "p-4 rounded-xl border text-left transition-all duration-300",
+                        courseData.installmentPlan === plan.value 
+                          ? "bg-indigo-500/20 border-indigo-500 text-white shadow-lg shadow-indigo-500/10" 
+                          : "bg-white/5 border-white/5 text-slate-400 hover:bg-white/10"
+                      )}
+                    >
+                      <p className="text-xs font-bold">{plan.label}</p>
+                      <p className="text-[9px] opacity-60 leading-tight mt-1">{plan.description}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-center p-6 border border-white/5 rounded-2xl bg-black/20">
+                <div className="text-center">
+                  <p className="text-[10px] text-slate-500 font-bold uppercase mb-2">Estimated per Payment</p>
+                  <p className="text-3xl font-bold text-white">
+                    GH₵ {(courseData.price / (courseData.installmentPlan === 'MONTHLY' ? 4 : 2)).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar className="w-4 h-4 text-indigo-400" />
+              <Label htmlFor="duration" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                Course Duration (Weeks)
+              </Label>
+            </div>
+            <div className="relative group">
               <Input
                 id="duration"
                 type="number"
@@ -849,19 +1097,27 @@ export default function CourseCreationWizard() {
                     duration: parseInt(e.target.value) || 0,
                   }))
                 }
+                className={cn(
+                  "h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-indigo-500/50 transition-all pl-12",
+                  errors.duration && "border-rose-500/50 bg-rose-500/5"
+                )}
                 placeholder="4"
-                className="pl-10"
               />
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             </div>
             {errors.duration && (
-              <p className="text-sm text-red-500">{errors.duration}</p>
+              <p className="text-xs text-rose-500 font-medium ml-2">{errors.duration}</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="estimatedHours">Estimated Hours *</Label>
-            <div className="relative">
-              <Clock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="w-4 h-4 text-indigo-400" />
+              <Label htmlFor="estimatedHours" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                Effort (Total Hours)
+              </Label>
+            </div>
+            <div className="relative group">
               <Input
                 id="estimatedHours"
                 type="number"
@@ -872,60 +1128,18 @@ export default function CourseCreationWizard() {
                     estimatedHours: parseInt(e.target.value) || 0,
                   }))
                 }
+                className={cn(
+                  "h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-indigo-500/50 transition-all pl-12",
+                  errors.estimatedHours && "border-rose-500/50 bg-rose-500/5"
+                )}
                 placeholder="20"
-                className="pl-10"
               />
+              <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             </div>
             {errors.estimatedHours && (
-              <p className="text-sm text-red-500">{errors.estimatedHours}</p>
+              <p className="text-xs text-rose-500 font-medium ml-2">{errors.estimatedHours}</p>
             )}
           </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="installmentEnabled"
-              checked={courseData.installmentEnabled}
-              onCheckedChange={(checked) =>
-                setCourseData((prev) => ({
-                  ...prev,
-                  installmentEnabled: checked as boolean,
-                }))
-              }
-            />
-            <Label htmlFor="installmentEnabled">
-              Enable installment payments
-            </Label>
-          </div>
-
-          {courseData.installmentEnabled && (
-            <div className="space-y-2">
-              <Label htmlFor="installmentPlan">Installment Plan</Label>
-              <Select
-                value={courseData.installmentPlan}
-                onValueChange={(value) =>
-                  setCourseData((prev) => ({ ...prev, installmentPlan: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select installment plan" />
-                </SelectTrigger>
-                <SelectContent>
-                  {INSTALLMENT_PLANS.map((plan) => (
-                    <SelectItem key={plan.value} value={plan.value}>
-                      <div>
-                        <div className="font-medium">{plan.label}</div>
-                        <div className="text-sm text-gray-500">
-                          {plan.description}
-                        </div>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
         </div>
       </div>
     );
@@ -933,27 +1147,32 @@ export default function CourseCreationWizard() {
 
   function renderPrerequisitesObjectives() {
     return (
-      <div className="space-y-8">
+      <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* Prerequisites */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Prerequisites</h3>
-            <span className="text-sm text-gray-500">Optional</span>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                <Shield className="w-4 h-4 text-amber-500" />
+              </div>
+              <Label className="text-sm font-bold text-white uppercase tracking-wider">Prerequisites</Label>
+            </div>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded">Optional</span>
           </div>
 
           <div className="space-y-3">
             {courseData.prerequisites.map((prerequisite, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg"
+                className="flex items-center gap-4 p-4 bg-white/5 border border-white/5 rounded-2xl group hover:bg-white/10 transition-all duration-300"
               >
-                <BookOpen className="w-4 h-4 text-gray-500" />
-                <span className="flex-1">{prerequisite}</span>
+                <div className="w-2 h-2 rounded-full bg-amber-500/40" />
+                <span className="flex-1 text-slate-300 font-medium">{prerequisite}</span>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={() => removePrerequisite(index)}
-                  className="text-red-500 hover:text-red-700"
+                  className="w-8 h-8 rounded-lg text-slate-500 hover:bg-rose-500/20 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -961,42 +1180,51 @@ export default function CourseCreationWizard() {
             ))}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <Input
               value={newPrerequisite}
               onChange={(e) => setNewPrerequisite(e.target.value)}
-              placeholder="Add a prerequisite"
+              placeholder="e.g. Basic understanding of JavaScript"
               onKeyPress={(e) => e.key === "Enter" && addPrerequisite()}
+              className="h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-indigo-500/50 transition-all placeholder:text-slate-600"
             />
             <Button
               onClick={addPrerequisite}
               disabled={!newPrerequisite.trim()}
+              className="h-14 w-14 bg-white/10 hover:bg-white/20 text-white rounded-2xl transition-all"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
             </Button>
           </div>
         </div>
 
         {/* Learning Objectives */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Learning Objectives *</h3>
-            <span className="text-sm text-gray-500">Required</span>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                <Target className="w-4 h-4 text-indigo-400" />
+              </div>
+              <Label className="text-sm font-bold text-white uppercase tracking-wider">Learning Objectives</Label>
+            </div>
+            <span className="text-[10px] font-bold text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded">Required</span>
           </div>
 
           <div className="space-y-3">
             {courseData.learningObjectives.map((objective, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 p-3 bg-blue-50 rounded-lg"
+                className="flex items-center gap-4 p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl group hover:bg-indigo-500/10 transition-all duration-300"
               >
-                <Target className="w-4 h-4 text-blue-500" />
-                <span className="flex-1">{objective}</span>
+                <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                  <span className="text-xs font-bold text-indigo-400">{index + 1}</span>
+                </div>
+                <span className="flex-1 text-slate-200 font-medium">{objective}</span>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={() => removeObjective(index)}
-                  className="text-red-500 hover:text-red-700"
+                  className="w-8 h-8 rounded-lg text-slate-500 hover:bg-rose-500/20 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -1004,19 +1232,27 @@ export default function CourseCreationWizard() {
             ))}
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <Input
               value={newObjective}
               onChange={(e) => setNewObjective(e.target.value)}
-              placeholder="Add a learning objective"
+              placeholder="e.g. Master React Hooks and Context API"
               onKeyPress={(e) => e.key === "Enter" && addObjective()}
+              className={cn(
+                "h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-indigo-500/50 transition-all placeholder:text-slate-600",
+                errors.objectives && "border-rose-500/20"
+              )}
             />
-            <Button onClick={addObjective} disabled={!newObjective.trim()}>
-              <Plus className="w-4 h-4" />
+            <Button 
+              onClick={addObjective} 
+              disabled={!newObjective.trim()}
+              className="h-14 w-14 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl shadow-lg shadow-indigo-600/20 transition-all"
+            >
+              <Plus className="w-5 h-5" />
             </Button>
           </div>
           {errors.objectives && (
-            <p className="text-sm text-red-500">{errors.objectives}</p>
+            <p className="text-xs text-rose-500 font-medium ml-2">{errors.objectives}</p>
           )}
         </div>
       </div>
@@ -1025,107 +1261,152 @@ export default function CourseCreationWizard() {
 
   function renderCourseOutline() {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">Course Outline *</h3>
-          <span className="text-sm text-gray-500">
-            {courseData.courseOutline.length} items
-          </span>
+      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="flex items-center justify-between border-b border-white/5 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+              <Layers className="w-5 h-5 text-indigo-400" />
+            </div>
+            <div>
+              <Label className="text-sm font-bold text-white uppercase tracking-wider">Course Curriculum</Label>
+              <p className="text-xs text-slate-500 font-medium">Build your course structure item by item</p>
+            </div>
+          </div>
+          <Badge className="bg-white/5 text-slate-400 border-white/5 px-3 py-1">
+            {courseData.courseOutline.length} Modules
+          </Badge>
         </div>
 
         {/* Outline Items */}
-        <div className="space-y-3">
-          {courseData.courseOutline.map((item, index) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-500">
-                  #{item.order}
-                </span>
-                <Badge variant="secondary">{item.type}</Badge>
+        <div className="space-y-4">
+          {courseData.courseOutline.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-white/5 rounded-[2.5rem] bg-white/[0.01]">
+              <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
+                <Plus className="w-8 h-8 text-slate-600" />
               </div>
-
-              <div className="flex-1">
-                <h4 className="font-medium">{item.title}</h4>
-                {item.description && (
-                  <p className="text-sm text-gray-600">{item.description}</p>
-                )}
-                <div className="flex items-center gap-4 mt-1">
-                  <span className="text-xs text-gray-500">
-                    <Clock className="w-3 h-3 inline mr-1" />
-                    {item.duration} min
-                  </span>
-                  {item.isRequired && (
-                    <Badge variant="outline" className="text-xs">
-                      Required
-                    </Badge>
-                  )}
-                </div>
-              </div>
-
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => removeOutlineItem(item.id)}
-                className="text-red-500 hover:text-red-700"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
+              <p className="text-slate-500 font-medium">No content added yet. Start by defining your first module below.</p>
             </div>
-          ))}
+          ) : (
+            <div className="space-y-3">
+              {courseData.courseOutline.map((item, index) => (
+                <div
+                  key={item.id}
+                  className="group flex items-center gap-6 p-6 bg-white/[0.03] border border-white/5 rounded-3xl hover:bg-white/[0.06] transition-all duration-300"
+                >
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Seq</span>
+                    <div className="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center border border-white/5 shadow-inner">
+                      <span className="text-sm font-bold text-white">{(index + 1).toString().padStart(2, '0')}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1">
+                      <Badge className={cn(
+                        "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md",
+                        item.type === 'lesson' ? "bg-blue-500/20 text-blue-400" :
+                        item.type === 'assignment' ? "bg-amber-500/20 text-amber-400" :
+                        item.type === 'quiz' ? "bg-purple-500/20 text-purple-400" : "bg-emerald-500/20 text-emerald-400"
+                      )}>
+                        {item.type}
+                      </Badge>
+                      <h4 className="text-base font-bold text-white">{item.title}</h4>
+                    </div>
+                    <p className="text-xs text-slate-500 line-clamp-1 mb-2 font-medium">{item.description || 'No description provided.'}</p>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <Clock className="w-3 h-3" />
+                        {item.duration} minutes
+                      </div>
+                      {item.isRequired && (
+                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-500 uppercase tracking-wider">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Mandatory
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeOutlineItem(item.id)}
+                    className="w-12 h-12 rounded-2xl text-slate-500 hover:bg-rose-500/20 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Add New Outline Item */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Add Course Content</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="outlineTitle">Title *</Label>
-                <Input
-                  id="outlineTitle"
-                  value={newOutlineItem.title || ""}
-                  onChange={(e) =>
-                    setNewOutlineItem((prev) => ({
-                      ...prev,
-                      title: e.target.value,
-                    }))
-                  }
-                  placeholder="Enter content title"
-                />
-              </div>
+        <div className="p-8 bg-indigo-500/5 border border-indigo-500/10 rounded-[2.5rem] relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+            <Plus className="w-24 h-24 text-white" />
+          </div>
+          
+          <h5 className="text-sm font-bold text-white uppercase tracking-wider mb-6 flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-indigo-400" />
+            Append New Content
+          </h5>
 
-              <div className="space-y-2">
-                <Label htmlFor="outlineType">Type</Label>
-                <Select
-                  value={newOutlineItem.type || "lesson"}
-                  onValueChange={(value: any) =>
-                    setNewOutlineItem((prev) => ({
-                      ...prev,
-                      type: value,
-                    }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="lesson">Lesson</SelectItem>
-                    <SelectItem value="assignment">Assignment</SelectItem>
-                    <SelectItem value="quiz">Quiz</SelectItem>
-                    <SelectItem value="project">Project</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
+            <div className="md:col-span-7 space-y-3">
+              <Label htmlFor="outlineTitle" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Title</Label>
+              <Input
+                id="outlineTitle"
+                value={newOutlineItem.title || ""}
+                onChange={(e) =>
+                  setNewOutlineItem((prev) => ({
+                    ...prev,
+                    title: e.target.value,
+                  }))
+                }
+                placeholder="e.g. Introduction to Neural Networks"
+                className="h-14 bg-black/20 border-white/5 text-white rounded-2xl focus:ring-indigo-500/50 transition-all"
+              />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="outlineDescription">Description</Label>
-              <Textarea
+            <div className="md:col-span-3 space-y-3">
+              <Label htmlFor="outlineType" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Type</Label>
+              <Select
+                value={newOutlineItem.type || "lesson"}
+                onValueChange={(value: any) =>
+                  setNewOutlineItem((prev) => ({
+                    ...prev,
+                    type: value,
+                  }))
+                }
+              >
+                <SelectTrigger className="h-14 bg-black/20 border-white/5 text-white rounded-2xl focus:ring-indigo-500/50 transition-all">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
+                  <SelectItem value="lesson">Lesson</SelectItem>
+                  <SelectItem value="assignment">Assignment</SelectItem>
+                  <SelectItem value="quiz">Quiz</SelectItem>
+                  <SelectItem value="project">Project</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="md:col-span-2">
+              <Button
+                onClick={addOutlineItem}
+                disabled={!newOutlineItem.title?.trim()}
+                className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl shadow-lg shadow-indigo-600/20 transition-all"
+              >
+                <Plus className="w-6 h-6" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mt-6 items-end">
+            <div className="md:col-span-6 space-y-3">
+              <Label htmlFor="outlineDescription" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Brief Summary</Label>
+              <Input
                 id="outlineDescription"
                 value={newOutlineItem.description || ""}
                 onChange={(e) =>
@@ -1134,14 +1415,14 @@ export default function CourseCreationWizard() {
                     description: e.target.value,
                   }))
                 }
-                placeholder="Describe this content"
-                rows={2}
+                placeholder="What will students learn in this part?"
+                className="h-14 bg-black/20 border-white/5 text-white rounded-2xl focus:ring-indigo-500/50 transition-all"
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="outlineDuration">Duration (minutes)</Label>
+            <div className="md:col-span-3 space-y-3">
+              <Label htmlFor="outlineDuration" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Duration (min)</Label>
+              <div className="relative">
                 <Input
                   id="outlineDuration"
                   type="number"
@@ -1153,10 +1434,14 @@ export default function CourseCreationWizard() {
                     }))
                   }
                   placeholder="30"
+                  className="h-14 bg-black/20 border-white/5 text-white rounded-2xl focus:ring-indigo-500/50 transition-all pl-12"
                 />
+                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600" />
               </div>
+            </div>
 
-              <div className="flex items-center space-x-2">
+            <div className="md:col-span-3 pb-3">
+              <div className="flex items-center gap-3 bg-black/10 p-3 rounded-xl border border-white/5">
                 <Checkbox
                   id="outlineRequired"
                   checked={newOutlineItem.isRequired || true}
@@ -1166,23 +1451,16 @@ export default function CourseCreationWizard() {
                       isRequired: checked as boolean,
                     }))
                   }
+                  className="w-5 h-5 rounded-md border-white/20 data-[state=checked]:bg-emerald-500"
                 />
-                <Label htmlFor="outlineRequired">Required content</Label>
+                <Label htmlFor="outlineRequired" className="text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer">Required Part</Label>
               </div>
             </div>
-
-            <Button
-              onClick={addOutlineItem}
-              disabled={!newOutlineItem.title?.trim()}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add to Course Outline
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {errors.outline && (
-          <p className="text-sm text-red-500">{errors.outline}</p>
+          <p className="text-xs text-rose-500 font-medium ml-2">{errors.outline}</p>
         )}
       </div>
     );
@@ -1190,89 +1468,117 @@ export default function CourseCreationWizard() {
 
   function renderMediaResources() {
     return (
-      <div className="space-y-8">
+      <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* Course Thumbnail */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Course Thumbnail</h3>
-          <div className="flex items-center gap-4">
-            {courseData.thumbnail ? (
-              <div className="relative">
-                <img
-                  src={URL.createObjectURL(courseData.thumbnail)}
-                  alt="Course thumbnail"
-                  className="w-32 h-20 object-cover rounded-lg"
-                />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    setCourseData((prev) => ({ ...prev, thumbnail: null }))
-                  }
-                  className="absolute -top-2 -right-2 text-red-500 hover:text-red-700"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
-              </div>
-            ) : (
-              <div className="w-32 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                <Image className="w-6 h-6 text-gray-400" />
-              </div>
-            )}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+              <Image className="w-4 h-4 text-indigo-400" />
+            </div>
+            <Label className="text-sm font-bold text-white uppercase tracking-wider">Visual Identity (Thumbnail)</Label>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div className="relative group aspect-video bg-black/40 border-2 border-dashed border-white/10 rounded-[2rem] flex flex-col items-center justify-center overflow-hidden transition-all hover:border-indigo-500/40">
+              {courseData.thumbnail ? (
+                <>
+                  <img
+                    src={URL.createObjectURL(courseData.thumbnail)}
+                    alt="Course thumbnail"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setCourseData((prev) => ({ ...prev, thumbnail: null }))}
+                      className="w-12 h-12 rounded-2xl bg-rose-500/20 text-rose-500 hover:bg-rose-500 transition-all"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <label className="cursor-pointer flex flex-col items-center p-8 w-full h-full justify-center">
+                  <div className="w-16 h-16 rounded-3xl bg-white/5 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-indigo-500/20 transition-all">
+                    <Upload className="w-8 h-8 text-slate-600 group-hover:text-indigo-400" />
+                  </div>
+                  <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Upload Cover</span>
+                  <span className="text-[10px] text-slate-600 mt-2 font-medium">1280x720 recommended</span>
+                  <input
+                    type="file"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) setCourseData((prev) => ({ ...prev, thumbnail: file }));
+                    }}
+                  />
+                </label>
+              )}
+            </div>
 
-            <div>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleFileUpload(file, "thumbnail");
-                }}
-                className="hidden"
-                id="thumbnail-upload"
+            <div className="space-y-4">
+              <h6 className="text-sm font-bold text-slate-300">Thumbnail Requirements</h6>
+              <ul className="space-y-3">
+                {[
+                  { label: "High resolution (min 1280x720)", icon: <CheckCircle2 className="w-3 h-3 text-emerald-500" /> },
+                  { label: "JPG, PNG or WEBP format", icon: <CheckCircle2 className="w-3 h-3 text-emerald-500" /> },
+                  { label: "Maximum file size: 5MB", icon: <CheckCircle2 className="w-3 h-3 text-emerald-500" /> },
+                  { label: "No offensive content or copyright material", icon: <CheckCircle2 className="w-3 h-3 text-emerald-500" /> }
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-3 text-xs text-slate-500 font-medium">
+                    {item.icon}
+                    {item.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          {errors.thumbnail && (
+            <p className="text-xs text-rose-500 font-medium ml-2">{errors.thumbnail}</p>
+          )}
+        </div>
+
+        {/* Video Resources */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                <Video className="w-4 h-4 text-indigo-400" />
+              </div>
+              <Label className="text-sm font-bold text-white uppercase tracking-wider">Course Trailer (Optional)</Label>
+            </div>
+          </div>
+
+          <div className="p-8 bg-black/40 border border-white/5 rounded-[2rem] flex flex-col items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mb-3">
+              <Link className="w-5 h-5 text-slate-600" />
+            </div>
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 text-center">Cloudinary Storage Ready</p>
+            <div className="flex gap-3 w-full max-w-lg">
+              <Input
+                placeholder="Cloudinary public ID or video URL"
+                value={courseData.promotionalVideo}
+                onChange={(e) => setCourseData(prev => ({ ...prev, promotionalVideo: e.target.value }))}
+                className="h-14 bg-black/20 border-white/5 text-white rounded-2xl focus:ring-indigo-500/50 transition-all font-medium"
               />
-              <Label htmlFor="thumbnail-upload" className="cursor-pointer">
-                <Button variant="outline" asChild>
-                  <span>
-                    <Upload className="w-4 h-4 mr-2" />
-                    Upload Thumbnail
-                  </span>
-                </Button>
-              </Label>
-              <p className="text-sm text-gray-500 mt-1">
-                Recommended: 1280x720px, max 5MB
-              </p>
+              <Button className="h-14 bg-white/10 hover:bg-white/20 text-white rounded-2xl px-6 font-bold transition-all">Preview</Button>
             </div>
           </div>
         </div>
 
-        {/* Promotional Video */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Promotional Video</h3>
-          <div className="space-y-2">
-            <Label htmlFor="promotionalVideo">Video URL</Label>
-            <Input
-              id="promotionalVideo"
-              value={courseData.promotionalVideo}
-              onChange={(e) =>
-                setCourseData((prev) => ({
-                  ...prev,
-                  promotionalVideo: e.target.value,
-                }))
-              }
-              placeholder="https://youtube.com/watch?v=..."
-            />
-            <p className="text-sm text-gray-500">
-              Add a YouTube or Vimeo URL to showcase your course
-            </p>
-          </div>
-        </div>
-
         {/* Course Materials */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">Course Materials</h3>
-            <span className="text-sm text-gray-500">
-              {courseData.courseMaterials.length} files
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-white/5 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                <FileText className="w-4 h-4 text-indigo-400" />
+              </div>
+              <Label className="text-sm font-bold text-white uppercase tracking-wider">Course Materials</Label>
+            </div>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest bg-white/5 px-2 py-0.5 rounded">
+              {courseData.courseMaterials.length} Files Attached
             </span>
           </div>
 
@@ -1280,45 +1586,33 @@ export default function CourseCreationWizard() {
             {courseData.courseMaterials.map((material) => (
               <div
                 key={material.id}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                className="group flex items-center gap-4 p-4 bg-white/[0.03] border border-white/5 rounded-2xl hover:bg-white/[0.06] transition-all duration-300"
               >
-                <div className="flex items-center gap-2">
-                  {material.type === "video" && (
-                    <Video className="w-4 h-4 text-red-500" />
-                  )}
-                  {material.type === "audio" && (
-                    <FileText className="w-4 h-4 text-blue-500" />
-                  )}
-                  {material.type === "image" && (
-                    <Image className="w-4 h-4 text-green-500" />
-                  )}
-                  {material.type === "document" && (
-                    <FileText className="w-4 h-4 text-gray-500" />
-                  )}
-                  {material.type === "link" && (
-                    <Link className="w-4 h-4 text-purple-500" />
-                  )}
+                <div className="w-10 h-10 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center">
+                  {material.type === "video" && <Video className="w-5 h-5 text-rose-400" />}
+                  {material.type === "audio" && <Volume2 className="w-5 h-5 text-blue-400" />}
+                  {material.type === "image" && <Image className="w-5 h-5 text-emerald-400" />}
+                  {material.type === "document" && <FileText className="w-5 h-5 text-indigo-400" />}
+                  {material.type === "link" && <Link className="w-5 h-5 text-amber-400" />}
                 </div>
 
                 <div className="flex-1">
-                  <p className="font-medium">{material.name}</p>
-                  {material.description && (
-                    <p className="text-sm text-gray-600">
-                      {material.description}
-                    </p>
-                  )}
-                  {material.size && (
-                    <p className="text-xs text-gray-500">
-                      {(material.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  )}
+                  <p className="text-sm font-bold text-white">{material.name}</p>
+                  <div className="flex items-center gap-3 mt-0.5">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{material.type}</span>
+                    {material.size && (
+                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                        • {(material.size / 1024 / 1024).toFixed(2)} MB
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={() => removeMaterial(material.id)}
-                  className="text-red-500 hover:text-red-700"
+                  className="w-10 h-10 rounded-xl text-slate-500 hover:bg-rose-500/20 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
@@ -1326,7 +1620,7 @@ export default function CourseCreationWizard() {
             ))}
           </div>
 
-          <div>
+          <div className="relative group p-6 border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.01] hover:bg-white/[0.02] hover:border-white/10 transition-all text-center">
             <input
               type="file"
               multiple
@@ -1334,20 +1628,13 @@ export default function CourseCreationWizard() {
                 const files = Array.from(e.target.files || []);
                 files.forEach((file) => handleFileUpload(file, "material"));
               }}
-              className="hidden"
-              id="materials-upload"
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             />
-            <Label htmlFor="materials-upload" className="cursor-pointer">
-              <Button variant="outline" asChild>
-                <span>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload Materials
-                </span>
-              </Button>
-            </Label>
-            <p className="text-sm text-gray-500 mt-1">
-              Upload documents, videos, images, and other course materials
-            </p>
+            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+              <Upload className="w-6 h-6 text-slate-500" />
+            </div>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Drop files here or click to browse</p>
+            <p className="text-[10px] text-slate-600 mt-2 font-medium">Supporting PDF, Word, MP4, and Common Images</p>
           </div>
         </div>
       </div>
@@ -1356,63 +1643,70 @@ export default function CourseCreationWizard() {
 
   function renderSettingsFeatures() {
     return (
-      <div className="space-y-8">
-        {/* Course Mode */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Course Delivery Mode</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        {/* Course Delivery Mode */}
+        <div className="space-y-8">
+          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+              <Layers className="w-4 h-4 text-indigo-400" />
+            </div>
+            <Label className="text-sm font-bold text-white uppercase tracking-wider">Course Delivery Mode</Label>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
-              {
-                value: "online",
-                label: "Online",
-                description: "Fully online course",
-              },
-              {
-                value: "offline",
-                label: "Offline",
-                description: "In-person classes",
-              },
-              {
-                value: "hybrid",
-                label: "Hybrid",
-                description: "Mix of online and offline",
-              },
+              { value: "online", label: "Virtual Learning", description: "Fully remote experience via our LMS." },
+              { value: "offline", label: "Campus Based", description: "Traditional in-person classroom setting." },
+              { value: "hybrid", label: "Blended Model", description: "Best of both worlds: online & onsite." },
             ].map((mode) => (
-              <div key={mode.value} className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id={mode.value}
-                    checked={courseData.mode.includes(mode.value)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setCourseData((prev) => ({
-                          ...prev,
-                          mode: [...prev.mode, mode.value],
-                        }));
-                      } else {
-                        setCourseData((prev) => ({
-                          ...prev,
-                          mode: prev.mode.filter((m) => m !== mode.value),
-                        }));
-                      }
-                    }}
-                  />
-                  <Label htmlFor={mode.value}>{mode.label}</Label>
+              <button
+                key={mode.value}
+                onClick={() => {
+                  if (courseData.mode.includes(mode.value)) {
+                    setCourseData(prev => ({ ...prev, mode: prev.mode.filter(m => m !== mode.value) }));
+                  } else {
+                    setCourseData(prev => ({ ...prev, mode: [...prev.mode, mode.value] }));
+                  }
+                }}
+                className={cn(
+                  "p-6 rounded-3xl border text-left transition-all duration-300",
+                  courseData.mode.includes(mode.value)
+                    ? "bg-indigo-500/10 border-indigo-500/30 ring-1 ring-indigo-500/20"
+                    : "bg-white/5 border-white/5 hover:bg-white/10"
+                )}
+              >
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className={cn("text-xs font-bold uppercase tracking-widest", courseData.mode.includes(mode.value) ? "text-indigo-400" : "text-slate-500")}>
+                      {mode.value}
+                    </span>
+                    <Checkbox checked={courseData.mode.includes(mode.value)} className="pointer-events-none" />
+                  </div>
+                  <h6 className="text-sm font-bold text-white">{mode.label}</h6>
+                  <p className="text-[10px] text-slate-500 font-medium leading-relaxed">{mode.description}</p>
                 </div>
-                <p className="text-sm text-gray-500">{mode.description}</p>
-              </div>
+              </button>
             ))}
           </div>
         </div>
 
-        {/* Course Settings */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Course Settings</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="maxStudents">Maximum Students</Label>
-              <div className="relative">
-                <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <div className="space-y-8">
+          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+            <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+              <Settings2 className="w-4 h-4 text-indigo-400" />
+            </div>
+            <Label className="text-sm font-bold text-white uppercase tracking-wider">Deployment & Capacity</Label>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="w-4 h-4 text-indigo-400" />
+                <Label htmlFor="maxStudents" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                  Audience Size (Max)
+                </Label>
+              </div>
+              <div className="relative group">
                 <Input
                   id="maxStudents"
                   type="number"
@@ -1423,26 +1717,32 @@ export default function CourseCreationWizard() {
                       maxStudents: parseInt(e.target.value) || 0,
                     }))
                   }
-                  placeholder="50"
-                  className="pl-10"
+                  className="h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-indigo-500/50 transition-all font-bold text-lg pl-12"
+                  placeholder="Unlimited"
                 />
+                <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="language">Primary Language</Label>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Zap className="w-4 h-4 text-indigo-400" />
+                <Label htmlFor="language" className="text-sm font-bold text-slate-300 uppercase tracking-wider">
+                  Instruction Language
+                </Label>
+              </div>
               <Select
                 value={courseData.language}
                 onValueChange={(value) =>
                   setCourseData((prev) => ({ ...prev, language: value }))
                 }
               >
-                <SelectTrigger>
-                  <SelectValue />
+                <SelectTrigger className="h-14 bg-white/5 border-white/10 text-white rounded-2xl focus:ring-indigo-500/50 transition-all">
+                  <SelectValue placeholder="English" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-slate-900 border-white/10 text-slate-200">
                   {LANGUAGES.map((language) => (
-                    <SelectItem key={language} value={language}>
+                    <SelectItem key={language} value={language} className="focus:bg-indigo-600 focus:text-white">
                       {language}
                     </SelectItem>
                   ))}
@@ -1452,72 +1752,92 @@ export default function CourseCreationWizard() {
           </div>
         </div>
 
-        {/* Features */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold">Course Features</h3>
+        <div className="space-y-8">
+          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+            </div>
+            <Label className="text-sm font-bold text-white uppercase tracking-wider">Course Features & Tools</Label>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[
               {
-                key: "certificateAwarded",
-                label: "Certificate of Completion",
-                description: "Award certificate upon completion",
+                key: "certificateAwarded" as const,
+                label: "Digital Certification",
+                icon: <Shield className="w-4 h-4" />,
+                description: "Blockchain-verified certificates",
               },
               {
-                key: "enableDiscussion",
-                label: "Discussion Forum",
-                description: "Enable student discussions",
+                key: "enableDiscussion" as const,
+                label: "Real-time Discussion",
+                icon: <FileText className="w-4 h-4" />,
+                description: "Dedicated forum for each module",
               },
               {
-                key: "enableLiveSessions",
-                label: "Live Sessions",
-                description: "Schedule live video sessions",
+                key: "enableLiveSessions" as const,
+                label: "Sync Live Sessions",
+                icon: <Video className="w-4 h-4" />,
+                description: "Interactive Q&A and webinars",
               },
               {
-                key: "enableAssessments",
-                label: "Assessments",
-                description: "Include quizzes and assignments",
+                key: "enableAssessments" as const,
+                label: "Guided Assessments",
+                icon: <CheckCircle2 className="w-4 h-4" />,
+                description: "Auto-graded quizzes and feedback",
               },
               {
-                key: "isPublic",
-                label: "Public Course",
-                description: "Make course visible to all students",
+                key: "isPublic" as const,
+                label: "Catalog Visibility",
+                icon: <Users className="w-4 h-4" />,
+                description: "Feature in public marketplace",
               },
               {
-                key: "allowEnrollment",
-                label: "Allow Enrollment",
-                description: "Students can enroll immediately",
+                key: "allowEnrollment" as const,
+                label: "Instant Enrollment",
+                icon: <Zap className="w-4 h-4" />,
+                description: "Skip application processing",
               },
               {
-                key: "requireApplication",
-                label: "Require Application",
-                description: "Students must apply first",
+                key: "requireApplication" as const,
+                label: "Admission Required",
+                icon: <FileText className="w-4 h-4" />,
+                description: "Vet students before they join",
               },
               {
-                key: "autoApprove",
-                label: "Auto-approve Applications",
-                description: "Automatically approve applications",
+                key: "autoApprove" as const,
+                label: "Auto-Admission",
+                icon: <CheckCircle2 className="w-4 h-4" />,
+                description: "System-vetted intake protocol",
               },
             ].map((feature) => (
-              <div key={feature.key} className="flex items-start space-x-3">
-                <Checkbox
-                  id={feature.key}
-                  checked={
-                    courseData[feature.key as keyof CourseData] as boolean
-                  }
-                  onCheckedChange={(checked) =>
-                    setCourseData((prev) => ({
-                      ...prev,
-                      [feature.key]: checked,
-                    }))
-                  }
-                />
-                <div className="space-y-1">
-                  <Label htmlFor={feature.key} className="text-sm font-medium">
-                    {feature.label}
-                  </Label>
-                  <p className="text-xs text-gray-500">{feature.description}</p>
+              <button
+                key={feature.key}
+                onClick={() => setCourseData(prev => ({ ...prev, [feature.key]: !prev[feature.key] }))}
+                className={cn(
+                  "p-5 rounded-2xl border text-left transition-all duration-300 group",
+                  courseData[feature.key]
+                    ? "bg-indigo-500/10 border-indigo-500/30 ring-1 ring-indigo-500/20"
+                    : "bg-white/5 border-white/5 hover:bg-white/10"
+                )}
+              >
+                <div className="flex items-start gap-4">
+                  <div className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                    courseData[feature.key] ? "bg-indigo-500 text-white" : "bg-white/5 text-slate-500"
+                  )}>
+                    {feature.icon}
+                  </div>
+                  <div className="flex-1">
+                    <p className={cn("text-sm font-bold", courseData[feature.key] ? "text-white" : "text-slate-400")}>{feature.label}</p>
+                    <p className="text-[10px] text-slate-500 font-medium mt-0.5">{feature.description}</p>
+                  </div>
+                  <Checkbox
+                    checked={courseData[feature.key]}
+                    className="mt-1 pointer-events-none"
+                  />
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -1527,188 +1847,124 @@ export default function CourseCreationWizard() {
 
   function renderReviewPublish() {
     return (
-      <div className="space-y-8">
-        <div className="text-center mb-8">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-gray-900 mb-2">
-            Review Your Course
-          </h3>
-          <p className="text-gray-600">
-            Please review all the information below before publishing your
-            course
-          </p>
+      <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="text-center space-y-4">
+          <div className="w-20 h-20 rounded-[2.5rem] bg-indigo-500/20 flex items-center justify-center mx-auto shadow-lg shadow-indigo-500/10">
+            <Shield className="w-10 h-10 text-indigo-400" />
+          </div>
+          <div>
+            <h3 className="text-3xl font-bold text-white tracking-tight">Final Verification</h3>
+            <p className="text-slate-500 font-medium">Please verify your course parameters before publishing to the platform.</p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Course Overview */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5" />
-                Course Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <h4 className="font-semibold">{courseData.title}</h4>
-                <p className="text-sm text-gray-600">
-                  {courseData.shortDescription}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-500">Category:</span>
-                  <p className="font-medium">{courseData.category}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Difficulty:</span>
-                  <p className="font-medium">{courseData.difficulty}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Duration:</span>
-                  <p className="font-medium">{courseData.duration} weeks</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Hours:</span>
-                  <p className="font-medium">
-                    {courseData.estimatedHours} hours
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pricing & Enrollment */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
-                Pricing & Enrollment
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-500">Course Price:</span>
-                  <p className="font-medium">${courseData.price}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Application Fee:</span>
-                  <p className="font-medium">${courseData.applicationFee}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Max Students:</span>
-                  <p className="font-medium">{courseData.maxStudents}</p>
-                </div>
-                <div>
-                  <span className="text-gray-500">Mode:</span>
-                  <p className="font-medium">{courseData.mode.join(", ")}</p>
-                </div>
-              </div>
-
-              {courseData.installmentEnabled && (
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm font-medium text-blue-900">
-                    Installment Plan
-                  </p>
-                  <p className="text-sm text-blue-700">
-                    {courseData.installmentPlan}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Learning Objectives */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="w-5 h-5" />
-              Learning Objectives
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {courseData.learningObjectives.map((objective, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-sm">{objective}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        {/* Course Outline */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Course Outline ({courseData.courseOutline.length} items)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {courseData.courseOutline.map((item, index) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-                >
-                  <span className="text-sm font-medium text-gray-500">
-                    #{item.order}
-                  </span>
-                  <Badge variant="secondary">{item.type}</Badge>
-                  <div className="flex-1">
-                    <h4 className="font-medium">{item.title}</h4>
-                    {item.description && (
-                      <p className="text-sm text-gray-600">
-                        {item.description}
-                      </p>
-                    )}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {item.duration} min
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Features Summary */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Info className="w-5 h-5" />
-              Enabled Features
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Quick Stats Panel */}
+          <div className="p-8 bg-indigo-500/5 border border-indigo-500/10 rounded-[2.5rem] space-y-6">
+            <h5 className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+              <Zap className="w-3 h-3" />
+              Course Vital Statistics
+            </h5>
+            <div className="grid grid-cols-2 gap-6">
               {[
-                { key: "certificateAwarded", label: "Certificate" },
-                { key: "enableDiscussion", label: "Discussion" },
-                { key: "enableLiveSessions", label: "Live Sessions" },
-                { key: "enableAssessments", label: "Assessments" },
-                { key: "isPublic", label: "Public" },
-                { key: "allowEnrollment", label: "Enrollment" },
-                { key: "requireApplication", label: "Application" },
-                { key: "autoApprove", label: "Auto-approve" },
-              ].map((feature) => (
-                <div key={feature.key} className="flex items-center gap-2">
-                  {courseData[feature.key as keyof CourseData] ? (
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                  ) : (
-                    <div className="w-4 h-4 border border-gray-300 rounded-full" />
-                  )}
-                  <span className="text-sm">{feature.label}</span>
+                { label: "Final Price", value: `GH₵ ${courseData.price}`, icon: <DollarSign className="w-4 h-4 text-emerald-400" /> },
+                { label: "Application Fee", value: `GH₵ ${courseData.applicationFee}`, icon: <Shield className="w-4 h-4 text-indigo-400" /> },
+                { label: "Curriculum Size", value: `${courseData.courseOutline.length} Modules`, icon: <Layers className="w-4 h-4 text-blue-400" /> },
+                { label: "Total Duration", value: `${courseData.duration} Weeks`, icon: <Calendar className="w-4 h-4 text-amber-400" /> }
+              ].map((stat, i) => (
+                <div key={i} className="space-y-1">
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stat.label}</p>
+                  <div className="flex items-center gap-2">
+                    {stat.icon}
+                    <span className="text-lg font-bold text-white tracking-tight">{stat.value}</span>
+                  </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Delivery Configuration */}
+          <div className="p-8 bg-white/[0.02] border border-white/5 rounded-[2.5rem] space-y-6">
+            <h5 className="text-xs font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+              <Settings2 className="w-3 h-3" />
+              Delivery & Access
+            </h5>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+                    <Layers className="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <span className="text-sm font-bold text-slate-300">Mode</span>
+                </div>
+                <Badge className="bg-indigo-500/20 text-indigo-400 border-indigo-500/20 uppercase text-[10px] font-bold tracking-widest px-3">
+                  {courseData.mode.join(" + ") || "Not Specified"}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <span className="text-sm font-bold text-slate-300">Intake Process</span>
+                </div>
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/20 uppercase text-[10px] font-bold tracking-widest px-3">
+                  {courseData.requireApplication ? "Manual Vet" : "Instant Enroll"}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Major Content Summary */}
+        <div className="space-y-6">
+          <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+              <FileText className="w-4 h-4 text-slate-400" />
+            </div>
+            <Label className="text-sm font-bold text-white uppercase tracking-wider">Course Outline Verification</Label>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {courseData.courseOutline.length > 0 ? (
+              courseData.courseOutline.slice(0, 6).map((item, i) => (
+                <div key={item.id} className="p-4 bg-white/[0.03] border border-white/10 rounded-2xl flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center border border-white/5 text-[10px] font-bold text-indigo-400">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h6 className="text-xs font-bold text-white truncate">{item.title}</h6>
+                    <p className="text-[10px] text-slate-500 uppercase font-bold mt-1 tracking-widest">{item.type} • {item.duration} min</p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full p-8 border-2 border-dashed border-white/5 rounded-3xl text-center">
+                <AlertCircle className="w-8 h-8 text-rose-500/40 mx-auto mb-2" />
+                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">No curriculum content defined.</p>
+              </div>
+            )}
+            {courseData.courseOutline.length > 6 && (
+              <div className="p-4 bg-indigo-600/10 border border-indigo-600/20 rounded-2xl flex items-center justify-center">
+                <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">+{courseData.courseOutline.length - 6} More Items</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Final Confirmation Warning */}
+        <div className="p-6 bg-rose-500/5 border border-rose-500/20 rounded-3xl flex items-start gap-4">
+          <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="w-5 h-5 text-rose-500" />
+          </div>
+          <div className="space-y-1">
+            <h6 className="text-sm font-bold text-rose-500 uppercase tracking-tight">Important Notice</h6>
+            <p className="text-xs text-rose-500/70 font-medium leading-relaxed">
+              By publishing this course, you confirm that all content adheres to our educational standards and you hold the necessary rights to use all attached media and materials.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }

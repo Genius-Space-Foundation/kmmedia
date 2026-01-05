@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import LogoLoader from "@/components/ui/LogoLoader";
 import { 
   CreditCard, 
   Clock, 
@@ -294,6 +295,7 @@ export default function StudentDashboard() {
     courseId?: string;
     courseName?: string;
     applicationId?: string;
+    enrollmentId?: string;
     type: "APPLICATION_FEE" | "TUITION" | "INSTALLMENT";
   } | null>(null);
 
@@ -312,6 +314,11 @@ export default function StudentDashboard() {
   const [isAssessmentModalOpen, setIsAssessmentModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<any | null>(null);
   const [isClassModalOpen, setIsClassModalOpen] = useState(false);
+
+  // Learning Experience States
+  const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
+  const [showLessonViewer, setShowLessonViewer] = useState(false);
+  const [bookmarks, setBookmarks] = useState<string[]>([]);
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -387,8 +394,8 @@ export default function StudentDashboard() {
 
       const [deadlinesData, achievementsData, statsData] = await Promise.all([
         safeJsonParse(deadlinesRes, []),
-        safeJsonParse(achievementsRes, { success: false, data: { achievements: [] } }),
-        safeJsonParse(statsRes, { success: false, data: {} }),
+        safeJsonParse(achievementsRes, { success: false, data: { achievements: [] } } as any),
+        safeJsonParse(statsRes, { success: false, data: {} } as any),
       ]);
 
       if (Array.isArray(deadlinesData)) {
@@ -414,7 +421,7 @@ export default function StudentDashboard() {
         }
 
         const attendanceRes = await safeFetch("/api/student/attendance");
-        const attendanceJson = await safeJsonParse(attendanceRes, { success: false });
+        const attendanceJson = await safeJsonParse(attendanceRes, { success: false, data: null as any });
         
         if (attendanceJson?.success && attendanceJson.data) {
           setAttendanceData({
@@ -845,6 +852,7 @@ export default function StudentDashboard() {
     courseId?: string;
     courseName?: string;
     applicationId?: string;
+    enrollmentId?: string;
     type: "APPLICATION_FEE" | "TUITION" | "INSTALLMENT";
   }) => {
     setPaymentContext(context);
@@ -947,37 +955,10 @@ export default function StudentDashboard() {
   };
 
   // User Profile Functions
-  const handleUpdateProfile = async (data: any) => {
-    try {
-      const response = await makeAuthenticatedRequest("/api/user/profile", {
-        method: "PUT",
-        body: JSON.stringify(data),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setUser(result.user);
-        alert("Profile updated successfully");
-      } else {
-        alert(result.message || "Failed to update profile");
-        if (result.message === "Invalid token") {
-          clearAuthTokens();
-          router.push("/auth/login");
-        }
-      }
-    } catch (error) {
-      console.error("Update profile error:", error);
-      if (
-        error instanceof Error &&
-        error.message.includes("No valid authentication token")
-      ) {
-        clearAuthTokens();
-        router.push("/auth/login");
-      } else {
-        alert("Failed to update profile");
-      }
-    }
+  const handleUpdateProfile = (data: any) => {
+    setUser(data);
+    // The actual update call is handled inside ProfileEditModal/UserDropdown
+    // We just need to update the local state here to reflect changes immediately
   };
 
   const handleUpdatePassword = async (data: any) => {
@@ -1119,22 +1100,11 @@ export default function StudentDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
-        <div className="text-center space-y-6">
-          <div className="relative">
-            <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center mx-auto shadow-2xl">
-              <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-            </div>
-            <div className="absolute -inset-1 bg-blue-600/30 rounded-3xl blur animate-pulse"></div>
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-gray-800">
-              Loading Your Dashboard
-            </h2>
-            <p className="text-gray-600">
-              Preparing your personalized learning experience...
-            </p>
-          </div>
-        </div>
+        <LogoLoader 
+          size="lg" 
+          text="Loading Your Dashboard" 
+          subtext="Preparing your personalized learning experience..." 
+        />
       </div>
     );
   }
@@ -1335,10 +1305,33 @@ export default function StudentDashboard() {
                   <h2 className="text-2xl font-bold text-gray-800">My Payments</h2>
                   <p className="text-gray-500">View your transaction history and payment status</p>
                 </div>
-                <Button onClick={() => handleShowUnifiedPayment({
-                  amount: 0,
-                  type: "TUITION"
-                })} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={() => {
+                  // If we have an unpaid application, prefer that
+                  const approvedApp = applications.find(a => a.status === "APPROVED" && !enrollments.find(e => e.course.id === a.course.id));
+                  if (approvedApp) {
+                    handleShowUnifiedPayment({
+                      amount: approvedApp.course.price,
+                      courseId: approvedApp.course.id,
+                      courseName: approvedApp.course.title,
+                      applicationId: approvedApp.id,
+                      type: "TUITION"
+                    });
+                  } else {
+                    // Otherwise just show a generic tuition payment context or first active enrollment
+                    const firstEnrollment = enrollments[0];
+                    if (firstEnrollment) {
+                      handleShowUnifiedPayment({
+                        amount: firstEnrollment.course.price,
+                        courseId: firstEnrollment.course.id,
+                        courseName: firstEnrollment.course.title,
+                        enrollmentId: firstEnrollment.id,
+                        type: "TUITION"
+                      });
+                    } else {
+                      toast.error("No active applications or enrollments found to make a payment for.");
+                    }
+                  }
+                }} className="bg-blue-600 hover:bg-blue-700">
                   <CreditCard className="w-4 h-4 mr-2" />
                   Make a Payment
                 </Button>
@@ -1448,7 +1441,7 @@ export default function StudentDashboard() {
                                   amount: plan.remainingBalance,
                                   courseId: plan.courseId,
                                   courseName: plan.courseTitle,
-                                  applicationId: plan.enrollmentId,
+                                  enrollmentId: plan.enrollmentId,
                                   type: "INSTALLMENT"
                                 })}
                                >
@@ -1727,6 +1720,7 @@ export default function StudentDashboard() {
               courseId={paymentContext.courseId}
               courseName={paymentContext.courseName}
               applicationId={paymentContext.applicationId}
+              enrollmentId={paymentContext.enrollmentId}
               type={paymentContext.type}
               onSuccess={(paymentData) => {
                 setShowUnifiedPayment(false);

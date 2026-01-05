@@ -22,7 +22,7 @@ export function formatCurrency(
     maximumFractionDigits: decimals,
   });
   
-  return showSymbol ? `₵${formatted}` : formatted;
+  return showSymbol ? `GH₵ ${formatted}` : formatted;
 }
 
 /**

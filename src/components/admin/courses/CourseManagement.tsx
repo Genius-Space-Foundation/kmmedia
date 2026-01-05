@@ -13,7 +13,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -50,6 +49,7 @@ import { toast } from "sonner";
 import { safeJsonParse } from "@/lib/api-utils";
 import ManagementHeader from "../shared/ManagementHeader";
 import BulkActionsModal from "../shared/BulkActionsModal";
+import CourseCreationWizard from "@/components/instructor/course-creation/CourseCreationWizard";
 
 interface Course {
   id: string;
@@ -81,9 +81,10 @@ interface Course {
 
 interface CourseManagementProps {
   onRefresh?: () => void;
+  onCreateCourse?: () => void;
 }
 
-export default function CourseManagement({ onRefresh }: CourseManagementProps) {
+export default function CourseManagement({ onRefresh, onCreateCourse }: CourseManagementProps) {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
@@ -94,7 +95,6 @@ export default function CourseManagement({ onRefresh }: CourseManagementProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [processing, setProcessing] = useState(false);
-  const [showCreateCourse, setShowCreateCourse] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -152,6 +152,7 @@ export default function CourseManagement({ onRefresh }: CourseManagementProps) {
       } else {
         const errorData = await safeJsonParse(response, {
           message: "Unknown error",
+          error: null
         });
         console.error("Course update failed:", errorData);
         toast.error(
@@ -196,10 +197,10 @@ export default function CourseManagement({ onRefresh }: CourseManagementProps) {
         fetchCourses();
         if (onRefresh) onRefresh();
       } else {
-        const error = await safeJsonParse(response, {
+        const errorData = await safeJsonParse(response, {
           message: "Failed to process bulk action",
         });
-        toast.error(error.message);
+        toast.error(errorData.message);
       }
     } catch (error) {
       console.error("Error processing bulk action:", error);
@@ -311,7 +312,7 @@ export default function CourseManagement({ onRefresh }: CourseManagementProps) {
         onBulkAction={() => setShowBulkActions(true)}
         onRefresh={fetchCourses}
         additionalButtons={
-          <Button onClick={() => setShowCreateCourse(true)}>
+          <Button onClick={onCreateCourse || (() => {})}>
             <Plus className="h-4 w-4 mr-2" />
             Add Course
           </Button>
@@ -823,7 +824,6 @@ export default function CourseManagement({ onRefresh }: CourseManagementProps) {
         </DialogContent>
       </Dialog>
 
-      {/* Bulk Actions Modal */}
       <BulkActionsModal
         isOpen={showBulkActions}
         onClose={() => setShowBulkActions(false)}

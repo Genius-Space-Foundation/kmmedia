@@ -15,7 +15,7 @@ import {
   Award,
   User,
 } from "lucide-react";
-import { TourButton } from "@/components/tours/TourButton";
+
 import { StudentDashboardTour } from "@/components/tours/StudentDashboardTour";
 
 interface StudentLayoutProps {
@@ -123,9 +123,7 @@ export default function StudentLayout({
           onSettingsClick={() => onTabChange("settings")}
           onLogout={handleLogout}
           notificationCount={0}
-          additionalActions={
-            <TourButton tourName="student-dashboard" />
-          }
+
         />
 
         {/* Tour Component */}

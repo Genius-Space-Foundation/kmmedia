@@ -170,7 +170,7 @@ const integrationTemplates: IntegrationTemplate[] = [
     icon: <Mail className="h-4 w-4" />,
     provider: "SendGrid",
     features: ["email_delivery", "templates", "analytics", "automation"],
-    pricing: { plan: "Essentials", cost: 19.95, currency: "$" },
+    pricing: { plan: "Essentials", cost: 19.95, currency: "GH₵" },
     setup: {
       steps: [
         "Create SendGrid account",
@@ -190,7 +190,7 @@ const integrationTemplates: IntegrationTemplate[] = [
     icon: <BarChart3 className="h-4 w-4" />,
     provider: "Google",
     features: ["tracking", "reports", "goals", "ecommerce"],
-    pricing: { plan: "Free", cost: 0, currency: "$" },
+    pricing: { plan: "Free", cost: 0, currency: "GH₵" },
     setup: {
       steps: [
         "Create GA account",
@@ -210,7 +210,7 @@ const integrationTemplates: IntegrationTemplate[] = [
     icon: <Cloud className="h-4 w-4" />,
     provider: "Amazon",
     features: ["file_storage", "cdn", "backup", "versioning"],
-    pricing: { plan: "Standard", cost: 0.023, currency: "$" },
+    pricing: { plan: "Standard", cost: 0.023, currency: "GH₵" },
     setup: {
       steps: [
         "Create AWS account",
@@ -230,7 +230,7 @@ const integrationTemplates: IntegrationTemplate[] = [
     icon: <Users className="h-4 w-4" />,
     provider: "Slack",
     features: ["notifications", "channels", "bots", "workflows"],
-    pricing: { plan: "Pro", cost: 6.67, currency: "$" },
+    pricing: { plan: "Pro", cost: 6.67, currency: "GH₵" },
     setup: {
       steps: [
         "Create Slack app",
@@ -255,7 +255,7 @@ const integrationTemplates: IntegrationTemplate[] = [
       "automation",
       "analytics",
     ],
-    pricing: { plan: "Essentials", cost: 9.99, currency: "$" },
+    pricing: { plan: "Essentials", cost: 9.99, currency: "GH₵" },
     setup: {
       steps: [
         "Create Mailchimp account",
@@ -371,7 +371,7 @@ export default function ThirdPartyIntegrations() {
             errors: 13,
           },
           features: ["email_delivery", "templates", "analytics", "automation"],
-          pricing: { plan: "Essentials", cost: 19.95, currency: "$" },
+          pricing: { plan: "Pro", cost: 6.67, currency: "GH₵" },
         },
         {
           id: "3",
@@ -398,7 +398,7 @@ export default function ThirdPartyIntegrations() {
             errors: 4,
           },
           features: ["tracking", "reports", "goals", "ecommerce"],
-          pricing: { plan: "Free", cost: 0, currency: "$" },
+          pricing: { plan: "Free", cost: 0, currency: "GH₵" },
         },
         {
           id: "4",
@@ -424,7 +424,7 @@ export default function ThirdPartyIntegrations() {
             errors: 67,
           },
           features: ["file_storage", "cdn", "backup", "versioning"],
-          pricing: { plan: "Standard", cost: 0.023, currency: "$" },
+          pricing: { plan: "Standard", cost: 0.023, currency: "GH₵" },
         },
         {
           id: "5",
@@ -450,7 +450,7 @@ export default function ThirdPartyIntegrations() {
             errors: 6,
           },
           features: ["notifications", "channels", "bots", "workflows"],
-          pricing: { plan: "Pro", cost: 6.67, currency: "$" },
+          pricing: { plan: "Pro", cost: 6.67, currency: "GH₵" },
         },
       ];
 
@@ -677,8 +677,7 @@ export default function ThirdPartyIntegrations() {
                         {template.category}
                       </Badge>
                       <span className="text-sm text-gray-500">
-                        {template.pricing.cost}
-                        {template.pricing.currency}
+                        GH₵ {template.pricing.cost}
                       </span>
                     </div>
                   </div>

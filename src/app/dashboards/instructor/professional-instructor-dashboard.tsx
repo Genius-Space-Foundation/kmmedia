@@ -11,6 +11,7 @@ import {
   MessageSquare,
   Settings,
   Award,
+  User,
 } from "lucide-react";
 import { ModernSidebar } from "@/components/dashboard/modern-sidebar";
 import { ModernHeader } from "@/components/dashboard/modern-header";
@@ -191,10 +192,16 @@ export default function ProfessionalInstructorDashboard() {
       description: "Messages and announcements",
     },
     {
+      id: "profile",
+      label: "Profile",
+      icon: User,
+      description: "Manage your profile and preferences",
+    },
+    {
       id: "settings",
       label: "Settings & Tools",
       icon: Settings,
-      description: "Profile, AI tools, and integrations",
+      description: "AI tools and integrations",
     },
   ];
 
@@ -216,6 +223,8 @@ export default function ProfessionalInstructorDashboard() {
         return <AssessmentCenter />;
       case "communication":
         return <CommunicationHub />;
+      case "profile":
+        return <InstructorProfileEditor />;
       case "settings":
         // Settings tab has sub-tabs
         return renderSettingsContent();

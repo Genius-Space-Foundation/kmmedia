@@ -24,6 +24,9 @@ import ActivityLogs from "@/components/admin/logs/ActivityLogs";
 import FinancialManagement from "@/components/admin/payments/FinancialManagement";
 import DashboardOverview from "@/components/admin/dashboard/DashboardOverview";
 import AdminProfile from "@/components/admin/profile/AdminProfile";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import CourseCreationWizard from "@/components/instructor/course-creation/CourseCreationWizard";
+import { toast } from "sonner";
 
 interface DashboardStats {
   totalUsers: number;
@@ -46,6 +49,8 @@ export default function ProfessionalDashboard() {
   const [courses, setCourses] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showCreateCourse, setShowCreateCourse] = useState(false);
+  const [instructors, setInstructors] = useState<any[]>([]);
 
   useEffect(() => {
     fetchCurrentUser();
@@ -114,6 +119,20 @@ export default function ProfessionalDashboard() {
       console.error("Error fetching users:", error);
     }
   };
+
+  useEffect(() => {
+    if (users.length > 0) {
+      setInstructors(
+        users
+          .filter((u: any) => u.role === "INSTRUCTOR")
+          .map((u: any) => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+          }))
+      );
+    }
+  }, [users]);
 
   const fetchCourses = async () => {
     try {
@@ -296,6 +315,7 @@ export default function ProfessionalDashboard() {
                 users={users}
                 courses={courses}
                 applications={applications}
+                onCreateCourse={() => setShowCreateCourse(true)}
               />
             </div>
           )}
@@ -344,6 +364,7 @@ export default function ProfessionalDashboard() {
                   fetchStats();
                   fetchCourses();
                 }}
+                onCreateCourse={() => setShowCreateCourse(true)}
               />
             </div>
           )}
@@ -388,6 +409,31 @@ export default function ProfessionalDashboard() {
           {activeTab === "settings" && <SystemSettings />}
         </main>
       </div>
+
+      {/* Course Creation Dialog */}
+      {showCreateCourse && (
+        <Dialog open={showCreateCourse} onOpenChange={setShowCreateCourse}>
+          <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-0 border-0 bg-transparent shadow-none">
+            <DialogTitle className="sr-only">Create New Course</DialogTitle>
+            <DialogDescription className="sr-only">
+              Fill in the details below to create and assign a new course to an instructor.
+            </DialogDescription>
+            <div className="bg-white rounded-3xl overflow-hidden shadow-2xl">
+              <CourseCreationWizard
+                adminMode={true}
+                instructors={instructors}
+                onSuccess={() => {
+                  setShowCreateCourse(false);
+                  fetchStats();
+                  fetchCourses();
+                  toast.success("Course created successfully");
+                }}
+                onCancel={() => setShowCreateCourse(false)}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }

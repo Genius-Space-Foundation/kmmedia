@@ -41,8 +41,14 @@ const steps: Step[] = [
 ];
 
 export function InstructorDashboardTour() {
-  const { currentTour, stopTour, markTourComplete } = useTour();
+  const { currentTour, stopTour, markTourComplete, runTour, isTourComplete, isInitialized } = useTour();
   const isRunning = currentTour === TOUR_NAME;
+
+  React.useEffect(() => {
+    if (isInitialized && !isTourComplete(TOUR_NAME) && !isRunning) {
+      runTour(TOUR_NAME);
+    }
+  }, [isInitialized, isTourComplete, isRunning, runTour]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, type } = data;

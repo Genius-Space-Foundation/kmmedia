@@ -26,11 +26,14 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
+          console.log("LOGIN FAIL: Missing credentials");
           throw new Error("Invalid credentials");
         }
 
+        const email = credentials.email.toLowerCase();
+
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email },
           select: {
             id: true,
             email: true,
@@ -38,15 +41,23 @@ export const authOptions: NextAuthOptions = {
             password: true,
             role: true,
             status: true,
+            requiresPasswordChange: true,
             image: true,
           },
         });
 
-        if (!user || !user.password) {
+        if (!user) {
+          console.log(`LOGIN FAIL: User not found for email ${email}`);
+          throw new Error("Invalid credentials");
+        }
+
+        if (!user.password) {
+          console.log(`LOGIN FAIL: User ${email} has no password (users with social login cannot use credentials)`);
           throw new Error("Invalid credentials");
         }
 
         if (user.status !== UserStatus.ACTIVE) {
+          console.log(`LOGIN FAIL: User ${email} is not active (Status: ${user.status})`);
           throw new Error("Account is not active");
         }
 
@@ -56,8 +67,11 @@ export const authOptions: NextAuthOptions = {
         );
 
         if (!isValidPassword) {
+          console.log(`LOGIN FAIL: Invalid password for ${email}`);
           throw new Error("Invalid credentials");
         }
+
+        console.log(`LOGIN SUCCESS: User ${email} authenticated`);
 
         // Return user object (password excluded)
         return {
@@ -66,6 +80,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
           status: user.status,
+          requiresPasswordChange: user.requiresPasswordChange,
           image: user.image,
         };
       },
@@ -106,6 +121,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
         token.status = user.status;
+        token.requiresPasswordChange = user.requiresPasswordChange;
       }
       return token;
     },
@@ -114,6 +130,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as any;
         session.user.status = token.status as any;
+        session.user.requiresPasswordChange = token.requiresPasswordChange as boolean;
       }
       return session;
     },

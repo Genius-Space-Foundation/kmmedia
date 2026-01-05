@@ -9,6 +9,7 @@ interface TourContextType {
   isTourComplete: (tourName: string) => boolean;
   currentTour: string | null;
   markTourComplete: (tourName: string) => void;
+  isInitialized: boolean;
 }
 
 const TourContext = createContext<TourContextType | undefined>(undefined);
@@ -18,6 +19,7 @@ const TOUR_STORAGE_KEY = 'lms_completed_tours';
 export function TourProvider({ children }: { children: ReactNode }) {
   const [currentTour, setCurrentTour] = useState<string | null>(null);
   const [completedTours, setCompletedTours] = useState<Set<string>>(new Set());
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
     // Load completed tours from localStorage
@@ -30,6 +32,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
         console.error('Failed to load tour state:', error);
       }
     }
+    setIsInitialized(true);
   }, []);
 
   const runTour = (tourName: string) => {
@@ -66,6 +69,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
     isTourComplete,
     currentTour,
     markTourComplete,
+    isInitialized,
   };
 
   return (

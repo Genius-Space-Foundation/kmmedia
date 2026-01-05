@@ -38,6 +38,7 @@ interface DashboardOverviewProps {
   users: any[];
   courses: any[];
   applications: any[];
+  onCreateCourse?: () => void;
 }
 
 export default function DashboardOverview({
@@ -46,6 +47,7 @@ export default function DashboardOverview({
   users,
   courses,
   applications,
+  onCreateCourse,
 }: DashboardOverviewProps) {
   if (loading) {
     return (
@@ -323,6 +325,7 @@ export default function DashboardOverview({
             <Button
               variant="secondary"
               className="h-20 flex-col bg-white/20 hover:bg-white/30 text-white border-white/30"
+              onClick={onCreateCourse}
             >
               <BookOpen className="h-6 w-6 mb-2" />
               Create Course

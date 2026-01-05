@@ -36,17 +36,31 @@ export async function uploadFile(
       public_id: options.public_id,
     };
 
-    cloudinary.uploader.upload(
-      file,
-      uploadOptions,
-      (error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result as UploadResult);
+    if (Buffer.isBuffer(file)) {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        uploadOptions,
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result as UploadResult);
+          }
         }
-      }
-    );
+      );
+      uploadStream.end(file);
+    } else {
+      cloudinary.uploader.upload(
+        file,
+        uploadOptions,
+        (error, result) => {
+          if (error) {
+            reject(error);
+          } else {
+            resolve(result as UploadResult);
+          }
+        }
+      );
+    }
   });
 }
 

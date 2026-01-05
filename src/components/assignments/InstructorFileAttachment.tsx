@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileUpload, UploadedFile } from "@/components/ui/file-upload";
@@ -56,6 +56,18 @@ const FILE_TYPE_ICONS = {
   },
 };
 
+/**
+ * InstructorFileAttachment component allows instructors to upload and manage files for assignments
+ * 
+ * @param {UploadedFile[]} files - Current list of uploaded files
+ * @param {Function} onFilesChange - Callback when files change
+ * @param {Function} [onUpload] - Optional upload handler
+ * @param {number} [maxFiles=10] - Maximum number of files allowed
+ * @param {number} [maxFileSize=50] - Maximum file size in MB
+ * @param {string} [className] - Additional CSS classes
+ * @param {boolean} [disabled=false] - Whether the component is disabled
+ * @returns {JSX.Element} File attachment component
+ */
 export function InstructorFileAttachment({
   files,
   onFilesChange,
@@ -278,6 +290,13 @@ interface FilePreviewModalProps {
   onClose: () => void;
 }
 
+/**
+ * FilePreviewModal component displays a modal for previewing uploaded files
+ * 
+ * @param {UploadedFile} file - File to preview
+ * @param {Function} onClose - Callback to close the modal
+ * @returns {JSX.Element} File preview modal component
+ */
 function FilePreviewModal({ file, onClose }: FilePreviewModalProps) {
   const isImage = file.type.startsWith("image/");
   const isPDF = file.type === "application/pdf";

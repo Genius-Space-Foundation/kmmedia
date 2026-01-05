@@ -15,6 +15,7 @@ model User {
   phone         String?
   role          UserRole   @default(STUDENT)
   status        UserStatus @default(ACTIVE)
+  requiresPasswordChange Boolean @default(false)
   emailVerified DateTime?
   lastLogin     DateTime?
   refreshToken  String?
