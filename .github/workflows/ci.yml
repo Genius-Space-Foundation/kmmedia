@@ -1,0 +1,48 @@
+name: Quality Assurance (CI)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify:
+    name: Lint, Type Check & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: kmmedia/package-lock.json
+
+      - name: Install Dependencies
+        working-directory: kmmedia
+        run: npm ci
+
+      - name: Generate Prisma Client
+        working-directory: kmmedia
+        run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Run Linting
+        working-directory: kmmedia
+        run: npm run lint
+
+      - name: Type Check
+        working-directory: kmmedia
+        run: npm run type-check
+
+      - name: Run Tests
+        working-directory: kmmedia
+        run: npm run test:ci
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
