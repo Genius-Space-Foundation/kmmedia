@@ -16,7 +16,7 @@ async function handler(req: AuthenticatedRequest) {
 
     // Build filter conditions
     const where: any = {
-      status: "APPROVED", // Only approved courses
+      status: "PUBLISHED", // Only published courses
     };
 
     if (search) {
@@ -71,6 +71,9 @@ async function handler(req: AuthenticatedRequest) {
         instructor: {
           select: {
             name: true,
+            bio: true,
+            profileImage: true,
+            image: true,
           },
         },
       },
@@ -90,7 +93,15 @@ async function handler(req: AuthenticatedRequest) {
       instructor: course.instructor,
       applicationFee: course.applicationFee,
       installmentEnabled: course.installmentEnabled,
+      installmentPlan: course.installmentPlan,
       cohort: course.cohort,
+      image: course.image,
+      prerequisites: course.prerequisites,
+      learningObjectives: course.learningObjectives,
+      startDate: course.startDate,
+      endDate: course.endDate,
+      enrollmentDeadline: course.enrollmentDeadline,
+      certificateAwarded: course.certificateAwarded,
     }));
 
     return NextResponse.json({

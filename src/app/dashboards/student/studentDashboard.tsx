@@ -65,6 +65,7 @@ import AchievementProgressTracking from "@/components/student/dashboard/Achievem
 import AssignmentSubmissionPortal from "@/components/student/dashboard/AssignmentSubmissionPortal";
 import AssessmentDetailModal from "@/components/student/dashboard/AssessmentDetailModal";
 import UpcomingClassDetailModal from "@/components/student/dashboard/UpcomingClassDetailModal";
+import CourseDetailModal from "@/components/student/dashboard/CourseDetailModal";
 
 interface Course {
   id: string;
@@ -87,8 +88,12 @@ interface Course {
     bio?: string;
   };
   prerequisites: string[];
-  learningOutcomes: string[];
-  syllabus: Lesson[];
+  learningObjectives: string[];
+  cohort?: string;
+  startDate?: string;
+  endDate?: string;
+  enrollmentDeadline?: string;
+  certificateAwarded?: boolean;
 }
 
 interface Lesson {
@@ -1160,26 +1165,28 @@ export default function StudentDashboard() {
             </CardContent>
           </Card>
 
-          {/* Available Courses Card */}
-          <Card className="group relative overflow-hidden bg-white border-0 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-violet-600/10"></div>
-            <CardContent className="relative p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">
-                    Available Courses
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {Array.isArray(courses) ? courses.length : 0}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">Ready to enroll</p>
+          {/* Available Courses Card - Only show if student has no applications */}
+          {(!applications || applications.length === 0) && (
+            <Card className="group relative overflow-hidden bg-white border-0 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-violet-600/10"></div>
+              <CardContent className="relative p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">
+                      Available Courses
+                    </p>
+                    <p className="text-3xl font-bold text-gray-900">
+                      {Array.isArray(courses) ? courses.length : 0}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">Ready to enroll</p>
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-white text-xl">📚</span>
+                  </div>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-white text-xl">📚</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Progress Card */}
           <Card className="group relative overflow-hidden bg-white border-0 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:scale-105">
@@ -1249,6 +1256,10 @@ export default function StudentDashboard() {
               courses={courses}
               applications={applications}
               enrollments={enrollments}
+              onViewCourseDetails={(course) => {
+                setSelectedCourse(course);
+                setShowCourseDetails(true);
+              }}
               onApplyForCourse={handleApplyForCourse}
               onPayTuition={(applicationId, type) => {
                 if (type === "FULL") {
@@ -1736,6 +1747,17 @@ export default function StudentDashboard() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Course Details Modal */}
+      <CourseDetailModal
+        course={selectedCourse as any}
+        isOpen={showCourseDetails}
+        onClose={() => {
+          setShowCourseDetails(false);
+          setSelectedCourse(null);
+        }}
+        onApply={handleApplyForCourse}
+      />
     </StudentLayout>
   );
 }

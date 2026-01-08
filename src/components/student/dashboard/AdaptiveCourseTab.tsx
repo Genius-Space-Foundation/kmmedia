@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Clock, CreditCard, BookOpen, AlertCircle } from "lucide-react";
+import { Clock, CreditCard, AlertCircle } from "lucide-react";
 import EnrolledCourseView from "./EnrolledCourseView";
 
 interface AdaptiveCourseTabProps {
@@ -19,6 +19,7 @@ interface AdaptiveCourseTabProps {
   enrollments: any[];
   
   // Handlers
+  onViewCourseDetails: (course: any) => void;
   onApplyForCourse: (courseId: string) => void;
   onPayTuition: (applicationId: string, type: "FULL" | "INSTALLMENT") => void;
   onShowUnifiedPayment?: (context: {
@@ -40,6 +41,7 @@ export function AdaptiveCourseTab({
   courses,
   applications,
   enrollments,
+  onViewCourseDetails,
   onApplyForCourse,
   onPayTuition,
   onShowUnifiedPayment,
@@ -60,8 +62,6 @@ export function AdaptiveCourseTab({
   // Determine current state
   const hasEnrollment = enrollments.length > 0;
   const hasApplication = applications.length > 0;
-  const approvedApplication = applications.find((app: any) => app.status === "APPROVED");
-  const pendingApplication = applications.find((app: any) => app.status === "PENDING");
   
   // STATE 4: ENROLLED - Show full course content
   if (hasEnrollment) {
@@ -95,90 +95,104 @@ export function AdaptiveCourseTab({
     );
   }
   
-  // STATE 3: APPROVED - Show payment options
-  if (approvedApplication) {
-    const app = approvedApplication;
-    return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold">Complete Your Enrollment</h2>
-        <Card className="border-brand-primary/20 bg-brand-primary/5">
-          <CardHeader>
-            <CardTitle>{app.course.title}</CardTitle>
-            <CardDescription>Your application has been approved!</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-700">Course Price:</span>
-              <span className="text-2xl font-bold">{formatCurrency(app.course.price)}</span>
-            </div>
-            
-            <div className="grid gap-3">
-              <Button 
-                className="w-full" 
-                onClick={() => {
-                  if (onShowUnifiedPayment) {
-                    onShowUnifiedPayment({
-                      amount: app.course.price,
-                      courseId: app.course.id,
-                      courseName: app.course.title,
-                      applicationId: app.id,
-                      type: "TUITION"
-                    });
-                  } else {
-                    onPayTuition(app.id, "FULL");
-                  }
-                }}
-              >
-                <CreditCard className="mr-2 h-4 w-4" />
-                Pay Full Tuition
-              </Button>
+  // STATE 2 & 3: APPLICATION UPDATES - Show application status or payment options
+  if (hasApplication) {
+    // If there are multiple applications, we might want to show a list or the most relevant one
+    // For now, prioritize APPROVED, then UNDER_REVIEW, then PENDING, then REJECTED
+    const priorityApp = 
+      applications.find((app: any) => app.status === "APPROVED") ||
+      applications.find((app: any) => app.status === "UNDER_REVIEW") ||
+      applications.find((app: any) => app.status === "PENDING") ||
+      applications[0];
+
+    const appStatus = priorityApp.status;
+
+    if (appStatus === "APPROVED") {
+      return (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold">Complete Your Enrollment</h2>
+          <Card className="border-brand-primary/20 bg-brand-primary/5">
+            <CardHeader>
+              <CardTitle>{priorityApp.course.title}</CardTitle>
+              <CardDescription>Your application has been approved!</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700">Course Price:</span>
+                <span className="text-2xl font-bold">{formatCurrency(priorityApp.course.price)}</span>
+              </div>
               
-              {app.course.installmentEnabled && (
+              <div className="grid gap-3">
                 <Button 
-                  variant="outline" 
-                  className="w-full"
+                  className="w-full" 
                   onClick={() => {
                     if (onShowUnifiedPayment) {
                       onShowUnifiedPayment({
-                        amount: app.course.price,
-                        courseId: app.course.id,
-                        courseName: app.course.title,
-                        applicationId: app.id,
-                        type: "INSTALLMENT"
+                        amount: priorityApp.course.price,
+                        courseId: priorityApp.course.id,
+                        courseName: priorityApp.course.title,
+                        applicationId: priorityApp.id,
+                        type: "TUITION"
                       });
                     } else {
-                      onPayTuition(app.id, "INSTALLMENT");
+                      onPayTuition(priorityApp.id, "FULL");
                     }
                   }}
                 >
-                  Pay in Installments
-                  {app.course.installmentPlan && (
-                    <span className="ml-2 text-sm">
-                      (Start with {app.course.installmentPlan.upfront}%)
-                    </span>
-                  )}
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Pay Full Tuition
                 </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-  
-  // STATE 2: PENDING - Show application status
-  if (pendingApplication) {
-    const app = pendingApplication;
+                
+                {priorityApp.course.installmentEnabled && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      if (onShowUnifiedPayment) {
+                        onShowUnifiedPayment({
+                          amount: priorityApp.course.price,
+                          courseId: priorityApp.course.id,
+                          courseName: priorityApp.course.title,
+                          applicationId: priorityApp.id,
+                          type: "INSTALLMENT"
+                        });
+                      } else {
+                        onPayTuition(priorityApp.id, "INSTALLMENT");
+                      }
+                    }}
+                  >
+                    Pay in Installments
+                    {priorityApp.course.installmentPlan && (
+                      <span className="ml-2 text-sm">
+                        (Start with {priorityApp.course.installmentPlan.upfront}%)
+                      </span>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    // Handle PENDING, UNDER_REVIEW, REJECTED
     return (
       <div className="space-y-6">
-        <Card className="border-neutral-200 bg-neutral-50">
+        <Card className={`border-neutral-200 ${appStatus === 'REJECTED' ? 'bg-red-50' : 'bg-neutral-50'}`}>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <Clock className="h-10 w-10 text-neutral-500" />
+              {appStatus === 'REJECTED' ? (
+                <AlertCircle className="h-10 w-10 text-red-500" />
+              ) : (
+                <Clock className="h-10 w-10 text-neutral-500" />
+              )}
               <div>
-                <CardTitle className="text-neutral-900">Application Under Review</CardTitle>
+                <CardTitle className="text-neutral-900">
+                  {appStatus === 'REJECTED' ? 'Application Rejected' : 'Application Under Review'}
+                </CardTitle>
                 <CardDescription className="text-neutral-600">
-                  {app.course.title}
+                  {priorityApp.course.title}
                 </CardDescription>
               </div>
             </div>
@@ -187,20 +201,36 @@ export function AdaptiveCourseTab({
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-gray-600">Status:</span>
-                <Badge className="bg-neutral-100 text-neutral-800">
-                  {app.status}
+                <Badge className={
+                  appStatus === 'REJECTED' ? "bg-red-100 text-red-800" :
+                  appStatus === 'UNDER_REVIEW' ? "bg-blue-100 text-blue-800" :
+                  "bg-neutral-100 text-neutral-800"
+                }>
+                  {appStatus.replace('_', ' ')}
                 </Badge>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Submitted:</span>
                 <span className="text-gray-900">
-                  {new Date(app.submittedAt).toLocaleDateString()}
+                  {new Date(priorityApp.submittedAt).toLocaleDateString()}
                 </span>
               </div>
             </div>
             <p className="text-sm text-gray-600">
-              Your application is being reviewed by our team. You'll receive an email notification once a decision is made.
+              {appStatus === 'REJECTED' 
+                ? priorityApp.reviewNotes || "Your application was not successful at this time. Please contact support for more information."
+                : "Your application is being reviewed by our team. You'll receive an email notification once a decision is made."
+              }
             </p>
+            {appStatus === 'REJECTED' && (
+              <Button 
+                variant="outline" 
+                className="w-full mt-4"
+                onClick={() => {/* Potentially allow re-applying or contacting support */}}
+              >
+                Contact Support
+              </Button>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -278,12 +308,21 @@ export function AdaptiveCourseTab({
                     </div>
                   )}
                 </div>
-                <Button 
-                  className="w-full bg-brand-primary hover:bg-brand-secondary text-white rounded-xl shadow-sm" 
-                  onClick={() => onApplyForCourse(course.id)}
-                >
-                  Apply Now
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 border-2 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-white rounded-xl transition-all"
+                    onClick={() => onViewCourseDetails(course)}
+                  >
+                    Details
+                  </Button>
+                  <Button 
+                    className="flex-1 bg-brand-primary hover:bg-brand-secondary text-white rounded-xl shadow-sm" 
+                    onClick={() => onApplyForCourse(course.id)}
+                  >
+                    Apply Now
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
