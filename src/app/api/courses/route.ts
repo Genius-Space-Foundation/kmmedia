@@ -3,6 +3,7 @@ import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { CourseStatus, CourseMode } from "@prisma/client";
 import { z } from "zod";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -77,6 +78,23 @@ async function createCourse(req: AuthenticatedRequest) {
       },
     });
 
+
+
+    // Log course creation
+    await createAuditLog({
+      userId: instructorId,
+      action: AuditAction.COURSE_CREATE,
+      resourceType: ResourceType.COURSE,
+      resourceId: course.id,
+      metadata: {
+        title: course.title,
+        category: course.category,
+        price: course.price,
+        mode: course.mode,
+      },
+      req,
+    });
+
     return NextResponse.json({
       success: true,
       data: course,
@@ -138,11 +156,15 @@ async function getCourses(req: NextRequest) {
       where.instructorId = instructorId;
     }
 
+    if (featured === "true") {
+      where.featured = true;
+    }
+
     console.log("API: Where clause:", where);
 
     console.log("API: Starting Prisma queries...");
 
-    // For featured courses, get courses with highest enrollments
+    // For featured courses, get courses with highest enrollments or explicitly marked as featured
     const orderBy =
       featured === "true"
         ? [{ enrollments: { _count: "desc" } }, { createdAt: "desc" }]
@@ -157,6 +179,7 @@ async function getCourses(req: NextRequest) {
               id: true,
               name: true,
               email: true,
+              profileImage: true,
             },
           },
           _count: {

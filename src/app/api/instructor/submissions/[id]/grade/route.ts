@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { gradeSubmission } from "@/lib/assessments/assessment-manager";
 import { z } from "zod";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -29,6 +30,21 @@ async function gradeSubmissionHandler(
       feedback,
       score
     );
+
+    // Log assignment grading
+    await createAuditLog({
+      userId: instructorId,
+      action: AuditAction.ASSIGNMENT_GRADE,
+      resourceType: ResourceType.ASSIGNMENT, // Or SUBMISSION resource type if added
+      // Ideally we track the submission ID, but resourceType might refer to the assignment it belongs to, or a new SUBMISSION type
+      // Using generic ASSIGNMENT for now or existing enum
+      resourceId: submissionId,
+      metadata: {
+        score,
+        feedback,
+      },
+      req,
+    });
 
     return NextResponse.json({
       success: true,

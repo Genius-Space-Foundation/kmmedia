@@ -9,6 +9,7 @@ export enum AuditAction {
   USER_LOGIN = "USER_LOGIN",
   USER_LOGOUT = "USER_LOGOUT",
   USER_REGISTER = "USER_REGISTER",
+  USER_CREATE = "USER_CREATE",
   USER_UPDATE = "USER_UPDATE",
   USER_DELETE = "USER_DELETE",
   USER_SUSPEND = "USER_SUSPEND",
@@ -36,12 +37,37 @@ export enum AuditAction {
   PAYMENT_CREATE = "PAYMENT_CREATE",
   PAYMENT_REFUND = "PAYMENT_REFUND",
   PAYMENT_VERIFY = "PAYMENT_VERIFY",
+  PAYMENT_VERIFY_FAILED = "PAYMENT_VERIFY_FAILED",
   
   // Assignment actions
   ASSIGNMENT_CREATE = "ASSIGNMENT_CREATE",
   ASSIGNMENT_UPDATE = "ASSIGNMENT_UPDATE",
   ASSIGNMENT_DELETE = "ASSIGNMENT_DELETE",
   ASSIGNMENT_GRADE = "ASSIGNMENT_GRADE",
+  ASSIGNMENT_EXTENSION = "ASSIGNMENT_EXTENSION",
+  
+  // Enrollment actions
+  ENROLLMENT_CREATE = "ENROLLMENT_CREATE",
+  ENROLLMENT_UPDATE = "ENROLLMENT_UPDATE",
+  ENROLLMENT_COMPLETE = "ENROLLMENT_COMPLETE",
+  
+  // Data export actions
+  DATA_EXPORT = "DATA_EXPORT",
+  USER_DATA_EXPORT = "USER_DATA_EXPORT",
+  COURSE_DATA_EXPORT = "COURSE_DATA_EXPORT",
+  PAYMENT_DATA_EXPORT = "PAYMENT_DATA_EXPORT",
+  
+  // Bulk actions
+  BULK_USER_CREATE = "BULK_USER_CREATE",
+  BULK_USER_UPDATE = "BULK_USER_UPDATE",
+  BULK_USER_DELETE = "BULK_USER_DELETE",
+  BULK_USER_ACTIVATE = "BULK_USER_ACTIVATE",
+  BULK_USER_SUSPEND = "BULK_USER_SUSPEND",
+  BULK_COURSE_APPROVE = "BULK_COURSE_APPROVE",
+  BULK_COURSE_DELETE = "BULK_COURSE_DELETE",
+  BULK_APPLICATION_APPROVE = "BULK_APPLICATION_APPROVE",
+  BULK_APPLICATION_REJECT = "BULK_APPLICATION_REJECT",
+  BULK_GRADE = "BULK_GRADE",
   
   // Admin actions
   ADMIN_BULK_ACTION = "ADMIN_BULK_ACTION",
@@ -108,7 +134,7 @@ export async function createAuditLog({
         resourceId,
         ipAddress,
         userAgent,
-        metadata: metadata || null,
+        metadata: metadata ?? undefined,
       },
     });
   } catch (error) {
@@ -133,7 +159,7 @@ export async function logAuthAttempt({
   req?: NextRequest | Request;
 }): Promise<void> {
   try {
-    const { ipAddress, userAgent } = getClientInfo(req);
+    const { ipAddress } = getClientInfo(req);
 
     // If login failed, we don't have a userId, so we'll create a special log
     if (!success || !userId) {
@@ -286,5 +312,109 @@ export async function getRecentAuditLogs(options?: {
         },
       },
     },
+  });
+}
+
+/**
+ * Log bulk operations with affected resource IDs
+ */
+export async function logBulkAction({
+  userId,
+  action,
+  resourceType,
+  resourceIds,
+  metadata,
+  req,
+}: {
+  userId: string;
+  action: AuditAction | string;
+  resourceType: ResourceType | string;
+  resourceIds: string[];
+  metadata?: Record<string, any>;
+  req?: NextRequest | Request;
+}): Promise<void> {
+  await createAuditLog({
+    userId,
+    action,
+    resourceType,
+    metadata: {
+      ...metadata,
+      resourceIds,
+      count: resourceIds.length,
+      isBulkAction: true,
+    },
+    req,
+  });
+}
+
+/**
+ * Log state changes with before/after values
+ */
+export async function logStateChange({
+  userId,
+  action,
+  resourceType,
+  resourceId,
+  before,
+  after,
+  req,
+}: {
+  userId: string;
+  action: AuditAction | string;
+  resourceType: ResourceType | string;
+  resourceId: string;
+  before: Record<string, any>;
+  after: Record<string, any>;
+  req?: NextRequest | Request;
+}): Promise<void> {
+  // Calculate changed fields
+  const changes = Object.keys(after).filter(
+    (key) => JSON.stringify(before[key]) !== JSON.stringify(after[key])
+  );
+
+  await createAuditLog({
+    userId,
+    action,
+    resourceType,
+    resourceId,
+    metadata: {
+      before,
+      after,
+      changes,
+      timestamp: new Date().toISOString(),
+    },
+    req,
+  });
+}
+
+/**
+ * Log failed operations for security monitoring
+ */
+export async function logFailedOperation({
+  userId,
+  action,
+  resourceType,
+  resourceId,
+  reason,
+  req,
+}: {
+  userId: string;
+  action: string;
+  resourceType: string;
+  resourceId?: string;
+  reason: string;
+  req?: NextRequest | Request;
+}): Promise<void> {
+  await createAuditLog({
+    userId,
+    action: `${action}_FAILED`,
+    resourceType,
+    resourceId,
+    metadata: {
+      failed: true,
+      reason,
+      timestamp: new Date().toISOString(),
+    },
+    req,
   });
 }

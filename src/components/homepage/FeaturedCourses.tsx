@@ -5,28 +5,14 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, Users, Clock, ArrowRight, BookOpen } from "lucide-react";
+import { Star, Users, Clock, BookOpen } from "lucide-react";
 import { SkeletonCourseCard } from "@/components/ui/skeleton";
+import CourseCard from "@/components/courses/CourseCard";
+import { formatCurrency } from "@/lib/currency";
 
-interface CoursePreview {
-  id: string;
-  title: string;
-  category: string;
-  enrollments: number;
-  rating: number;
-  image?: string;
-  price?: number;
-  duration?: number;
-  instructor?: {
-    name: string;
-    avatar?: string;
-  };
-  _count?: {
-    enrollments: number;
-  };
-  description?: string;
-  level?: string;
-}
+// Use any for simplicity in the preview, as CourseCard has a very specific Course interface
+// But we want to ensure we have the minimum required fields
+interface CoursePreview extends any {}
 
 export default function FeaturedCourses() {
   const [featuredCourses, setFeaturedCourses] = useState<CoursePreview[]>([]);
@@ -41,57 +27,11 @@ export default function FeaturedCourses() {
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            const courses = data.data.courses.map((course: any) => ({
-              ...course,
-              enrollments: course._count?.enrollments || 0,
-            }));
-            setFeaturedCourses(courses);
+            setFeaturedCourses(data.data.courses);
           }
         }
       } catch (error) {
         console.error("Error fetching featured courses:", error);
-        // Set mock data for development
-        setFeaturedCourses([
-          {
-            id: "1",
-            title: "Digital Photography Masterclass",
-            category: "Photography",
-            enrollments: 245,
-            rating: 4.8,
-            price: 299,
-            duration: 8,
-            level: "Beginner",
-            description:
-              "Master the art of digital photography with professional techniques",
-            instructor: { name: "Sarah Johnson" },
-          },
-          {
-            id: "2",
-            title: "Video Production Essentials",
-            category: "Video Production",
-            enrollments: 189,
-            rating: 4.9,
-            price: 399,
-            duration: 12,
-            level: "Intermediate",
-            description:
-              "Learn professional video production from concept to final cut",
-            instructor: { name: "Michael Chen" },
-          },
-          {
-            id: "3",
-            title: "Social Media Marketing",
-            category: "Marketing",
-            enrollments: 312,
-            rating: 4.7,
-            price: 199,
-            duration: 6,
-            level: "Beginner",
-            description:
-              "Build your brand and grow your audience on social platforms",
-            instructor: { name: "Emma Davis" },
-          },
-        ]);
       } finally {
         setIsLoading(false);
       }
@@ -135,74 +75,10 @@ export default function FeaturedCourses() {
         {/* Courses Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
           {featuredCourses.slice(0, 6).map((course) => (
-            <Card
+            <CourseCard
               key={course.id}
-              className="group hover:shadow-lg transition-all duration-300 border border-neutral-200 bg-white overflow-hidden"
-            >
-              <div className="relative overflow-hidden h-48 bg-neutral-100 flex items-center justify-center">
-                {/* Placeholder for course image */}
-                <BookOpen className="w-12 h-12 text-neutral-300" />
-                
-                {course.level && (
-                  <Badge className="absolute top-4 left-4 bg-white text-neutral-900 hover:bg-white shadow-sm font-medium">
-                    {course.level}
-                  </Badge>
-                )}
-
-                {course.price && (
-                  <Badge className="absolute top-4 right-4 bg-brand-primary text-white hover:bg-brand-primary shadow-sm font-bold">
-                    ${course.price}
-                  </Badge>
-                )}
-              </div>
-
-              <CardHeader className="pb-3 pt-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-semibold text-brand-primary uppercase tracking-wider">
-                    {course.category}
-                  </span>
-                  <div className="flex items-center space-x-1">
-                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                    <span className="text-sm font-medium text-neutral-700">
-                      {course.rating}
-                    </span>
-                  </div>
-                </div>
-                <CardTitle className="text-xl font-bold text-neutral-900 line-clamp-2 mb-1">
-                  {course.title}
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent className="pt-0 pb-5">
-                {course.description && (
-                  <p className="text-neutral-600 text-sm mb-4 line-clamp-2 leading-relaxed">
-                    {course.description}
-                  </p>
-                )}
-
-                <div className="flex items-center justify-between text-sm text-neutral-500 mb-6 pt-4 border-t border-neutral-100">
-                  <div className="flex items-center gap-1.5">
-                    <Users className="w-4 h-4" />
-                    <span>{course.enrollments} students</span>
-                  </div>
-                  {course.duration && (
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="w-4 h-4" />
-                      <span>{course.duration} weeks</span>
-                    </div>
-                  )}
-                </div>
-
-                <Button 
-                  asChild 
-                  className="w-full bg-white text-brand-primary border border-brand-primary hover:bg-brand-primary hover:text-white transition-colors"
-                >
-                  <Link href={`/courses/${course.id}`}>
-                    View Details
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+              course={course as any}
+            />
           ))}
         </div>
 

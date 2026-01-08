@@ -18,6 +18,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Activity,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -75,6 +76,13 @@ const navigationItems = [
     icon: Bell,
     href: "/dashboards/admin?tab=notifications",
     badge: "3",
+  },
+  {
+    id: "audit",
+    label: "Audit Logs",
+    icon: Activity,
+    href: "/dashboards/admin?tab=audit",
+    badge: null,
   },
   {
     id: "settings",

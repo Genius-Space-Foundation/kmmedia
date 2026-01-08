@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -44,6 +45,23 @@ async function exportUsers(req: AuthenticatedRequest) {
       orderBy: {
         createdAt: "desc",
       },
+    });
+
+
+
+    // Log data export
+    await createAuditLog({
+      userId: req.user!.userId,
+      action: AuditAction.USER_DATA_EXPORT,
+      resourceType: ResourceType.USER,
+      // No specific resource ID for bulk export, maybe leave undefined or use "bulk"
+      metadata: {
+        format,
+        roleFilter: role,
+        statusFilter: status,
+        count: users.length,
+      },
+      req,
     });
 
     if (format === "csv") {

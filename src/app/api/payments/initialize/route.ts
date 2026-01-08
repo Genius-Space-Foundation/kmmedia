@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 import {
   initializePayment,
@@ -9,6 +9,7 @@ import { createPaymentRecord } from "@/lib/payments/paystack";
 import { prisma } from "@/lib/db";
 import { PaymentType } from "@prisma/client";
 import { z } from "zod";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -73,6 +74,26 @@ async function handler(req: AuthenticatedRequest) {
       type: type as PaymentType,
       amount,
       reference,
+      metadata: {
+        userId,
+        type,
+        courseId: courseId || null,
+      },
+    });
+
+    // Log payment creation
+    await createAuditLog({
+      userId,
+      action: AuditAction.PAYMENT_CREATE,
+      resourceType: ResourceType.PAYMENT,
+      resourceId: reference, // Use reference as ID since we don't have the DB ID returned from createPaymentRecord easily here without changing that function
+      metadata: {
+        type,
+        amount,
+        reference,
+        courseId,
+      },
+      req,
     });
 
     return NextResponse.json({

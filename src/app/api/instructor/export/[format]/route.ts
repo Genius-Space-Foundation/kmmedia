@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withInstructorAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { z } from "zod";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
+
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -33,11 +35,24 @@ async function exportData(
       dateRange,
       metrics,
       exportedAt: new Date().toISOString(),
-      instructorId: req.user.id,
+      instructorId: req.user.userId,
     };
 
     // Simulate export generation time
     await new Promise((resolve) => setTimeout(resolve, 500));
+
+    // Log export
+    await createAuditLog({
+      userId: req.user.userId,
+      action: AuditAction.COURSE_DATA_EXPORT,
+      resourceType: ResourceType.COURSE, // Analytics usually relate to their courses
+      metadata: {
+        format,
+        dateRange,
+        metrics,
+      },
+      req,
+    });
 
     let content: string;
     let contentType: string;

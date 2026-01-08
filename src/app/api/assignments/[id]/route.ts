@@ -7,6 +7,7 @@ import {
 import { AssignmentService } from "@/lib/assignments/assignment-service";
 import { UserRole } from "@prisma/client";
 import { z } from "zod";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -94,6 +95,19 @@ async function updateAssignment(
       instructorId
     );
 
+    // Log assignment update
+    await createAuditLog({
+      userId: instructorId,
+      action: AuditAction.ASSIGNMENT_UPDATE,
+      resourceType: ResourceType.ASSIGNMENT,
+      resourceId: assignmentId,
+      metadata: {
+        updates: body,
+        courseId: assignment.courseId,
+      },
+      req,
+    });
+
     return NextResponse.json({
       success: true,
       data: assignment,
@@ -134,6 +148,18 @@ async function deleteAssignment(
     const instructorId = req.user!.userId;
 
     await AssignmentService.deleteAssignment(assignmentId, instructorId);
+
+    // Log assignment deletion
+    await createAuditLog({
+      userId: instructorId,
+      action: AuditAction.ASSIGNMENT_DELETE,
+      resourceType: ResourceType.ASSIGNMENT,
+      resourceId: assignmentId,
+      metadata: {
+        reason: "Instructor deleted",
+      },
+      req,
+    });
 
     return NextResponse.json({
       success: true,

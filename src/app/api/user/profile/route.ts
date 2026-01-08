@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
 import { prisma } from "@/lib/db";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -192,6 +193,17 @@ export async function PUT(request: NextRequest) {
     });
 
     console.log("Profile updated successfully for user:", userId);
+
+    // Log profile update
+    await createAuditLog({
+      userId: userId,
+      action: AuditAction.USER_UPDATE,
+      resourceType: ResourceType.USER,
+      resourceId: userId,
+      metadata: {
+        updatedFields: Object.keys(body).filter(k => body[k] !== undefined),
+      },
+    });
 
     // Flatten the response
     const flattenedUser = {

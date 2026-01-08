@@ -6,6 +6,7 @@ import { generatePaymentReference } from "@/lib/payments/paystack";
 import { z } from "zod";
 import { sendEmail } from "@/lib/notifications/email";
 import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -181,6 +182,24 @@ async function recordManualPayment(req: AuthenticatedRequest) {
         },
         userId: adminId,
       },
+    });
+
+    // Create Audit Log (New Standard)
+    await createAuditLog({
+      userId: adminId,
+      action: AuditAction.PAYMENT_CREATE, // Or create new MANUAL_PAYMENT action
+      resourceType: ResourceType.PAYMENT,
+      resourceId: payment.id,
+      metadata: {
+        amount: paymentData.amount,
+        type: paymentData.type,
+        method: paymentData.method,
+        targetUserId: paymentData.userId,
+        courseId: paymentData.courseId,
+        reference: reference,
+        isManual: true,
+      },
+      req,
     });
 
     // Send confirmation email (async)

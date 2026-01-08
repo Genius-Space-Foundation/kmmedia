@@ -3,6 +3,7 @@ import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { CourseStatus } from "@prisma/client";
 import { z } from "zod";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -65,6 +66,21 @@ async function approveCourse(
           },
         },
       },
+    });
+
+    // Log course approval/rejection
+    await createAuditLog({
+      userId: adminId,
+      action: action === "approve" ? AuditAction.COURSE_APPROVE : AuditAction.COURSE_REJECT,
+      resourceType: ResourceType.COURSE,
+      resourceId: courseId,
+      metadata: {
+        previousStatus: course.status,
+        newStatus: updatedCourse.status,
+        notes,
+        instructorId: course.instructorId,
+      },
+      req,
     });
 
     return NextResponse.json({

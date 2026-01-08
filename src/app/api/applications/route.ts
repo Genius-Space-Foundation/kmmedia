@@ -7,6 +7,7 @@ import {
 import { prisma } from "@/lib/db";
 import { ApplicationStatus } from "@prisma/client";
 import { z } from "zod";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -227,6 +228,20 @@ async function createApplication(req: AuthenticatedRequest) {
         data: { applicationId: application.id },
       });
     }
+
+    // Log application creation
+    await createAuditLog({
+      userId,
+      action: AuditAction.APPLICATION_CREATE,
+      resourceType: ResourceType.APPLICATION,
+      resourceId: application.id,
+      metadata: {
+        courseId: application.courseId,
+        courseTitle: application.course.title,
+        status: application.status,
+      },
+      req,
+    });
 
     return NextResponse.json({
       success: true,

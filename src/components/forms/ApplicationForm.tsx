@@ -52,6 +52,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { formatCurrency } from "@/lib/currency";
 
 // Form validation schemas for each step
 const step1Schema = z.object({
@@ -224,6 +225,13 @@ export function ApplicationForm({
     loadExistingDraft();
   }, [loadDraft, setValue, onDraftLoad]);
 
+  // Auto-submit after payment success
+  useEffect(() => {
+    if (isFeePaid && currentStep === 4 && !isLoading) {
+      handleFinalSubmit();
+    }
+  }, [isFeePaid, currentStep, isLoading]);
+
   const progress = (currentStep / STEPS.length) * 100;
 
   const handleNext = async () => {
@@ -358,6 +366,8 @@ export function ApplicationForm({
         
         if (onSuccessRedirect) {
           window.location.href = onSuccessRedirect;
+        } else {
+          window.location.href = "/dashboards/student";
         }
       } else {
         console.error("Submission failed:", result); 
@@ -741,10 +751,7 @@ export function ApplicationForm({
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">Application Fee</span>
                         <span className="font-bold text-lg">
-                            {new Intl.NumberFormat("en-GH", {
-                                style: "currency",
-                                currency: "GHS",
-                            }).format(applicationFee || 0)}
+                            {formatCurrency(applicationFee || 0)}
                         </span>
                     </div>
                     {isFeePaid ? (

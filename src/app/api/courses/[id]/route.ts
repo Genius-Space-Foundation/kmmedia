@@ -7,6 +7,7 @@ import {
 import { prisma } from "@/lib/db";
 import { CourseStatus } from "@prisma/client";
 import { z } from "zod";
+import { createAuditLog, logStateChange, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -129,6 +130,17 @@ async function updateCourse(
       },
     });
 
+    // Log course update
+    await logStateChange({
+      userId,
+      action: AuditAction.COURSE_UPDATE,
+      resourceType: ResourceType.COURSE,
+      resourceId: courseId,
+      before: existingCourse,
+      after: course,
+      req,
+    });
+
     return NextResponse.json({
       success: true,
       data: course,
@@ -191,6 +203,20 @@ async function deleteCourse(
 
     await prisma.course.delete({
       where: { id: courseId },
+    });
+
+    // Log course deletion
+    await createAuditLog({
+      userId,
+      action: AuditAction.COURSE_DELETE,
+      resourceType: ResourceType.COURSE,
+      resourceId: courseId,
+      metadata: {
+        title: existingCourse.title,
+        reason: "User initiated deletion",
+        previousStatus: existingCourse.status,
+      },
+      req,
     });
 
     return NextResponse.json({

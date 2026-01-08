@@ -3,6 +3,7 @@ import { createUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { UserRole } from "@prisma/client";
 import { z } from "zod";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -60,6 +61,20 @@ export async function POST(request: NextRequest) {
       console.error("Failed to send welcome email:", emailError);
       // Don't fail registration if email fails
     }
+
+    // Log user registration
+    await createAuditLog({
+      userId: user.id,
+      action: AuditAction.USER_REGISTER,
+      resourceType: ResourceType.USER,
+      resourceId: user.id,
+      metadata: {
+        email: user.email,
+        role: user.role,
+        registrationMethod: 'email',
+      },
+      req: request,
+    });
 
     // Return success - client should then call NextAuth signIn
     return NextResponse.json({

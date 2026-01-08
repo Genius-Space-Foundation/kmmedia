@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendEmail, emailTemplates } from "@/lib/notifications/email";
 import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
@@ -22,8 +22,8 @@ export const PUT = withAdminAuth(async function PUT(
   }
 
   let body: any;
-  let action: string | undefined;
-  let courseId: string;
+  let action: string = "";
+  let courseId: string = "";
 
   try {
     const paramsResolved = await params;
@@ -40,7 +40,7 @@ export const PUT = withAdminAuth(async function PUT(
       );
     }
 
-    const validActions = ["APPROVE", "REJECT", "PUBLISH", "UNPUBLISH", "UPDATE_INSTALLMENTS"];
+    const validActions = ["APPROVE", "REJECT", "PUBLISH", "UNPUBLISH", "UPDATE_INSTALLMENTS", "TOGGLE_FEATURED"];
     if (!validActions.includes(action)) {
       return NextResponse.json(
         { success: false, message: "Invalid action" },
@@ -48,9 +48,36 @@ export const PUT = withAdminAuth(async function PUT(
       );
     }
 
-    let updatedCourse;
+    let updatedCourse: any;
 
     switch (action) {
+      case "TOGGLE_FEATURED":
+        const { featured: isFeatured } = body;
+        updatedCourse = await prisma.course.update({
+          where: { id: courseId },
+          data: {
+            featured: isFeatured,
+            updatedAt: new Date(),
+          },
+          include: {
+            instructor: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+            _count: {
+              select: {
+                applications: true,
+                enrollments: true,
+              },
+            },
+          },
+        });
+        break;
+
       case "APPROVE":
         updatedCourse = await prisma.course.update({
           where: { id: courseId },
@@ -288,7 +315,7 @@ export const PUT = withAdminAuth(async function PUT(
 });
 
 export const GET = withAdminAuth(async (
-  request: AuthenticatedRequest,
+  _request: AuthenticatedRequest,
   { params }: { params: Promise<{ id: string }> }
 ) => {
   if (isBuildTime()) {

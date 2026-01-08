@@ -21,6 +21,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
 
 interface PaymentOption {
   id: string;
@@ -259,7 +260,7 @@ export default function UnifiedPaymentFlow({
             <div>
               <p className="text-blue-700">Total Amount:</p>
               <p className="font-semibold text-blue-900 text-lg">
-                GH₵{amount.toLocaleString()}
+                {formatCurrency(amount)}
               </p>
             </div>
             <div>
@@ -333,10 +334,11 @@ export default function UnifiedPaymentFlow({
                           </div>
                           <div className="text-right">
                             <p className="text-2xl font-bold text-gray-900">
-                              GH₵
-                              {option.installments
-                                ? option.monthlyAmount?.toLocaleString()
-                                : option.totalWithFees.toLocaleString()}
+                              {formatCurrency(
+                                option.installments
+                                  ? option.monthlyAmount || 0
+                                  : option.totalWithFees
+                              )}
                             </p>
                             {option.installments && (
                               <p className="text-sm text-gray-600">per month</p>
@@ -352,7 +354,7 @@ export default function UnifiedPaymentFlow({
                                 Course Amount:
                               </span>
                               <span className="font-medium">
-                                GH₵{option.totalAmount.toLocaleString()}
+                                {formatCurrency(option.totalAmount)}
                               </span>
                             </div>
 
@@ -362,7 +364,7 @@ export default function UnifiedPaymentFlow({
                                   Processing Fee:
                                 </span>
                                 <span className="font-medium">
-                                  GH₵{option.processingFee.toLocaleString()}
+                                  {formatCurrency(option.processingFee)}
                                 </span>
                               </div>
                             )}
@@ -372,7 +374,7 @@ export default function UnifiedPaymentFlow({
                             <div className="flex items-center justify-between text-sm font-semibold">
                               <span>Total Amount:</span>
                               <span>
-                                GH₵{option.totalWithFees.toLocaleString()}
+                                {formatCurrency(option.totalWithFees)}
                               </span>
                             </div>
                           </div>
@@ -424,7 +426,7 @@ export default function UnifiedPaymentFlow({
                           {savings && savings > 0 && (
                             <Badge variant="secondary">
                               <TrendingDown className="h-3 w-3 mr-1" />
-                              Save GH₵{savings.toLocaleString()}
+                              Save {formatCurrency(savings)}
                             </Badge>
                           )}
                         </div>

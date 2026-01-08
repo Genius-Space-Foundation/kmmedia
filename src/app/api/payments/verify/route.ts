@@ -9,6 +9,7 @@ import { PaymentStatus } from "@prisma/client";
 import { z } from "zod";
 import { sendEmail } from "@/lib/notifications/email";
 import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -70,7 +71,6 @@ export async function POST(request: NextRequest) {
       }
 
       // Handle different payment types
-      // Handle different payment types
       if (payment.type === "APPLICATION_FEE") {
         // If linked to an application (legacy flow or late linking), update status
         if (payment.application) {
@@ -78,8 +78,51 @@ export async function POST(request: NextRequest) {
             where: { id: payment.application.id },
             data: { status: "UNDER_REVIEW" },
           });
+        } else {
+          // AUTO-APPLICATION CREATION FROM DRAFT
+          // If not linked, try to find a draft and create an application
+          // This ensures that even if the student doesn't return to click 'Submit', 
+          // their application is still captured because they paid.
+          
+          // Use courseId from metadata if available
+          const courseId = payment.metadata && (payment.metadata as any).courseId;
+          
+          if (courseId) {
+            const draft = await prisma.applicationDraft.findUnique({
+              where: {
+                userId_courseId: {
+                  userId: payment.userId,
+                  courseId: courseId
+                }
+              }
+            });
+
+            if (draft) {
+              // Create the real application
+              const application = await prisma.application.create({
+                data: {
+                  userId: payment.userId,
+                  courseId: courseId,
+                  formData: draft.formData,
+                  status: "UNDER_REVIEW", // Set to under review immediately since paid
+                }
+              });
+
+              // Link this payment to the new application
+              await prisma.payment.update({
+                where: { id: payment.id },
+                data: { applicationId: application.id }
+              });
+
+              // Delete the draft
+              await prisma.applicationDraft.delete({
+                where: { id: draft.id }
+              });
+              
+              console.log(`Auto-created application ${application.id} for user ${payment.userId} from draft`);
+            }
+          }
         }
-        // If not linked, do nothing. The application creation endpoint will find this payment.
       } else if (payment.type === "TUITION") {
         if (payment.enrollment) {
           // Update existing enrollment status
@@ -272,6 +315,21 @@ export async function POST(request: NextRequest) {
          }
       }
 
+      // Log payment verification success
+      await createAuditLog({
+        userId: payment.userId,
+        action: AuditAction.PAYMENT_VERIFY,
+        resourceType: ResourceType.PAYMENT,
+        resourceId: reference,
+        metadata: {
+          status: "success",
+          amount: convertFromPesewas(paymentData.amount),
+          type: payment.type,
+          reference,
+        },
+        req: request,
+      });
+
       return NextResponse.json({
         success: true,
         data: {
@@ -286,6 +344,31 @@ export async function POST(request: NextRequest) {
     } else {
       // Payment failed
       await updatePaymentStatus(reference, PaymentStatus.FAILED, paymentData);
+
+      // Log payment verification failure
+      await createAuditLog({
+        userId: "system", // Unknown user if not found in DB yet, or extract if possible. But here we might not have user? 
+        // We do not have userId comfortably here if we haven't fetched payment record yet.
+        // But lines 48 fetched payment. If payment found, we have user.
+        // Wait, line 65 checks if (!payment). So if we are here (else block of if (paymentData.status === "success")), we haven't fetched payment yet?
+        // No, fetch is INSIDE the if (paymentData.status === "success") block.
+        // So if verification from Paystack fails (line 29), we return early.
+        // If paystack says success (line 39), we proceed.
+        // If paystack says NOT success (line 328), we are in the else block.
+        // We haven't fetched the payment record yet in the else block!
+        // So we don't know the userId easily unless we fetch it by reference.
+        // Let's rely on reference as resourceId.
+        action: AuditAction.PAYMENT_VERIFY_FAILED, // We need to define this or use generic FAILED
+        resourceType: ResourceType.PAYMENT,
+        resourceId: reference,
+        metadata: {
+          status: paymentData.status,
+          message: paymentData.gateway_response,
+          reference,
+          failed: true
+        },
+        req: request,
+      });
 
       return NextResponse.json({
         success: false,

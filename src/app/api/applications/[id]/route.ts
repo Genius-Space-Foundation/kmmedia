@@ -7,6 +7,7 @@ import {
 import { prisma } from "@/lib/db";
 import { ApplicationStatus } from "@prisma/client";
 import { z } from "zod";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -162,6 +163,21 @@ async function updateApplication(
     // If approved, create enrollment
     // Note: Enrollment is NO LONGER created automatically on approval.
     // It will be created when the student pays the tuition fee.
+
+    // Log application update
+    await createAuditLog({
+      userId: adminId,
+      action: status === "APPROVED" ? AuditAction.APPLICATION_APPROVE : AuditAction.APPLICATION_REJECT,
+      resourceType: ResourceType.APPLICATION,
+      resourceId: applicationId,
+      metadata: {
+        previousStatus: application.status,
+        newStatus: status,
+        notes,
+        applicantUserId: application.userId,
+      },
+      req,
+    });
 
     return NextResponse.json({
       success: true,

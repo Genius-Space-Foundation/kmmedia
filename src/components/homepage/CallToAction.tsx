@@ -26,7 +26,7 @@ export default function CallToAction() {
             View Courses
           </Link>
         </div>
-        <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-neutral-500">
+        {/* <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-neutral-500">
           <div className="flex items-center gap-2">
             <svg
               className="w-5 h-5 text-success"
@@ -69,7 +69,7 @@ export default function CallToAction() {
             </svg>
             <span>Cancel Anytime</span>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );

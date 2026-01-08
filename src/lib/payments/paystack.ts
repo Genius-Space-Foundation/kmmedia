@@ -124,6 +124,7 @@ export async function createPaymentRecord(data: {
   applicationId?: string;
   enrollmentId?: string;
   dueDate?: Date;
+  metadata?: any;
 }) {
   return prisma.payment.create({
     data: {
@@ -135,6 +136,7 @@ export async function createPaymentRecord(data: {
       applicationId: data.applicationId,
       enrollmentId: data.enrollmentId,
       dueDate: data.dueDate,
+      metadata: data.metadata,
     },
   });
 }

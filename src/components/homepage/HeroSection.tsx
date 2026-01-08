@@ -51,15 +51,13 @@ export default function HeroSection() {
           <h1 className="text-4xl tracking-tight font-extrabold text-white sm:text-5xl md:text-6xl lg:text-7xl">
             <span className="block">Elevate Your</span>
             <span className="block text-brand-primary mt-2">
-              Media Career
+              Media & Tech Career
             </span>
           </h1>
 
           {/* Subtitle */}
           <p className="mt-6 text-lg sm:text-xl md:text-2xl text-neutral-200 leading-relaxed max-w-2xl">
-            Join professionals mastering industry-leading skills in film
-            production, video editing, and broadcasting. Get certified and
-            start your journey today.
+            Master the skills that define the future of media and technology. Access world-class training in film production, digital broadcasting, and tech innovation to accelerate your professional journey.
           </p>
 
           {/* CTA Buttons */}

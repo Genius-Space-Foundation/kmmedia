@@ -6,6 +6,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/db";
 import { UserRole, UserStatus } from "@prisma/client";
 import { verifyPassword } from "@/lib/auth";
+import { logAuthAttempt } from "@/lib/audit-log";
 
 export const authOptions: NextAuthOptions = {
   // adapter: PrismaAdapter(prisma), // Disabled for JWT sessions
@@ -27,6 +28,12 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           console.log("LOGIN FAIL: Missing credentials");
+          // Format request object slightly differently for server-side calls if needed
+          // or just pass null for req since we might not have easy access to NextRequest here
+          await logAuthAttempt({ 
+            email: "unknown", 
+            success: false 
+          });
           throw new Error("Invalid credentials");
         }
 
@@ -73,6 +80,12 @@ export const authOptions: NextAuthOptions = {
 
         console.log(`LOGIN SUCCESS: User ${email} authenticated`);
 
+        await logAuthAttempt({
+          email,
+          userId: user.id,
+          success: true,
+        });
+
         // Return user object (password excluded)
         return {
           id: user.id,
@@ -110,9 +123,23 @@ export const authOptions: NextAuthOptions = {
           return true;
         } catch (error) {
           console.error("Error during social sign-in:", error);
+          await logAuthAttempt({
+            email: user.email || "unknown",
+            success: false,
+          });
           return false;
         }
       }
+      
+      // Log successful social login
+      if (user.email) {
+         await logAuthAttempt({
+            email: user.email,
+            userId: user.id,
+            success: true,
+         });
+      }
+      
       return true;
     },
     async jwt({ token, user }) {

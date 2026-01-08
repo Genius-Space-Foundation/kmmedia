@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { ApplicationForm } from "@/components/forms/ApplicationForm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-config";
+import { formatCurrency } from "@/lib/currency";
 
 interface ApplyPageProps {
   params: Promise<{
@@ -127,11 +128,11 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
                 <span>•</span>
                 <span>Instructor: {course.instructor.name}</span>
                 <span>•</span>
-                <span>Course Fee: ${course.price}</span>
+                <span>Course Fee: {formatCurrency(course.price)}</span>
                 {course.applicationFee > 0 && (
                   <>
                     <span>•</span>
-                    <span>Application Fee: ${course.applicationFee}</span>
+                    <span>Application Fee: {formatCurrency(course.applicationFee)}</span>
                   </>
                 )}
               </div>
@@ -144,7 +145,7 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
           courseId={course.id}
           courseName={course.title}
           applicationFee={course.applicationFee || 0}
-          onSuccessRedirect={`/applications/success?course=${course.id}`}
+          onSuccessRedirect="/dashboards/student"
         />
 
         {/* Help Section */}

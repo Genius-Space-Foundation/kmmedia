@@ -74,6 +74,7 @@ interface Course {
     applications: number;
     enrollments: number;
   };
+  featured: boolean;
   tags?: string[];
   requirements?: string[];
   objectives?: string[];
@@ -163,6 +164,38 @@ export default function CourseManagement({ onRefresh, onCreateCourse }: CourseMa
     } catch (error) {
       console.error("Error updating course:", error);
       toast.error("Failed to update course");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleToggleFeatured = async (courseId: string, currentStatus: boolean) => {
+    try {
+      setProcessing(true);
+      const response = await fetch(`/api/admin/courses/${courseId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "TOGGLE_FEATURED",
+          featured: !currentStatus,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success(`Course ${!currentStatus ? "featured" : "unfeatured"} successfully`);
+        fetchCourses();
+        if (onRefresh) onRefresh();
+      } else {
+        const errorData = await safeJsonParse(response, {
+          message: "Failed to toggle featured status",
+        });
+        toast.error(errorData.message);
+      }
+    } catch (error) {
+      console.error("Error toggling featured status:", error);
+      toast.error("Failed to toggle featured status");
     } finally {
       setProcessing(false);
     }
@@ -537,6 +570,16 @@ export default function CourseManagement({ onRefresh, onCreateCourse }: CourseMa
                         >
                           <Eye className="h-4 w-4 mr-1" />
                           View
+                        </Button>
+                        <Button
+                          variant={course.featured ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handleToggleFeatured(course.id, course.featured)}
+                          disabled={processing}
+                          className={course.featured ? "bg-yellow-500 hover:bg-yellow-600 text-white" : ""}
+                        >
+                          <Star className={`h-4 w-4 mr-1 ${course.featured ? "fill-white" : ""}`} />
+                          {course.featured ? "Featured" : "Feature"}
                         </Button>
                         <Button
                           variant="outline"

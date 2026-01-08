@@ -20,7 +20,7 @@ import UserManagement from "@/components/admin/users/UserManagement";
 import CourseManagement from "@/components/admin/courses/CourseManagement";
 import SystemSettings from "@/components/admin/settings/SystemSettings";
 import ReportsAnalytics from "@/components/admin/reports/ReportsAnalytics";
-import ActivityLogs from "@/components/admin/logs/ActivityLogs";
+import AuditLogViewer from "@/components/admin/audit/AuditLogViewer";
 import FinancialManagement from "@/components/admin/payments/FinancialManagement";
 import DashboardOverview from "@/components/admin/dashboard/DashboardOverview";
 import AdminProfile from "@/components/admin/profile/AdminProfile";
@@ -253,8 +253,8 @@ export default function ProfessionalDashboard() {
       badge: null,
     },
     {
-      id: "logs",
-      label: "Activity Logs",
+      id: "audit",
+      label: "Audit Logs",
       icon: Activity,
       badge: null,
     },
@@ -391,14 +391,14 @@ export default function ProfessionalDashboard() {
             </div>
           )}
 
-          {/* Activity Logs Tab */}
-          {activeTab === "logs" && (
+          {/* Audit Logs Tab */}
+          {activeTab === "audit" && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-3xl font-black text-gray-900">Activity Logs</h2>
+                <h2 className="text-3xl font-black text-gray-900">Audit Logs</h2>
                 <p className="text-gray-600 mt-2">Monitor system activities and changes</p>
               </div>
-              <ActivityLogs />
+              <AuditLogViewer />
             </div>
           )}
 

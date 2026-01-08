@@ -3,6 +3,7 @@ import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { UserStatus } from "@prisma/client";
 import { z } from "zod";
+import { createAuditLog, logBulkAction, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -105,13 +106,22 @@ async function bulkUserActions(req: AuthenticatedRequest) {
         );
     }
 
-    // Log the bulk action for audit purposes
-    console.log(`Bulk action performed by admin ${req.user!.userId}:`, {
-      action,
-      userIds,
-      comments,
-      affectedCount: result.count,
-      timestamp: new Date().toISOString(),
+
+
+    // Log the bulk action
+    await logBulkAction({
+      userId: req.user!.userId,
+      action: `BULK_USER_${action}`,
+      resourceType: ResourceType.USER,
+      resourceIds: userIds,
+      metadata: {
+        action,
+        comments,
+        affectedCount: result.count,
+        details: message,
+      },
+      returnIds: false, // We don't need to log all IDs in DB metadata if huge, but we passed them in resourceIds
+      req,
     });
 
     // In a real implementation, you might want to create audit log entries

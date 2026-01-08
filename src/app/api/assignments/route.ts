@@ -6,6 +6,7 @@ import {
   formatValidationErrors,
 } from "@/lib/assignments/assignment-errors";
 import { z } from "zod";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -26,6 +27,20 @@ async function createAssignment(req: AuthenticatedRequest) {
       body,
       instructorId
     );
+
+    // Log assignment creation
+    await createAuditLog({
+      userId: instructorId,
+      action: AuditAction.ASSIGNMENT_CREATE,
+      resourceType: ResourceType.ASSIGNMENT,
+      resourceId: assignment.id,
+      metadata: {
+        title: assignment.title,
+        courseId: assignment.courseId,
+        dueDate: assignment.dueDate,
+      },
+      req,
+    });
 
     return NextResponse.json({
       success: true,

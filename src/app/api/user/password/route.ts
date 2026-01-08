@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { withAuth, AuthenticatedRequest } from "@/lib/middleware";
 import { prisma } from "@/lib/db";
 import { hashPassword, verifyPassword } from "@/lib/auth";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 import { z } from "zod";
 
 export const dynamic = 'force-dynamic';
@@ -69,6 +70,15 @@ async function updatePassword(req: AuthenticatedRequest) {
       data: {
         password: hashedNewPassword,
       },
+    });
+
+    // Log password change
+    await createAuditLog({
+      userId: userId,
+      action: AuditAction.PASSWORD_CHANGE,
+      resourceType: ResourceType.USER,
+      resourceId: userId,
+      req,
     });
 
     return NextResponse.json({

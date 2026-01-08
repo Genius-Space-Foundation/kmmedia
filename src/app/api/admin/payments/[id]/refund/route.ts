@@ -5,6 +5,7 @@ import { PaymentStatus } from "@prisma/client";
 import { z } from "zod";
 import { sendEmail } from "@/lib/notifications/email";
 import { extendedEmailTemplates } from "@/lib/notifications/email-templates-extended";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -69,7 +70,7 @@ async function processRefund(req: AuthenticatedRequest, { params }: { params: Pr
         data: {
           status: PaymentStatus.REFUNDED,
           metadata: {
-            ...payment.metadata,
+            ...(payment.metadata && typeof payment.metadata === 'object' ? (payment.metadata as any) : {}),
             refund: {
               amount: refundAmount,
               reason,
@@ -126,6 +127,20 @@ async function processRefund(req: AuthenticatedRequest, { params }: { params: Pr
       });
 
       return { updatedPayment, refundRecord };
+    });
+
+    // Create Audit Log (New Standard)
+    await createAuditLog({
+      userId: adminId,
+      action: AuditAction.PAYMENT_REFUND,
+      resourceType: ResourceType.PAYMENT,
+      resourceId: id,
+      metadata: {
+        amount: refundAmount,
+        reason,
+        targetUserId: payment.userId,
+      },
+      req,
     });
 
     // Send refund notification email to user (async, don't block response)

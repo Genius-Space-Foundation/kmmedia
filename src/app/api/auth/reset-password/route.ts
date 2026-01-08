@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
 import { z } from "zod";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -73,6 +74,19 @@ export async function POST(req: NextRequest) {
     // Delete token
     await prisma.verificationToken.delete({
       where: { token },
+    });
+
+    // Log password reset
+    await createAuditLog({
+      userId: user.id,
+      action: AuditAction.PASSWORD_RESET,
+      resourceType: ResourceType.USER,
+      resourceId: user.id,
+      metadata: {
+        method: "email_token",
+      },
+      // req is NextRequest in this file, signature matches
+      req,
     });
 
     return NextResponse.json({

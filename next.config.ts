@@ -101,7 +101,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: [],
 
   // Transpile legacy packages
-  transpilePackages: ["react-joyride"],
+  transpilePackages: [],
 
   // Disable static optimization for dynamic pages
   // output: "standalone", // Commented out to fix build manifest issues

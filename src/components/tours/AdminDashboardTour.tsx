@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import Joyride, { Step, CallBackProps, STATUS, EVENTS } from 'react-joyride';
+import Joyride, { Step, CallBackProps, STATUS, EVENTS } from '@list-labs/react-joyride';
 import { useTour } from './TourProvider';
 
 const TOUR_NAME = 'admin-dashboard';

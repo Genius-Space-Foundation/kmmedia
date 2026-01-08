@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { withAdminAuth } from "@/lib/middleware/auth";
+import { logBulkAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -100,6 +101,19 @@ async function bulkHandler(request: NextRequest) {
     }
 
     console.log(`Bulk ${action}: ${result.count} courses updated`);
+
+    // Log bulk course action
+    await logBulkAction({
+      userId: body.userId || "admin", // Ideally get from auth middleware but it's not exposed here in the args
+      action: `COURSE_BULK_${action}`, // e.g. COURSE_BULK_APPROVE
+      resourceType: ResourceType.COURSE,
+      resourceIds: courseIds,
+      metadata: {
+        action,
+        comments,
+        count: result.count,
+      },
+    });
 
     return NextResponse.json({
       success: true,

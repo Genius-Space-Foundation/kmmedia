@@ -5,6 +5,7 @@ import { UserRole, UserStatus } from "@prisma/client";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { sendEmail, emailTemplates } from "@/lib/notifications/email";
+import { createAuditLog, AuditAction, ResourceType } from "@/lib/audit-log";
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -91,6 +92,25 @@ async function createUser(req: AuthenticatedRequest) {
     }).catch((error) =>
       console.error("Failed to send temporary password email:", error)
     );
+
+    // Log user creation
+    await createAuditLog({
+      userId: req.user!.userId,
+      action: AuditAction.USER_CREATE,
+      resourceType: ResourceType.USER,
+      resourceId: user.id,
+      metadata: {
+        createdUser: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          status: user.status,
+        },
+        createdBy: req.user!.userId,
+        isAdminAction: true,
+      },
+      req,
+    });
 
     return NextResponse.json({
       success: true,

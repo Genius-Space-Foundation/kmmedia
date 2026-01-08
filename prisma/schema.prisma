@@ -346,6 +346,8 @@ model Course {
   installmentPlan    Json? // { upfront: 40, midCourse: 30, completion: 30 }
 
   // Course details
+  image              String?
+  featured           Boolean          @default(false)
   prerequisites      String[]
   learningObjectives String[]
   certificateAwarded Boolean  @default(true)
