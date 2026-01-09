@@ -16,7 +16,7 @@ import {
   User,
 } from "lucide-react";
 
-import { StudentDashboardTour } from "@/components/tours/StudentDashboardTour";
+
 
 interface StudentLayoutProps {
   children: React.ReactNode;
@@ -126,8 +126,7 @@ export default function StudentLayout({
 
         />
 
-        {/* Tour Component */}
-        <StudentDashboardTour />
+
 
         {/* Page Content */}
         <main className={`px-8 py-8 ${className}`}>{children}</main>

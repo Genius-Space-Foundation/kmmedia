@@ -6,7 +6,6 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { AccessibilityProvider } from "@/components/providers/AccessibilityProvider";
 import { NotificationProvider } from "@/components/ui/notification-provider";
-import { TourProvider } from "@/components/tours/TourProvider";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -64,11 +63,9 @@ export default function RootLayout({
           <SessionProvider>
             <ThemeProvider>
               <NotificationProvider>
-                <TourProvider>
-                  <PWARegistration />
-                  {children}
-                  <Toaster position="top-right" richColors />
-                </TourProvider>
+                <PWARegistration />
+                {children}
+                <Toaster position="top-right" richColors />
               </NotificationProvider>
             </ThemeProvider>
           </SessionProvider>
