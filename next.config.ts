@@ -5,17 +5,19 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
 
-  // Disable ESLint and TypeScript during build
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Disable TypeScript during build
   typescript: {
     ignoreBuildErrors: true,
   },
 
   // Image optimization
   images: {
-    domains: ["res.cloudinary.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "res.cloudinary.com",
+      },
+    ],
     formats: ["image/webp", "image/avif"],
   },
 
@@ -67,7 +69,10 @@ const nextConfig: NextConfig = {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
 
-  // Webpack optimizations
+  // Turbopack configuration (Next.js 16+)
+  turbopack: {},
+
+  // Webpack optimizations (fallback for --webpack builds)
   webpack: (config, { dev, isServer }) => {
     if (!dev && !isServer) {
       // Optimize bundle size
