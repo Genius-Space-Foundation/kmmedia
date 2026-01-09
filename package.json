@@ -25,7 +25,8 @@
     "test:ci": "npm run type-check && npm run lint && npm run test",
     "test:pbt": "jest --testPathPattern=\\.property\\.test\\.(ts|tsx)$",
     "test:pbt:watch": "jest --watch --testPathPattern=\\.property\\.test\\.(ts|tsx)$",
-    "test:unit": "jest --testPathPattern=\\.test\\.(ts|tsx)$ --testPathIgnorePatterns=\\.property\\.test\\.(ts|tsx)$"
+    "test:unit": "jest --testPathPattern=\\.test\\.(ts|tsx)$ --testPathIgnorePatterns=\\.property\\.test\\.(ts|tsx)$",
+    "verify-rls": "npx tsx scripts/quick_verify_rls.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

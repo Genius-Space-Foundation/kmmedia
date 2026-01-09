@@ -98,6 +98,7 @@ npm start
 ## 🔐 Security Features
 
 - **JWT Authentication**: Secure token-based authentication
+- **Row Level Security (RLS)**: Database-level data isolation ([View Guide](docs/RLS_DEPLOYMENT_GUIDE.md))
 - **Role-Based Access Control**: Granular permissions system
 - **Rate Limiting**: API rate limiting to prevent abuse
 - **Input Validation**: Zod schema validation
@@ -153,6 +154,7 @@ npm start
 3. **Manual Deployment**:
    ```bash
    npm ci --only=production
+   # Deploy database migrations (includes RLS policies)
    npx prisma migrate deploy
    npm run build
    npm start
