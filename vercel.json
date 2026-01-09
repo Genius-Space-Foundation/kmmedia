@@ -4,10 +4,5 @@
       "path": "/api/reminders/process",
       "schedule": "0 5 * * *"
     }
-  ],
-  "env": {
-    "DATABASE_URL": "@database-url",
-    "JWT_SECRET": "@jwt-secret",
-    "JWT_REFRESH_SECRET": "@jwt-refresh-secret"
-  }
+  ]
 }
