@@ -44,6 +44,7 @@ export default function ProfessionalDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
   const [users, setUsers] = useState<any[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
@@ -273,13 +274,25 @@ export default function ProfessionalDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex overflow-x-hidden">
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Modern Sidebar */}
       <ModernSidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
+        isMobileOpen={mobileMenuOpen}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          setMobileMenuOpen(false);
+        }}
         navigationItems={navigationItems}
         brandName="KM Media"
         brandSubtitle="Admin Portal"
@@ -288,9 +301,9 @@ export default function ProfessionalDashboard() {
 
       {/* Main Content */}
       <div
-        className={`flex-1 transition-all duration-300 ${
-          sidebarOpen ? "ml-72" : "ml-20"
-        }`}
+        className={`flex-1 transition-all duration-300 w-full ${
+          sidebarOpen ? "lg:ml-72" : "lg:ml-20"
+        } ml-0`}
       >
         {/* Modern Header */}
         <ModernHeader
@@ -301,10 +314,11 @@ export default function ProfessionalDashboard() {
           onSettingsClick={() => setActiveTab("settings")}
           onLogout={handleLogout}
           notificationCount={3}
+          onMenuClick={() => setMobileMenuOpen(true)}
         />
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-8 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-8 py-6 sm:py-8">
           {/* Overview Tab */}
           {activeTab === "overview" && (
             <div className="space-y-8">

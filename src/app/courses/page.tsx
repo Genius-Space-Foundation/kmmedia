@@ -268,91 +268,91 @@ export default function CoursesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-neutral-50 relative overflow-hidden">
+    <div className="min-h-screen bg-brand-neutral-50 flex flex-col">
+      {/* Enhanced Navigation */}
+      <EnhancedNavigation user={user} />
 
-      <div className="relative max-w-full mx-auto">
-        {/* Enhanced Navigation */}
-        <EnhancedNavigation user={user} />
-
-        {/* Hero Section */}
-        <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden py-20">
-          {/* Professional Background */}
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-neutral-900/70 z-10"></div>
+      <main className="flex-grow">
+        {/* Premium Courses Hero Section */}
+        <section className="relative min-h-[650px] lg:min-h-[750px] flex items-center justify-center overflow-hidden py-20">
+          {/* Enhanced Background Treatment for Better Text Visibility */}
+          <div className="absolute inset-0 z-0">
+            {/* Darker overlay for better contrast */}
+            <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/95 via-neutral-900/90 to-neutral-950/95 z-10"></div>
             <img
               src="/images/3.jpeg"
               alt="KM Media Training Institute Courses"
-              className="w-full h-full object-cover opacity-10"
+              className="w-full h-full object-cover grayscale opacity-15 scale-110 animate-subtle-zoom"
             />
           </div>
 
-          <div className="relative z-10 text-center text-white px-6 sm:px-8 lg:px-12 max-w-6xl mx-auto">
-            {/* Professional Badge */}
-            <div className="inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full text-white text-sm font-medium mb-8">
-              <span className="w-2 h-2 bg-brand-accent rounded-full mr-3 animate-pulse"></span>
-              Professional Courses Available
-              <span className="ml-3 px-3 py-1 bg-brand-accent/90 rounded-full text-xs font-bold text-black">
-                {courses.length}+ Courses
-              </span>
+          <div className="relative z-20 text-center text-white px-6 sm:px-8 lg:px-12 max-w-6xl mx-auto">
+            {/* Discovery Badge - Enhanced visibility */}
+            <div className="inline-flex items-center px-4 py-2 bg-white/15 backdrop-blur-md border border-white/30 rounded-2xl text-white text-sm font-semibold mb-10 animate-fade-in tracking-wide shadow-lg">
+              <span className="mr-2">🚀</span>
+              Discover Your Potential
             </div>
 
-            {/* Main Heading */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              <span className="block">Discover Your Perfect</span>
-              <span className="text-brand-primary block mt-2">
-                Learning Path
+            {/* Main Heading with Stylized Text - Improved contrast */}
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-8 leading-[1.05] tracking-tight drop-shadow-lg">
+              Master the Art of
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 animate-gradient-x py-2 drop-shadow-none">
+                Modern Media
               </span>
             </h1>
 
-            {/* Description */}
-            <p className="text-xl sm:text-2xl text-white/90 mb-12 max-w-4xl mx-auto leading-relaxed">
-              Choose from our comprehensive range of professional courses
-              designed to help you advance your career and acquire new skills.
+            {/* Premium Description - Better visibility */}
+            <p className="text-lg sm:text-2xl text-gray-200 mb-16 max-w-3xl mx-auto leading-relaxed font-light drop-shadow-md">
+              Choose from our world-class courses designed to transform you into a media powerhouse. Professional certification, expert mentorship, and career-ready skills.
             </p>
 
-            {/* Functional Search Bar */}
-            {/* <div className="max-w-2xl mx-auto mb-12">
-            {/* Dynamic Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 max-w-4xl mx-auto">
-              <div className="text-center">
-                <div className="text-3xl sm:text-4xl font-bold text-white mb-2">
-                  {courses.length}
+            {/* Enhanced Dynamic Stats Cards - Improved contrast */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-5xl mx-auto">
+              <div className="group bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl hover:bg-white/15 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                <div className="text-4xl font-extrabold text-cyan-400 mb-1 group-hover:animate-pulse drop-shadow-lg">
+                  {courses.length}+
                 </div>
-                <div className="text-white/70 text-sm font-medium uppercase tracking-wide">
-                  Available Courses
+                <div className="text-gray-200 text-xs font-bold uppercase tracking-widest">
+                  Expert Courses
                 </div>
               </div>
 
-              <div className="text-center">
-                <div className="text-3xl sm:text-4xl font-bold text-white mb-2">
+              <div className="group bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl hover:bg-white/15 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                <div className="text-4xl font-extrabold text-blue-400 mb-1 group-hover:animate-pulse drop-shadow-lg">
                   {new Set(courses.map((c) => c.category)).size}
                 </div>
-                <div className="text-white/70 text-sm font-medium uppercase tracking-wide">
-                  Categories
+                <div className="text-gray-200 text-xs font-bold uppercase tracking-widest">
+                  Specializations
                 </div>
               </div>
 
-              <div className="text-center">
-                <div className="text-3xl sm:text-4xl font-bold text-white mb-2">
+              <div className="group bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl hover:bg-white/15 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                <div className="text-4xl font-extrabold text-sky-400 mb-1 group-hover:animate-pulse drop-shadow-lg">
                   {courses.reduce(
                     (sum, course) => sum + course._count.enrollments,
                     0
                   )}
                 </div>
-                <div className="text-white/70 text-sm font-medium uppercase tracking-wide">
-                  Students Enrolled
+                <div className="text-gray-200 text-xs font-bold uppercase tracking-widest">
+                  Active Students
                 </div>
               </div>
 
-              <div className="text-center">
-                <div className="text-3xl sm:text-4xl font-bold text-white mb-2">
+              <div className="group bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl hover:bg-white/15 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
+                <div className="text-4xl font-extrabold text-emerald-400 mb-1 group-hover:animate-pulse drop-shadow-lg">
                   95%
                 </div>
-                <div className="text-white/70 text-sm font-medium uppercase tracking-wide">
+                <div className="text-gray-200 text-xs font-bold uppercase tracking-widest">
                   Success Rate
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Modern Scroll Indicator - Enhanced visibility */}
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-60 animate-bounce">
+            <span className="text-[10px] text-gray-200 uppercase tracking-[0.2em] font-medium drop-shadow-md">Explore</span>
+            <div className="w-1 h-8 bg-gradient-to-b from-cyan-400 to-transparent rounded-full shadow-lg"></div>
           </div>
         </section>
 
@@ -518,9 +518,10 @@ export default function CoursesPage() {
           }}
         />
 
+        </main>
+
         {/* Footer */}
         <Footer />
-      </div>
     </div>
   );
 }

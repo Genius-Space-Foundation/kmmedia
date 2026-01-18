@@ -8,7 +8,6 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
 } from "@/components/ui/card";
 import EnhancedNavigation from "@/components/navigation/EnhancedNavigation";
 import Footer from "@/components/layout/Footer";
@@ -49,34 +48,53 @@ export default function AboutPage() {
       <EnhancedNavigation user={user} />
 
       <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="relative h-[60vh] min-h-[500px] flex items-center justify-center overflow-hidden">
-          {/* Background Image with Overlay */}
-          <div className="absolute inset-0 z-0">
+        {/* Premium Hero Section */}
+        <section className="relative min-h-[600px] lg:h-[80vh] flex items-center justify-center overflow-hidden">
+          {/* Background Image with Modern Overlay */}
+          <div className="absolute inset-0 z-0 scale-105 animate-subtle-zoom">
             <img
               src="/images/2.jpeg"
               alt="About KM Media Training Institute"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover grayscale opacity-20"
             />
-            <div className="absolute inset-0 bg-neutral-900/80"></div>
+            {/* Multi-layered overlay for depth */}
+            <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/90 via-neutral-900/80 to-neutral-950/90"></div>
           </div>
 
-          <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="max-w-3xl mx-auto space-y-6">
-              {/* Badge */}
+          <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 text-center mt-8">
+            <div className="max-w-4xl mx-auto">
+              {/* Premium Glassmorphism Badge */}
+              <div className="inline-flex items-center px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white text-sm font-medium mb-10 animate-fade-in shadow-2xl">
+                <span className="relative flex h-2.5 w-2.5 mr-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-accent opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brand-accent"></span>
+                </span>
+                Our Institute Story
+              </div>
              
-            {/* Main Heading */}
-            <h1 className="text-responsive-4xl font-bold text-white mb-6 leading-tight animate-fade-in-up">
-              Empowering the Next Generation of
-              <br />
-              <span className="text-brand-accent">Media Professionals</span>
+              {/* Refined Typography */}
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold text-white mb-8 tracking-tight leading-[1.1] drop-shadow-lg">
+                <span className="block">
+                  Empowering the Next
+                </span>
+                <span className="text-brand-accent italic">
+                  Generation
+                </span>{" "}
+                <span>
+                  of Media
+                </span>
               </h1>
               
-              <p className="text-lg sm:text-xl text-neutral-300 leading-relaxed max-w-2xl mx-auto">
-                Bridging the gap between academic theory and professional practice through innovative, hands-on media education.
+              <div className="w-24 h-1.5 bg-brand-primary mx-auto rounded-full mb-10 shadow-lg shadow-brand-primary/50"></div>
+
+              <p className="text-lg sm:text-2xl text-gray-200 leading-relaxed max-w-2xl mx-auto font-medium drop-shadow-md">
+                Bridging the gap between academic theory and professional practice through innovative, hands-on media education since 2012.
               </p>
             </div>
           </div>
+
+          {/* Bottom Decorative Curve */}
+          <div className="absolute bottom-0 left-0 right-0 h-16 bg-brand-neutral-50 clip-path-slant opacity-0 animate-fade-in animation-delay-1500"></div>
         </section>
 
         {/* Mission & Vision Section */}
@@ -111,7 +129,7 @@ export default function AboutPage() {
         {/* Statistics Strip */}
         <section className="py-16 bg-brand-neutral-900 text-white">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-neutral-800">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center sm:divide-x divide-neutral-800">
               <div className="p-4">
                 <div className="text-4xl sm:text-5xl font-bold text-brand-primary mb-2">500+</div>
                 <div className="text-sm sm:text-base text-neutral-400 font-medium uppercase tracking-wider">Graduates</div>

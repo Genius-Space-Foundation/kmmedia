@@ -50,56 +50,48 @@ export default function StoriesPage() {
         {/* Enhanced Navigation */}
         <EnhancedNavigation user={user} />
 
-        {/* Hero Section */}
-        <section className="relative min-h-[60vh] flex items-center justify-center overflow-hidden">
-          {/* Background Image */}
+        {/* Success Stories Premium Hero Section */}
+        <section className="relative min-h-[550px] lg:h-[70vh] flex items-center justify-center overflow-hidden">
+          {/* Immersive Background */}
           <div className="absolute inset-0">
             <img
               src="/images/1.jpeg"
               alt="Success Stories - KM Media Training Institute"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover scale-110 animate-subtle-zoom"
             />
-            <div className="absolute inset-0 bg-neutral-900/70"></div>
+            {/* Advanced Overlay */}
+            <div className="absolute inset-0 bg-neutral-950/60 backdrop-blur-[1px]"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-neutral-950/40"></div>
           </div>
 
-          <div className="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
-            {/* Badge */}
-            <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm border border-white/30 rounded-full text-white text-sm font-medium mb-8">
-              {/* <span className="text-lg mr-2">⭐</span> */}
-              Student Testimonials
+          <div className="relative z-10 text-center text-white px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+            {/* Portal Badge */}
+            <div className="inline-flex items-center px-4 py-1.5 bg-brand-primary/20 backdrop-blur-xl border border-brand-primary/30 rounded-full text-brand-primary-light text-xs sm:text-sm font-semibold mb-8 tracking-[0.1em] uppercase animate-fade-in">
+              <span className="relative flex h-2 w-2 mr-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-primary"></span>
+              </span>
+              Impact & Inspiration
             </div>
 
-            {/* Main Heading */}
-            <h1 className="text-responsive-4xl font-bold text-white mb-6 leading-tight animate-fade-in-up">
-              Discover Our
+            {/* Expressive Typography */}
+            <h1 className="text-4xl sm:text-6xl lg:text-8xl font-black text-white mb-8 leading-none tracking-tight">
+              Shaping <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-accent">Futures</span>
               <br />
-              <span className="text-brand-primary">Success Stories</span>
+              <span className="block mt-2 font-light italic">One Story at a Time</span>
             </h1>
 
-            {/* Description */}
-            <p className="text-responsive-xl text-white/90 mb-12 max-w-4xl mx-auto leading-relaxed animate-slide-in-up">
-              Stay connected with our community through success stories, events,
-              tips, and behind-the-scenes content that inspires and educates.
-            </p>
+            <div className="w-20 h-1 bg-brand-accent mx-auto mb-10 rounded-full opacity-0 animate-scale-x animation-delay-700"></div>
 
-            {/* Search Bar */}
-            {/* <div className="max-w-2xl mx-auto">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search stories..."
-                  className="w-full h-14 px-6 pr-16 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 text-lg"
-                />
-                <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                  <span className="text-white/70 text-xl">🔍</span>
-                </div>
-              </div>
-            </div> */}
+            {/* Description */}
+            <p className="text-lg sm:text-2xl text-neutral-300 mb-12 max-w-3xl mx-auto leading-relaxed font-medium animate-fade-in animation-delay-1000">
+              Explore the journeys of our alumni and students who are redefining the boundaries of media and technology.
+            </p>
           </div>
         </section>
 
         {/* Impact Stats */}
-        <section className="py-20 px-responsive bg-white">
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold text-neutral-900 mb-4">
@@ -160,7 +152,7 @@ export default function StoriesPage() {
         </section>
 
         {/* Success Stories */}
-        <section className="py-20 px-responsive">
+        <section className="py-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold text-neutral-900 mb-4">
@@ -258,7 +250,7 @@ export default function StoriesPage() {
         </section>
 
         {/* Testimonials */}
-        <section className="py-20 px-responsive">
+        <section className="py-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl font-bold text-neutral-900 mb-4">
@@ -302,7 +294,7 @@ export default function StoriesPage() {
         </section>
 
         {/* Career Transformation Section */}
-        <section className="py-20 px-responsive">
+        <section className="py-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="bg-brand-primary rounded-3xl shadow-2xl p-12 text-white text-center">
               <h2 className="text-4xl font-bold mb-6">
