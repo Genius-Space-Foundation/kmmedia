@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Bell, Search, ChevronDown, LogOut, User as UserIcon, Settings } from "lucide-react";
+import { Bell, Search, ChevronDown, LogOut, User as UserIcon, Settings, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -21,6 +21,7 @@ interface ModernHeaderProps {
   onSettingsClick: () => void;
   onLogout: () => void;
   notificationCount?: number;
+  onMenuClick?: () => void;
   additionalActions?: React.ReactNode;
 }
 
@@ -32,17 +33,28 @@ export function ModernHeader({
   onSettingsClick,
   onLogout,
   notificationCount = 0,
+  onMenuClick,
   additionalActions,
 }: ModernHeaderProps) {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl border-b border-gray-200 shadow-sm">
-      <div className="max-w-full mx-auto px-8 py-5">
+      <div className="max-w-full mx-auto px-4 sm:px-8 py-4 sm:py-5">
         <div className="flex items-center justify-between">
           {/* Title Section */}
           <div className="flex items-center space-x-4">
+            {onMenuClick && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onMenuClick}
+                className="lg:hidden rounded-xl h-11 w-11 hover:bg-gray-100"
+              >
+                <Menu className="h-6 w-6 text-gray-700" />
+              </Button>
+            )}
             <div>
-              <h1 className="text-3xl font-black text-gray-900">{title}</h1>
-              <p className="text-sm text-gray-600 font-medium mt-1">{subtitle}</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-900 line-clamp-1">{title}</h1>
+              <p className="text-xs sm:text-sm text-gray-600 font-medium mt-1 line-clamp-1">{subtitle}</p>
             </div>
           </div>
 

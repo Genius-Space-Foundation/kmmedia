@@ -128,20 +128,22 @@ export default function ClassScheduleWidget({ classes = [], onViewClassDetails }
       </CardHeader>
       <CardContent className="p-0">
         {/* Week Grid */}
-        <div className="grid grid-cols-7 border-b border-neutral-100">
-          {weekDays.map((day, i) => {
-            const isToday = day.toDateString() === new Date().toDateString();
-            return (
-              <div key={i} className={`p-3 text-center border-r border-neutral-100 last:border-r-0 ${isToday ? 'bg-brand-primary/5' : ''}`}>
-                <div className="text-xs text-neutral-500 font-medium mb-1">
-                  {day.toLocaleDateString(undefined, { weekday: 'short' })}
+        <div className="overflow-x-auto scrollbar-hide">
+          <div className="grid grid-cols-7 border-b border-neutral-100 min-w-[600px] sm:min-w-0">
+            {weekDays.map((day, i) => {
+              const isToday = day.toDateString() === new Date().toDateString();
+              return (
+                <div key={i} className={`p-3 text-center border-r border-neutral-100 last:border-r-0 ${isToday ? 'bg-brand-primary/5' : ''}`}>
+                  <div className="text-xs text-neutral-500 font-medium mb-1">
+                    {day.toLocaleDateString(undefined, { weekday: 'short' })}
+                  </div>
+                  <div className={`text-sm font-bold w-8 h-8 mx-auto flex items-center justify-center rounded-full ${isToday ? 'bg-brand-primary text-white' : 'text-neutral-900'}`}>
+                    {day.getDate()}
+                  </div>
                 </div>
-                <div className={`text-sm font-bold w-8 h-8 mx-auto flex items-center justify-center rounded-full ${isToday ? 'bg-brand-primary text-white' : 'text-neutral-900'}`}>
-                  {day.getDate()}
-                </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Upcoming Classes List */}

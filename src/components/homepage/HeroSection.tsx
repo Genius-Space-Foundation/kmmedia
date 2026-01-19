@@ -45,33 +45,33 @@ export default function HeroSection() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
-        <div className="max-w-3xl">
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-32">
+        <div className="max-w-3xl mx-auto text-center lg:text-left lg:mx-0">
           {/* Main Heading */}
-          <h1 className="text-4xl tracking-tight font-extrabold text-white sm:text-5xl md:text-6xl lg:text-7xl">
+          <h1 className="text-3xl tracking-tight font-extrabold text-white sm:text-5xl md:text-6xl lg:text-7xl">
             <span className="block">Elevate Your</span>
-            <span className="block text-brand-primary mt-2">
+            <span className="block text-brand-primary mt-1 sm:mt-2">
               Media & Tech Career
             </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="mt-6 text-lg sm:text-xl md:text-2xl text-neutral-200 leading-relaxed max-w-2xl">
+          <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl lg:text-2xl text-neutral-200 leading-relaxed max-w-2xl mx-auto lg:mx-0">
             Master the skills that define the future of media and technology. Access world-class training in film production, digital broadcasting, and tech innovation to accelerate your professional journey.
           </p>
 
           {/* CTA Buttons */}
-          <div className="mt-10 flex flex-col sm:flex-row gap-4">
-            <Link href={user ? `/dashboards/${user.role.toLowerCase()}` : "/auth/register"}>
-              <Button className="w-full sm:w-auto flex items-center justify-center px-8 py-4 text-base font-semibold rounded-lg text-white bg-brand-primary hover:bg-brand-secondary shadow-lg hover:shadow-xl transition-all duration-300">
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
+            <Link href={user ? `/dashboards/${user.role.toLowerCase()}` : "/auth/register"} className="w-full sm:w-auto">
+              <Button className="w-full flex items-center justify-center px-8 py-4 text-base font-semibold rounded-lg text-white bg-brand-primary hover:bg-brand-secondary shadow-lg hover:shadow-xl transition-all duration-300">
                 {user ? "Go to Dashboard" : "Get Started"}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
-            <Link href="/courses">
+            <Link href="/courses" className="w-full sm:w-auto">
               <Button
                 variant="outline"
-                className="w-full sm:w-auto flex items-center justify-center px-8 py-4 text-base font-semibold rounded-lg text-white bg-white/10 border-2 border-white/30 hover:bg-white/20 backdrop-blur-sm transition-all duration-300"
+                className="w-full flex items-center justify-center px-8 py-4 text-base font-semibold rounded-lg text-white bg-white/10 border-2 border-white/30 hover:bg-white/20 backdrop-blur-sm transition-all duration-300"
               >
                 <Play className="mr-2 h-5 w-5" />
                 View Courses
@@ -80,17 +80,17 @@ export default function HeroSection() {
           </div>
 
           {/* Trust Indicators */}
-          <div className="mt-8 flex flex-wrap items-center gap-6 text-sm text-neutral-200">
+          <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 text-sm text-neutral-200">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-brand-primary" />
+              <CheckCircle2 className="h-5 w-5 text-brand-primary shrink-0" />
               <span className="font-medium">Industry Certified</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-brand-primary" />
+              <CheckCircle2 className="h-5 w-5 text-brand-primary shrink-0" />
               <span className="font-medium">Expert Instructors</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-brand-primary" />
+              <CheckCircle2 className="h-5 w-5 text-brand-primary shrink-0" />
               <span className="font-medium">Job Placement Support</span>
             </div>
           </div>

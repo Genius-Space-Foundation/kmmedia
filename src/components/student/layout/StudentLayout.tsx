@@ -32,6 +32,7 @@ export default function StudentLayout({
   className = "",
 }: StudentLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -93,43 +94,54 @@ export default function StudentLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex">
+    <div className="min-h-screen bg-neutral-50 flex overflow-x-hidden">
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Modern Sidebar */}
       <ModernSidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
+        isMobileOpen={mobileMenuOpen}
         activeTab={activeTab}
-        onTabChange={onTabChange}
+        onTabChange={(tab) => {
+          onTabChange(tab);
+          setMobileMenuOpen(false);
+        }}
         navigationItems={navigationItems}
         brandName="KM Media"
         brandSubtitle="Student Portal"
         brandInitials="KM"
+        brandLogo="/images/logo.jpeg"
       />
 
       {/* Main Content */}
       <div
-        className={`flex-1 transition-all duration-300 ${
-          sidebarOpen ? "ml-72" : "ml-20"
-        }`}
+        className={`flex-1 transition-all duration-300 w-full ${
+          sidebarOpen ? "lg:ml-72" : "lg:ml-20"
+        } ml-0`}
       >
         {/* Modern Header */}
         <ModernHeader
           title="Student Dashboard"
           subtitle={`Welcome back, ${
             user?.name || "Student"
-          }! Ready to continue learning?`}
+          }!`}
           currentUser={user}
           onProfileClick={() => onTabChange("profile")}
           onSettingsClick={() => onTabChange("settings")}
           onLogout={handleLogout}
           notificationCount={0}
-
+          onMenuClick={() => setMobileMenuOpen(true)}
         />
 
-
-
         {/* Page Content */}
-        <main className={`px-8 py-8 ${className}`}>{children}</main>
+        <main className={`px-4 sm:px-8 py-6 sm:py-8 ${className}`}>{children}</main>
       </div>
     </div>
   );

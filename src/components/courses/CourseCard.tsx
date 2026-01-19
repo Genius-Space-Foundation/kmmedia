@@ -489,7 +489,7 @@ export default function CourseCard({
         </div>
 
         {/* Enhanced Course Stats */}
-        <div className="grid grid-cols-4 gap-3 py-4 bg-gradient-to-r from-gray-50 to-brand-primary-light/30 rounded-lg border border-gray-100 group-hover:border-brand-primary-light transition-colors duration-300">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 py-4 bg-gradient-to-r from-gray-50 to-brand-primary-light/30 rounded-lg border border-gray-100 group-hover:border-brand-primary-light transition-colors duration-300">
           <div className="text-center group/stat">
             <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg mx-auto mb-1 group-hover/stat:scale-110 transition-transform duration-300 shadow-sm">
               <Star className="w-4 h-4 text-yellow-600" />

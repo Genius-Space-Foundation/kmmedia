@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
           {/* Brand Section */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 flex flex-col items-center lg:items-start text-center lg:text-left">
             <div className="flex items-center space-x-3 mb-6">
               <div className="w-10 h-10 bg-brand-primary rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-lg">KM</span>
@@ -29,7 +29,7 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div>
+          <div className="text-center lg:text-left">
             <h3 className="text-lg font-semibold text-white mb-6">
               Quick Links
             </h3>
@@ -70,11 +70,11 @@ export default function Footer() {
           </div>
 
           {/* Contact Info */}
-          <div>
+          <div className="text-center lg:text-left">
             <h3 className="text-lg font-semibold text-white mb-6">
               Contact Us
             </h3>
-            <ul className="space-y-4 text-neutral-400">
+            <ul className="space-y-4 text-neutral-400 flex flex-col items-center lg:items-start">
               <li className="flex items-start gap-3">
                 <span>info@kmmedia.com</span>
               </li>
@@ -91,7 +91,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="border-t border-neutral-800 pt-8 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-neutral-500 text-sm">
+            <p className="text-neutral-500 text-sm text-center md:text-left">
               © 2024 KM Media Training Institute. All rights reserved.
             </p>
             <div className="flex space-x-6 text-sm">

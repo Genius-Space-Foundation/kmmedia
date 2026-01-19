@@ -212,195 +212,201 @@ export default function CourseComparison({
 
         <div className="space-y-6">
           {/* Course Headers */}
-          <div
-            className="grid gap-4"
-            style={{
-              gridTemplateColumns: `200px repeat(${courses.length}, 1fr)`,
-            }}
-          >
-            <div></div>
-            {courses.map((course) => (
-              <Card key={course.id} className="relative">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onRemoveCourse(course.id)}
-                  className="absolute top-2 right-2 h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                >
-                  <X className="w-3 h-3" />
-                </Button>
-                <CardHeader className="pb-3">
-                  <div className="w-full h-32 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg mb-3 overflow-hidden">
-                    <img
-                      src="/images/3.jpeg"
-                      alt={course.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <CardTitle className="text-lg line-clamp-2">
-                    {course.title}
-                  </CardTitle>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge className="bg-blue-100 text-blue-800 text-xs">
-                      {course.category}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {course.difficulty}
-                    </Badge>
-                  </div>
-                </CardHeader>
-              </Card>
-            ))}
+          <div className="overflow-x-auto pb-4 scrollbar-hide">
+            <div
+              className="grid gap-4 min-w-[800px]"
+              style={{
+                gridTemplateColumns: `200px repeat(${courses.length}, 1fr)`,
+              }}
+            >
+              <div></div>
+              {courses.map((course) => (
+                <Card key={course.id} className="relative">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onRemoveCourse(course.id)}
+                    className="absolute top-2 right-2 h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <X className="w-3 h-3" />
+                  </Button>
+                  <CardHeader className="pb-3">
+                    <div className="w-full h-32 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg mb-3 overflow-hidden">
+                      <img
+                        src="/images/3.jpeg"
+                        alt={course.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <CardTitle className="text-lg line-clamp-2">
+                      {course.title}
+                    </CardTitle>
+                    <div className="flex flex-wrap gap-1">
+                      <Badge className="bg-blue-100 text-blue-800 text-xs">
+                        {course.category}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        {course.difficulty}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
           </div>
 
           {/* Comparison Table */}
-          <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead className="w-48 font-semibold">Feature</TableHead>
-                  {courses.map((course) => (
-                    <TableHead
-                      key={course.id}
-                      className="text-center font-semibold"
-                    >
-                      Course {courses.indexOf(course) + 1}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {comparisonData.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <TableRow key={item.key} className="hover:bg-gray-50">
-                      <TableCell className="font-medium">
-                        <div className="flex items-center space-x-2">
-                          <Icon className="w-4 h-4 text-gray-500" />
-                          <span>{item.label}</span>
-                        </div>
-                      </TableCell>
-                      {courses.map((course) => (
-                        <TableCell key={course.id} className="text-center">
-                          {item.render(course)}
+          <div className="border rounded-lg overflow-hidden overflow-x-auto scrollbar-hide">
+            <div className="min-w-[800px]">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-48 font-semibold">Feature</TableHead>
+                    {courses.map((course) => (
+                      <TableHead
+                        key={course.id}
+                        className="text-center font-semibold"
+                      >
+                        Course {courses.indexOf(course) + 1}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {comparisonData.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <TableRow key={item.key} className="hover:bg-gray-50">
+                        <TableCell className="font-medium">
+                          <div className="flex items-center space-x-2">
+                            <Icon className="w-4 h-4 text-gray-500" />
+                            <span>{item.label}</span>
+                          </div>
                         </TableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })}
+                        {courses.map((course) => (
+                          <TableCell key={course.id} className="text-center">
+                            {item.render(course)}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    );
+                  })}
 
-                {/* Prerequisites */}
-                <TableRow className="hover:bg-gray-50">
-                  <TableCell className="font-medium">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="w-4 h-4 text-gray-500" />
-                      <span>Prerequisites</span>
-                    </div>
-                  </TableCell>
-                  {courses.map((course) => (
-                    <TableCell key={course.id} className="text-center">
-                      {course.prerequisites &&
-                      course.prerequisites.length > 0 ? (
-                        <div className="space-y-1">
-                          {course.prerequisites
-                            .slice(0, 2)
-                            .map((prereq, index) => (
-                              <div
-                                key={index}
-                                className="text-xs bg-gray-100 rounded px-2 py-1"
-                              >
-                                {prereq}
-                              </div>
-                            ))}
-                          {course.prerequisites.length > 2 && (
-                            <div className="text-xs text-gray-500">
-                              +{course.prerequisites.length - 2} more
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-gray-500">None</span>
-                      )}
+                  {/* Prerequisites */}
+                  <TableRow className="hover:bg-gray-50">
+                    <TableCell className="font-medium">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-gray-500" />
+                        <span>Prerequisites</span>
+                      </div>
                     </TableCell>
-                  ))}
-                </TableRow>
+                    {courses.map((course) => (
+                      <TableCell key={course.id} className="text-center">
+                        {course.prerequisites &&
+                        course.prerequisites.length > 0 ? (
+                          <div className="space-y-1">
+                            {course.prerequisites
+                              .slice(0, 2)
+                              .map((prereq, index) => (
+                                <div
+                                  key={index}
+                                  className="text-xs bg-gray-100 rounded px-2 py-1"
+                                >
+                                  {prereq}
+                                </div>
+                              ))}
+                            {course.prerequisites.length > 2 && (
+                              <div className="text-xs text-gray-500">
+                                +{course.prerequisites.length - 2} more
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-500">None</span>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
 
-                {/* Learning Objectives */}
-                <TableRow className="hover:bg-gray-50">
-                  <TableCell className="font-medium">
-                    <div className="flex items-center space-x-2">
-                      <BookOpen className="w-4 h-4 text-gray-500" />
-                      <span>Learning Objectives</span>
-                    </div>
-                  </TableCell>
-                  {courses.map((course) => (
-                    <TableCell key={course.id} className="text-center">
-                      {course.learningObjectives &&
-                      course.learningObjectives.length > 0 ? (
-                        <div className="space-y-1">
-                          {course.learningObjectives
-                            .slice(0, 3)
-                            .map((objective, index) => (
-                              <div
-                                key={index}
-                                className="text-xs text-left bg-blue-50 rounded px-2 py-1"
-                              >
-                                • {objective}
-                              </div>
-                            ))}
-                          {course.learningObjectives.length > 3 && (
-                            <div className="text-xs text-gray-500">
-                              +{course.learningObjectives.length - 3} more
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-gray-500">Not specified</span>
-                      )}
+                  {/* Learning Objectives */}
+                  <TableRow className="hover:bg-gray-50">
+                    <TableCell className="font-medium">
+                      <div className="flex items-center space-x-2">
+                        <BookOpen className="w-4 h-4 text-gray-500" />
+                        <span>Learning Objectives</span>
+                      </div>
                     </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
+                    {courses.map((course) => (
+                      <TableCell key={course.id} className="text-center">
+                        {course.learningObjectives &&
+                        course.learningObjectives.length > 0 ? (
+                          <div className="space-y-1">
+                            {course.learningObjectives
+                              .slice(0, 3)
+                              .map((objective, index) => (
+                                <div
+                                  key={index}
+                                  className="text-xs text-left bg-blue-50 rounded px-2 py-1"
+                                >
+                                  • {objective}
+                                </div>
+                              ))}
+                            {course.learningObjectives.length > 3 && (
+                              <div className="text-xs text-gray-500">
+                                +{course.learningObjectives.length - 3} more
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-500">Not specified</span>
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {/* Action Buttons */}
-          <div
-            className="grid gap-4"
-            style={{
-              gridTemplateColumns: `200px repeat(${courses.length}, 1fr)`,
-            }}
-          >
-            <div></div>
-            {courses.map((course) => (
-              <div key={course.id} className="space-y-2">
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full border-blue-200 text-blue-600 hover:bg-blue-50"
-                >
-                  <a
-                    href={`/courses/${course.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+          <div className="overflow-x-auto pb-4 scrollbar-hide">
+            <div
+              className="grid gap-4 min-w-[800px]"
+              style={{
+                gridTemplateColumns: `200px repeat(${courses.length}, 1fr)`,
+              }}
+            >
+              <div></div>
+              {courses.map((course) => (
+                <div key={course.id} className="space-y-2">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full border-blue-200 text-blue-600 hover:bg-blue-50"
                   >
-                    View Details
-                  </a>
-                </Button>
-                <Button
-                  asChild
-                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                >
-                  <a
-                    href={`/courses/${course.id}/apply`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    <a
+                      href={`/courses/${course.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      View Details
+                    </a>
+                  </Button>
+                  <Button
+                    asChild
+                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   >
-                    Apply Now
-                  </a>
-                </Button>
-              </div>
-            ))}
+                    <a
+                      href={`/courses/${course.id}/apply`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Apply Now
+                    </a>
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Comparison Summary */}

@@ -24,6 +24,7 @@ interface ModernSidebarProps {
   brandSubtitle: string;
   brandInitials?: string;
   brandLogo?: string;
+  isMobileOpen?: boolean;
 }
 
 export function ModernSidebar({
@@ -36,12 +37,17 @@ export function ModernSidebar({
   brandSubtitle,
   brandInitials,
   brandLogo,
+  isMobileOpen = false,
 }: ModernSidebarProps) {
   return (
     <aside
       className={cn(
         "fixed left-0 top-0 h-full bg-white border-r border-gray-200 shadow-xl z-50 transition-all duration-300",
-        isOpen ? "w-72" : "w-20"
+        // Desktop behavior
+        "lg:flex lg:flex-col",
+        isOpen ? "lg:w-72" : "lg:w-20",
+        // Mobile behavior
+        isMobileOpen ? "translate-x-0 w-72" : "-translate-x-full lg:translate-x-0"
       )}
     >
       {/* Sidebar Header */}
