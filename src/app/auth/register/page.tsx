@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { MultiStepRegistrationForm } from "@/components/forms/MultiStepRegistrationForm";
 
 // Force dynamic rendering
@@ -55,7 +56,14 @@ export default function RegisterPage() {
         </div>
 
         {/* Registration Form */}
-        <MultiStepRegistrationForm />
+        <Suspense fallback={
+          <div className="bg-white rounded-xl p-12 border border-neutral-200 shadow-sm flex flex-col items-center justify-center space-y-4">
+            <div className="w-10 h-10 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-neutral-600 font-medium">Loading registration form...</p>
+          </div>
+        }>
+          <MultiStepRegistrationForm />
+        </Suspense>
 
         {/* Login Link */}
         <div className="text-center pt-6">

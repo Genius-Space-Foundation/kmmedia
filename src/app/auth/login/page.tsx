@@ -6,7 +6,7 @@ import { LoginForm } from "@/components/forms/login-form";
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
-export default function LoginPage() {
+function LoginContent() {
   const searchParams = useSearchParams();
   const returnUrl = searchParams.get("returnUrl");
 
@@ -30,34 +30,6 @@ export default function LoginPage() {
               </p>
             </div>
           </div>
-
-          {/* Welcome Section */}
-          {/* <div className="mb-8 bg-white rounded-xl p-6 border border-neutral-200 shadow-sm">
-            <div className="flex items-center justify-center mb-3">
-              <div className="w-10 h-10 bg-brand-primary/10 rounded-lg flex items-center justify-center">
-                <svg
-                  className="w-5 h-5 text-brand-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                  />
-                </svg>
-              </div>
-              <h2 className="ml-3 text-lg font-bold text-neutral-900">
-                Student Portal
-              </h2>
-            </div>
-            <p className="text-neutral-600 text-sm">
-              Access your courses, track progress, and manage your learning
-              journey.
-            </p>
-          </div> */}
         </div>
 
         {/* Login Form */}
@@ -105,5 +77,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
