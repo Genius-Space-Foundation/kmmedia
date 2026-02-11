@@ -97,7 +97,7 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
   };
 
   return (
-    <header className="fixed lg:sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-brand-border shadow-brand-sm">
+    <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-brand-border shadow-brand-sm text-brand-text-primary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <nav className="flex items-center justify-between h-16">
           {/* Logo Section */}

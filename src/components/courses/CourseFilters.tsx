@@ -52,6 +52,7 @@ export interface CourseFilter {
   rating: number;
   sortBy: string;
   sortOrder: "asc" | "desc";
+  userId?: string;
 }
 
 interface CourseFiltersProps {
@@ -260,38 +261,38 @@ export default function CourseFilters({
   };
 
   return (
-    <Card className="w-full shadow-lg border-0 bg-white/95 backdrop-blur-sm">
-      <CardHeader className="pb-4">
+    <Card className="w-full shadow-2xl border border-white/10 bg-white/40 backdrop-blur-2xl rounded-[2rem] overflow-hidden group">
+      <CardHeader className="pb-6 border-b border-black/5 bg-white/20">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-              <Filter className="w-5 h-5 text-white" />
+          <div className="flex items-center space-x-5">
+            <div className="w-14 h-14 bg-neutral-900 rounded-[1.25rem] flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+              <Filter className="w-6 h-6 text-brand-primary" />
             </div>
             <div>
-              <CardTitle className="text-xl text-gray-900">
-                Course Filters
+              <CardTitle className="text-2xl font-black text-neutral-900 tracking-tight">
+                Global Discovery
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="font-bold text-neutral-500 uppercase text-[10px] tracking-widest mt-1">
                 {isLoading
-                  ? "Loading courses..."
-                  : `Showing ${filteredCount} of ${totalCourses} courses`}
+                  ? "Synchronizing course data..."
+                  : `Curating ${filteredCount} professional pathways`}
               </CardDescription>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             {getActiveFilterCount() > 0 && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                {getActiveFilterCount()} active
+              <Badge className="bg-brand-primary text-white font-black px-3 py-1 rounded-lg shadow-lg animate-fade-in">
+                {getActiveFilterCount()} Active Params
               </Badge>
             )}
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="text-gray-600 hover:text-gray-900"
+              className="h-10 w-10 rounded-xl hover:bg-black/5 transition-colors"
             >
               <ChevronDown
-                className={`w-4 h-4 transition-transform ${
+                className={`w-5 h-5 text-neutral-900 transition-transform duration-500 ${
                   isExpanded ? "rotate-180" : ""
                 }`}
               />
@@ -300,56 +301,60 @@ export default function CourseFilters({
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
-        {/* Search Bar - Always Visible */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Search courses by title, description, or instructor..."
-            value={filters.search}
-            onChange={(e) => handleFilterChange("search", e.target.value)}
-            className="pl-10 h-12 bg-gray-50 border-gray-200 focus:bg-white focus:border-blue-500"
-          />
-          {filters.search && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleFilterChange("search", "")}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-gray-100"
-            >
-              <X className="w-4 h-4" />
-            </Button>
-          )}
+      <CardContent className="p-8 space-y-8">
+        {/* Search Bar - Professional Redesign */}
+        <div className="relative group/search">
+          <div className="absolute inset-0 bg-brand-primary/5 rounded-2xl blur-xl opacity-0 group-focus-within/search:opacity-100 transition-opacity"></div>
+          <div className="relative flex items-center">
+            <Search className="absolute left-4 w-5 h-5 text-neutral-400 group-focus-within/search:text-brand-primary transition-colors" />
+            <Input
+              type="text"
+              placeholder="Query specialized knowledge or elite instructors..."
+              value={filters.search}
+              onChange={(e) => handleFilterChange("search", e.target.value)}
+              className="pl-12 h-16 bg-white/50 border-neutral-200/50 rounded-2xl text-lg font-medium focus:ring-4 focus:ring-brand-primary/10 focus:border-brand-primary transition-all placeholder:text-neutral-400 shadow-sm"
+            />
+            {filters.search && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleFilterChange("search", "")}
+                className="absolute right-3 h-10 w-10 hover:bg-neutral-100 rounded-xl"
+              >
+                <X className="w-5 h-5 text-neutral-500" />
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center space-x-2">
-            <Label className="text-sm font-medium text-gray-700">
-              Quick filters:
-            </Label>
-            {FILTER_PRESETS.map((preset) => (
-              <Button
-                key={preset.name}
-                variant="outline"
-                size="sm"
-                onClick={() => applyPreset(preset)}
-                className="h-8 text-xs border-gray-200 hover:border-blue-300 hover:bg-blue-50"
-              >
-                {preset.name}
-              </Button>
-            ))}
+        {/* Quick Actions & Presets */}
+        <div className="flex flex-wrap items-center justify-between gap-6">
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Intelligent Presets</span>
+            <div className="flex flex-wrap gap-2">
+              {FILTER_PRESETS.map((preset) => (
+                <Button
+                  key={preset.name}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => applyPreset(preset)}
+                  className="h-9 px-4 rounded-xl border-neutral-200 text-neutral-600 font-bold text-xs hover:border-brand-primary hover:text-brand-primary hover:bg-brand-primary/5 transition-all active:scale-95"
+                >
+                  {preset.name}
+                </Button>
+              ))}
+            </div>
           </div>
+          
           {getActiveFilterCount() > 0 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={clearAllFilters}
-              className="h-8 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="h-10 px-5 text-xs font-black text-error-DEFAULT hover:bg-error-light/50 rounded-xl group/clear"
             >
-              <RotateCcw className="w-3 h-3 mr-1" />
-              Clear all
+              <RotateCcw className="w-4 h-4 mr-2 group-hover:rotate-[-180deg] transition-transform duration-500" />
+              Reset All Discovery Params
             </Button>
           )}
         </div>

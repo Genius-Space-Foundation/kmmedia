@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -157,6 +157,8 @@ export function MultiStepRegistrationForm() {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl");
 
   const steps: RegistrationStep[] = [
     {
@@ -277,9 +279,13 @@ export function MultiStepRegistrationForm() {
           setError("Registration successful, but failed to log in automatically. Please log in manually.");
           setTimeout(() => router.push("/auth/login"), 2000);
         } else {
-          // Redirect to onboarding or dashboard based on role
+          // Redirect to onboarding or returnUrl/dashboard based on role
           const role = result.user.role.toLowerCase();
-          router.push(`/auth/onboarding?role=${role}`);
+          if (returnUrl) {
+            router.push(`${returnUrl}${returnUrl.includes('?') ? '&' : '?'}registered=true`);
+          } else {
+            router.push(`/auth/onboarding?role=${role}`);
+          }
         }
       } else {
         setError(result.message || "Registration failed");

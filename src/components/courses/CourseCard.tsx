@@ -6,10 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -23,16 +19,7 @@ import {
   Share2,
   Eye,
   Award,
-  TrendingUp,
-  MapPin,
-  Calendar,
-  DollarSign,
-  User,
   CheckCircle,
-  StarHalf,
-  GraduationCap,
-  BarChart3,
-  FileText,
 } from "lucide-react";
 
 interface Course {
@@ -95,12 +82,9 @@ export default function CourseCard({
   onPreview,
   className = "",
 }: CourseCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
   const rating = course.averageRating || 4.8;
-  const reviewCount =
-    course.totalReviews || course._count.reviews || course._count.enrollments;
   const isPopular = course._count.enrollments > 50;
   const isAlmostFull = course.spotsRemaining && course.spotsRemaining <= 5;
   const isNew =
@@ -127,124 +111,67 @@ export default function CourseCard({
   if (variant === "compact") {
     return (
       <Card
-        className={`group hover:shadow-lg transition-all duration-300 border-0 bg-white/95 backdrop-blur-sm ${className}`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+        className={`group hover:shadow-2xl transition-all duration-500 border border-white/10 bg-white/40 backdrop-blur-xl rounded-2xl overflow-hidden ${className}`}
       >
-        <div className="flex p-4 space-x-4">
+        <div className="flex p-4 space-x-5">
           {/* Course Image */}
-          <div className="relative w-20 h-20 flex-shrink-0">
-            <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl flex items-center justify-center overflow-hidden">
+          <div className="relative w-24 h-24 flex-shrink-0">
+            <div className="w-full h-full bg-neutral-900 rounded-2xl flex items-center justify-center overflow-hidden shadow-xl">
               <img
                 src="/images/3.jpeg"
                 alt={course.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 onLoad={() => setImageLoaded(true)}
               />
-              {!imageLoaded && <BookOpen className="w-8 h-8 text-blue-500" />}
+              {!imageLoaded && <BookOpen className="w-8 h-8 text-brand-primary animate-pulse" />}
             </div>
             {isPopular && (
-              <Badge className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-1 py-0.5">
-                🔥
+              <Badge className="absolute -top-2 -right-2 bg-brand-primary text-white text-[10px] font-black px-1.5 py-0.5 shadow-xl uppercase">
+                Hot
               </Badge>
             )}
           </div>
 
           {/* Course Info */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-2">
-              <h3 className="font-semibold text-gray-900 truncate pr-2 group-hover:text-brand-primary transition-colors">
+          <div className="flex-1 min-w-0 flex flex-col justify-center">
+            <div className="flex items-start justify-between mb-1">
+              <h3 className="font-black text-neutral-900 truncate pr-2 group-hover:text-brand-primary transition-colors tracking-tight text-lg">
                 {course.title}
               </h3>
-              <div className="flex items-center space-x-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleWishlistToggle}
-                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <Heart
-                    className={`w-4 h-4 ${
-                      course.isWishlisted
-                        ? "fill-red-500 text-red-500"
-                        : "text-gray-400"
-                    }`}
-                  />
-                </Button>
-              </div>
             </div>
 
-            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+            <div className="flex items-center space-x-4 text-[10px] text-neutral-500 font-bold uppercase tracking-widest mb-3">
               <div className="flex items-center space-x-1">
-                <Avatar className="w-4 h-4">
-                  <AvatarImage
-                    src={course.instructor.profileImage}
-                    alt={course.instructor.name}
-                    className="object-cover"
-                  />
-                  <AvatarFallback className="bg-brand-primary text-white text-xs">
-                    {course.instructor.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()}
+                <Avatar className="w-5 h-5 border border-white">
+                  <AvatarImage src={course.instructor.profileImage} />
+                  <AvatarFallback className="bg-neutral-900 text-white text-[8px]">
+                    {course.instructor.name[0]}
                   </AvatarFallback>
                 </Avatar>
-                <span className="truncate font-medium">
-                  {course.instructor.name}
-                </span>
-                {course.instructor.rating && (
-                  <div className="flex items-center space-x-0.5">
-                    <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />
-                    <span className="text-xs">
-                      {course.instructor.rating.toFixed(1)}
-                    </span>
-                  </div>
-                )}
+                <span className="truncate">{course.instructor.name}</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Clock className="w-3 h-3" />
+                <Clock className="w-3 h-3 text-brand-primary" />
                 <span>{course.duration}w</span>
               </div>
               <div className="flex items-center space-x-1">
-                <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                <Star className="w-3 h-3 fill-brand-primary text-brand-primary" />
                 <span>{rating.toFixed(1)}</span>
               </div>
             </div>
 
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-[9px] font-black uppercase border-neutral-200">
                   {course.category}
-                </Badge>
-                <Badge variant="outline" className="text-xs">
-                  {course.difficulty}
                 </Badge>
               </div>
               <div className="text-right">
-                <div className="font-bold text-gray-900">
+                <div className="font-black text-neutral-900 text-lg">
                   ₵{course.price.toLocaleString()}
                 </div>
               </div>
             </div>
-
-            {showProgress && course.isEnrolled && (
-              <div className="mt-3 p-2 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100">
-                <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
-                  <div className="flex items-center space-x-1">
-                    <BarChart3 className="w-3 h-3 text-green-600" />
-                    <span className="font-medium">Progress</span>
-                  </div>
-                  <span className="font-bold text-green-600">
-                    {course.progress || 0}%
-                  </span>
-                </div>
-                <Progress
-                  value={course.progress || 0}
-                  className="h-2 bg-green-100"
-                />
-              </div>
-            )}
           </div>
         </div>
       </Card>
@@ -253,410 +180,179 @@ export default function CourseCard({
 
   return (
     <Card
-      className={`group hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 border-0 bg-white/95 backdrop-blur-sm hover:scale-[1.03] hover:-translate-y-2 relative overflow-hidden cursor-pointer ${className}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className={`group hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] transition-all duration-500 border border-white/10 bg-white/60 backdrop-blur-2xl rounded-[2.5rem] overflow-hidden hover:scale-[1.02] hover:-translate-y-2 relative cursor-pointer ${className}`}
     >
-      {/* Status Badges */}
-      <div className="absolute top-3 left-3 z-10 flex flex-col space-y-1">
+      {/* Status Badges - Multi-layer */}
+      <div className="absolute top-5 left-5 z-10 flex flex-col space-y-2">
         {isNew && (
-          <Badge className="bg-green-500 text-white text-xs px-2 py-1">
-            ✨ New
+          <Badge className="bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-lg shadow-xl uppercase tracking-widest border-0">
+            Elite New
           </Badge>
         )}
         {isPopular && (
-          <Badge className="bg-orange-500 text-white text-xs px-2 py-1">
-            🔥 Popular
+          <Badge className="bg-brand-primary text-white text-[10px] font-black px-3 py-1 rounded-lg shadow-xl uppercase tracking-widest border-0">
+            Top Rated
           </Badge>
         )}
         {isAlmostFull && (
-          <Badge className="bg-red-500 text-white text-xs px-2 py-1">
-            ⚡ Almost Full
-          </Badge>
-        )}
-        {course.isEnrolled && (
-          <Badge className="bg-brand-primary text-white text-xs px-2 py-1">
-            <CheckCircle className="w-3 h-3 mr-1" />
-            Enrolled
+          <Badge className="bg-error-DEFAULT text-white text-[10px] font-black px-3 py-1 rounded-lg shadow-xl uppercase tracking-widest border-0">
+            Critical Spots
           </Badge>
         )}
       </div>
 
-      {/* Action Buttons */}
-      <div className="absolute top-3 right-3 z-10 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Action Buttons - Quick Access */}
+      <div className="absolute top-5 right-5 z-10 flex space-x-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
         <Button
           variant="ghost"
-          size="sm"
+          size="icon"
           onClick={handleWishlistToggle}
-          className="h-8 w-8 p-0 bg-white/90 backdrop-blur-sm hover:bg-white"
+          className="h-10 w-10 rounded-2xl bg-white/20 backdrop-blur-xl hover:bg-white text-neutral-900 shadow-xl"
         >
-          <Heart
-            className={`w-4 h-4 ${
-              course.isWishlisted
-                ? "fill-red-500 text-red-500"
-                : "text-gray-600"
-            }`}
-          />
+          <Heart className={`w-5 h-5 ${course.isWishlisted ? "fill-error-DEFAULT text-error-DEFAULT" : ""}`} />
         </Button>
         <Button
           variant="ghost"
-          size="sm"
+          size="icon"
           onClick={handleShare}
-          className="h-8 w-8 p-0 bg-white/90 backdrop-blur-sm hover:bg-white"
+          className="h-10 w-10 rounded-2xl bg-white/20 backdrop-blur-xl hover:bg-white text-neutral-900 shadow-xl"
         >
-          <Share2 className="w-4 h-4 text-gray-600" />
+          <Share2 className="w-5 h-5" />
         </Button>
-        {onPreview && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handlePreview}
-            className="h-8 w-8 p-0 bg-white/90 backdrop-blur-sm hover:bg-white"
-          >
-            <Eye className="w-4 h-4 text-gray-600" />
-          </Button>
-        )}
       </div>
 
-      {/* Course Image */}
-      <div className="relative h-48 overflow-hidden">
+      {/* Image Section - Cinematic Scale */}
+      <div className="relative h-64 overflow-hidden">
         <img
           src="/images/3.jpeg"
           alt={course.title}
-          className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:brightness-110"
+          className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110"
           onLoad={() => setImageLoaded(true)}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
+        {/* Advanced Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/90 via-neutral-900/20 to-transparent group-hover:via-neutral-900/40 transition-all duration-500" />
+        
+        {/* Dynamic Hover Effect */}
+        <div className="absolute inset-0 bg-brand-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-        {/* Animated overlay on hover */}
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-indigo-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-x-full group-hover:translate-x-0" />
-
-        {/* Play Button Overlay */}
+        {/* Play Icon - Centered Action */}
         {onPreview && (
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button
-              variant="ghost"
-              size="lg"
-              onClick={handlePreview}
-              className="h-16 w-16 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 border-2 border-white/50"
-            >
-              <Play className="w-8 h-8 text-white ml-1" />
-            </Button>
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 scale-90 group-hover:scale-100">
+            <div className="h-20 w-20 rounded-full bg-white/10 backdrop-blur-3xl border border-white/30 flex items-center justify-center group-hover:bg-brand-primary transition-colors cursor-pointer" onClick={handlePreview}>
+              <Play className="w-10 h-10 text-white ml-2" />
+            </div>
           </div>
         )}
 
-        {/* Price Badge */}
-        <div className="absolute bottom-3 right-3 bg-white/95 backdrop-blur-sm rounded-lg px-3 py-1 shadow-lg">
-          <div className="text-lg font-bold text-gray-900">
+        {/* Floating Price Tag */}
+        <div className="absolute bottom-6 right-6 flex flex-col items-end">
+          <div className="bg-brand-primary text-white text-2xl font-black px-5 py-2 rounded-2xl shadow-2xl tracking-tighter">
             ₵{course.price.toLocaleString()}
           </div>
-          {course.applicationFee > 0 && (
-            <div className="text-xs text-gray-600">
-              App: ₵{course.applicationFee.toLocaleString()}
-            </div>
-          )}
         </div>
       </div>
 
-      <CardHeader className="pb-3">
-        {/* Category and Difficulty Badges */}
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <Badge className="bg-brand-primary-light text-brand-primary border-brand-primary">
+      <div className="p-8">
+        {/* Category Badge & Meta */}
+        <div className="flex items-center gap-3 mb-5">
+          <Badge className="bg-brand-primary/10 text-brand-primary border-brand-primary/20 font-black uppercase text-[9px] tracking-[0.2em] px-3 py-1">
             {course.category}
           </Badge>
-          <Badge variant="outline" className="border-green-200 text-green-800">
-            {course.difficulty}
-          </Badge>
-          {course.mode.map((mode) => (
-            <Badge key={mode} variant="outline" className="text-xs">
-              {mode}
-            </Badge>
+          <div className="h-1 w-1 rounded-full bg-neutral-300"></div>
+          <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">
+            {course.difficulty} Level
+          </span>
+        </div>
+
+        <h3 className="text-2xl font-black text-neutral-900 group-hover:text-brand-primary transition-colors line-clamp-2 mb-4 leading-tight tracking-tight">
+          {course.title}
+        </h3>
+
+        <p className="text-neutral-500 font-medium line-clamp-2 mb-8 text-sm leading-relaxed">
+          {course.description}
+        </p>
+
+        {/* Professional Instructor Profile */}
+        <div className="flex items-center justify-between mb-8 p-4 rounded-3xl bg-neutral-50 border border-neutral-100 group-hover:bg-white group-hover:shadow-xl transition-all duration-500">
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <Avatar className="w-14 h-14 border-4 border-white shadow-2xl">
+                <AvatarImage src={course.instructor.profileImage} className="object-cover" />
+                <AvatarFallback className="bg-neutral-900 text-white text-xs font-black">
+                  {course.instructor.name.split(" ").map(n => n[0]).join("")}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-1 -right-1 h-6 w-6 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+                <CheckCircle className="h-3 w-3 text-white" />
+              </div>
+            </div>
+            <div>
+              <h4 className="font-black text-neutral-900 text-sm">{course.instructor.name}</h4>
+              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">Architect Instructor</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end">
+            <div className="flex items-center gap-1 text-brand-primary font-black text-xs">
+              <Star className="w-3 h-3 fill-brand-primary" />
+              {course.instructor.rating?.toFixed(1) || "4.9"}
+            </div>
+            <span className="text-[9px] font-bold text-neutral-400">RATING</span>
+          </div>
+        </div>
+
+        {/* Performance High-Impact Metrics */}
+        <div className="grid grid-cols-4 gap-4 mb-10">
+          {[
+            { icon: Star, value: rating.toFixed(1), label: "SCORE", color: "text-brand-primary" },
+            { icon: Users, value: course._count.enrollments, label: "ENROLLED", color: "text-neutral-900" },
+            { icon: Clock, value: `${course.duration}W`, label: "LENGTH", color: "text-neutral-900" },
+            { icon: Award, value: "YES", label: "CERT", color: "text-neutral-900" }
+          ].map((stat, idx) => (
+            <div key={idx} className="text-center group/stat">
+              <div className="text-lg font-black text-neutral-900 mb-0.5 tracking-tighter">{stat.value}</div>
+              <div className="text-[8px] font-black text-neutral-400 uppercase tracking-[0.2em]">{stat.label}</div>
+            </div>
           ))}
         </div>
 
-        <CardTitle className="text-xl text-gray-900 group-hover:text-brand-primary transition-colors line-clamp-2 mb-2">
-          {course.title}
-        </CardTitle>
-
-        <CardDescription className="text-gray-600 line-clamp-2 mb-4">
-          {course.description}
-        </CardDescription>
-
-        {/* Enhanced Instructor Info */}
-        <div className="bg-gradient-to-r from-brand-primary-light/30 to-brand-primary-light/50 rounded-lg p-4 mb-4 border border-brand-primary-light">
-          <div className="flex items-start space-x-3">
-            <Avatar className="w-12 h-12 border-2 border-white shadow-sm">
-              <AvatarImage
-                src={course.instructor.profileImage}
-                alt={course.instructor.name}
-                className="object-cover"
-              />
-              <AvatarFallback className="bg-gradient-to-br from-brand-primary to-brand-primary-dark text-white font-semibold">
-                {course.instructor.name
-                  .split(" ")
-                  .map((n) => n[0])
-                  .join("")
-                  .toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-2 mb-1">
-                <h4 className="font-semibold text-gray-900 truncate">
-                  {course.instructor.name}
-                </h4>
-                <GraduationCap className="w-4 h-4 text-brand-primary" />
-              </div>
-
-              {/* Instructor Rating */}
-              {course.instructor.rating && (
-                <div className="flex items-center space-x-1 mb-1">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => {
-                      const rating = course.instructor.rating || 0;
-                      if (i < Math.floor(rating)) {
-                        return (
-                          <Star
-                            key={i}
-                            className="w-3 h-3 fill-yellow-400 text-yellow-400"
-                          />
-                        );
-                      } else if (i === Math.floor(rating) && rating % 1 !== 0) {
-                        return (
-                          <StarHalf
-                            key={i}
-                            className="w-3 h-3 fill-yellow-400 text-yellow-400"
-                          />
-                        );
-                      } else {
-                        return (
-                          <Star key={i} className="w-3 h-3 text-gray-300" />
-                        );
-                      }
-                    })}
-                  </div>
-                  <span className="text-xs text-gray-600 font-medium">
-                    {course.instructor.rating.toFixed(1)} instructor rating
-                  </span>
-                </div>
-              )}
-
-              {/* Instructor Stats */}
-              <div className="flex items-center space-x-3 text-xs text-gray-600">
-                {course.instructor.totalStudents && (
-                  <div className="flex items-center space-x-1">
-                    <Users className="w-3 h-3" />
-                    <span>
-                      {course.instructor.totalStudents.toLocaleString()}{" "}
-                      students
-                    </span>
-                  </div>
-                )}
-                {course.instructor.yearsExperience && (
-                  <div className="flex items-center space-x-1">
-                    <Award className="w-3 h-3" />
-                    <span>{course.instructor.yearsExperience}+ years exp</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Instructor Credentials */}
-              {course.instructor.credentials &&
-                course.instructor.credentials.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {course.instructor.credentials
-                      .slice(0, 2)
-                      .map((credential) => (
-                        <Badge
-                          key={credential}
-                          variant="secondary"
-                          className="text-xs bg-brand-primary-light text-brand-primary border-brand-primary"
-                        >
-                          {credential}
-                        </Badge>
-                      ))}
-                    {course.instructor.credentials.length > 2 && (
-                      <Badge
-                        variant="secondary"
-                        className="text-xs bg-gray-100 text-gray-600"
-                      >
-                        +{course.instructor.credentials.length - 2}
-                      </Badge>
-                    )}
-                  </div>
-                )}
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Course Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 py-4 bg-gradient-to-r from-gray-50 to-brand-primary-light/30 rounded-lg border border-gray-100 group-hover:border-brand-primary-light transition-colors duration-300">
-          <div className="text-center group/stat">
-            <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-lg mx-auto mb-1 group-hover/stat:scale-110 transition-transform duration-300 shadow-sm">
-              <Star className="w-4 h-4 text-yellow-600" />
-            </div>
-            <div className="text-sm font-bold text-gray-900 mb-1">
-              {rating.toFixed(1)}
-            </div>
-            <div className="text-xs text-gray-600 font-medium">Rating</div>
-          </div>
-          <div className="text-center group/stat">
-            <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg mx-auto mb-1 group-hover/stat:scale-110 transition-transform duration-300 shadow-sm">
-              <Users className="w-4 h-4 text-green-600" />
-            </div>
-            <div className="text-sm font-bold text-gray-900 mb-1">
-              {course._count.enrollments}
-            </div>
-            <div className="text-xs text-gray-600 font-medium">Students</div>
-          </div>
-          <div className="text-center group/stat">
-            <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg mx-auto mb-1 group-hover/stat:scale-110 transition-transform duration-300 shadow-sm">
-              <FileText className="w-4 h-4 text-blue-600" />
-            </div>
-            <div className="text-sm font-bold text-gray-900 mb-1">
-              {course._count.assignments || 0}
-            </div>
-            <div className="text-xs text-gray-600 font-medium">Assignments</div>
-          </div>
-          <div className="text-center group/stat">
-            <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-brand-primary-light to-brand-primary-light rounded-lg mx-auto mb-1 group-hover/stat:scale-110 transition-transform duration-300 shadow-sm">
-              <Clock className="w-4 h-4 text-brand-primary" />
-            </div>
-            <div className="text-sm font-bold text-gray-900 mb-1">
-              {course.duration}
-            </div>
-            <div className="text-xs text-gray-600 font-medium">Weeks</div>
-          </div>
-        </div>
-      </CardHeader>
-
-      <CardContent className="pt-0">
-        {/* Enhanced Progress Indicators for Enrolled Students */}
+        {/* Progress System for Enrolled Students */}
         {showProgress && course.isEnrolled && (
-          <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 mb-4 border border-green-100">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <BarChart3 className="w-4 h-4 text-green-600" />
-                <span className="font-medium text-gray-900">Your Progress</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-2xl font-bold text-green-600">
-                  {course.progress || 0}%
-                </span>
-                <div className="text-xs text-gray-600">complete</div>
-              </div>
+          <div className="mb-8 p-5 rounded-[2rem] bg-emerald-50/50 border border-emerald-100 flex items-center gap-5">
+            <div className="h-16 w-16 rounded-2xl bg-white flex items-center justify-center shadow-xl border border-emerald-100 flex-shrink-0">
+               <span className="text-xl font-black text-emerald-600">{course.progress || 0}%</span>
             </div>
-
-            <Progress
-              value={course.progress || 0}
-              className="h-3 mb-3 bg-green-100"
-            />
-
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Last accessed:</span>
-                <span className="font-medium text-gray-900">
-                  {course.lastAccessed
-                    ? new Date(course.lastAccessed).toLocaleDateString()
-                    : "Never"}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600">Completion rate:</span>
-                <span className="font-medium text-gray-900">
-                  {course.completionRate || 85}%
-                </span>
-              </div>
-            </div>
-
-            {/* Progress Status Badge */}
-            <div className="mt-3 flex justify-center">
-              {(course.progress || 0) === 100 ? (
-                <Badge className="bg-green-500 text-white">
-                  <CheckCircle className="w-3 h-3 mr-1" />
-                  Completed
-                </Badge>
-              ) : (course.progress || 0) > 50 ? (
-                <Badge className="bg-brand-primary text-white">
-                  <TrendingUp className="w-3 h-3 mr-1" />
-                  In Progress
-                </Badge>
-              ) : (
-                <Badge className="bg-orange-500 text-white">
-                  <Play className="w-3 h-3 mr-1" />
-                  Just Started
-                </Badge>
-              )}
+            <div className="flex-1">
+              <h5 className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2">Mastery Progress</h5>
+              <Progress value={course.progress || 0} className="h-2 bg-emerald-100" />
             </div>
           </div>
         )}
 
-        {/* Additional Info */}
-        <div className="space-y-2 mb-4 text-sm text-gray-600">
-          {course.nextStartDate && (
-            <div className="flex items-center space-x-2">
-              <Calendar className="w-4 h-4" />
-              <span>
-                Next start:{" "}
-                {new Date(course.nextStartDate).toLocaleDateString()}
-              </span>
-            </div>
-          )}
-          {course.spotsRemaining && (
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="w-4 h-4" />
-              <span>{course.spotsRemaining} spots remaining</span>
-            </div>
-          )}
-          <div className="flex items-center space-x-2">
-            <Award className="w-4 h-4" />
-            <span>Certificate included</span>
-          </div>
-        </div>
-
-        {/* Tags */}
-        {course.tags && course.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-4">
-            {course.tags.slice(0, 3).map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs">
-                {tag}
-              </Badge>
-            ))}
-            {course.tags.length > 3 && (
-              <Badge variant="outline" className="text-xs">
-                +{course.tags.length - 3} more
-              </Badge>
-            )}
-          </div>
-        )}
-
-        {/* Enhanced Action Buttons */}
-        <div className="flex gap-3">
+        {/* Global Action Terminal */}
+        <div className="flex gap-4">
           <Link href={`/courses/${course.id}`} className="flex-1">
-            <Button
-              variant="outline"
-              className="w-full btn-brand-outline font-semibold group/btn"
-            >
-              <Eye className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform duration-200" />
-              View Details
+            <Button variant="outline" className="w-full h-14 rounded-2xl border-neutral-200 text-neutral-900 font-black text-[12px] uppercase tracking-widest hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all active:scale-95 group/btn shadow-sm">
+              <Eye className="w-4 h-4 mr-3 group-hover/btn:scale-110 transition-transform" />
+              Explore Path
             </Button>
           </Link>
           <Link href={`/courses/${course.id}/apply`} className="flex-1">
-            <Button className="w-full btn-brand-primary font-bold shadow-lg hover:shadow-xl transform hover:scale-[1.05] transition-all duration-300 group/btn">
+            <Button className="w-full h-14 rounded-2xl bg-brand-primary hover:bg-brand-secondary text-white font-black text-[12px] uppercase tracking-widest shadow-xl transition-all active:scale-95 group/btn">
               {course.isEnrolled ? (
                 <>
-                  <Play className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform duration-200" />
-                  Continue Learning
+                  <Play className="w-4 h-4 mr-3 group-hover/btn:scale-110 transition-transform" />
+                  Resume Mastery
                 </>
               ) : (
                 <>
-                  <BookOpen className="w-4 h-4 mr-2 group-hover/btn:scale-110 transition-transform duration-200" />
-                  Apply Now
+                  <BookOpen className="w-4 h-4 mr-3 group-hover/btn:scale-110 transition-transform" />
+                  Enroll Now
                 </>
               )}
             </Button>
           </Link>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

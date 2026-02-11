@@ -101,7 +101,15 @@ type ApplicationFormData = z.infer<typeof applicationSchema>;
 interface ApplicationFormProps {
   courseId: string;
   courseName: string;
-  applicationFee: number; // Added applicationFee prop
+  applicationFee: number;
+  initialUser?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    dateOfBirth?: string;
+  } | null;
   onSubmit?: (data: ApplicationFormData) => void;
   onDraftLoad?: (draft: any) => void;
   onSuccessRedirect?: string;
@@ -147,6 +155,7 @@ export function ApplicationForm({
   courseId,
   courseName,
   applicationFee,
+  initialUser,
   onSubmit,
   onDraftLoad,
   onSuccessRedirect,
@@ -171,6 +180,16 @@ export function ApplicationForm({
   } = useForm<ApplicationFormData>({
     resolver: zodResolver(applicationSchema),
     mode: "onChange",
+    defaultValues: {
+      personalInfo: {
+        firstName: initialUser?.firstName || "",
+        lastName: initialUser?.lastName || "",
+        email: initialUser?.email || "",
+        phone: initialUser?.phone || "",
+        address: initialUser?.address || "",
+        dateOfBirth: initialUser?.dateOfBirth || "",
+      }
+    }
   });
 
   // Document upload functionality removed
@@ -413,7 +432,8 @@ export function ApplicationForm({
                   id="firstName"
                   {...register("personalInfo.firstName")}
                   placeholder="Enter your first name"
-                  className="h-11"
+                  className={`h-11 ${initialUser?.firstName ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  readOnly={!!initialUser?.firstName}
                 />
                 {errors.personalInfo?.firstName && (
                   <p className="text-sm text-red-600 flex items-center gap-1">
@@ -432,7 +452,8 @@ export function ApplicationForm({
                   id="lastName"
                   {...register("personalInfo.lastName")}
                   placeholder="Enter your last name"
-                  className="h-11"
+                  className={`h-11 ${initialUser?.lastName ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  readOnly={!!initialUser?.lastName}
                 />
                 {errors.personalInfo?.lastName && (
                   <p className="text-sm text-red-600 flex items-center gap-1">
@@ -453,7 +474,8 @@ export function ApplicationForm({
                 type="email"
                 {...register("personalInfo.email")}
                 placeholder="your.email@example.com"
-                className="h-11"
+                className={`h-11 ${initialUser?.email ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                readOnly={!!initialUser?.email}
               />
               {errors.personalInfo?.email && (
                 <p className="text-sm text-red-600 flex items-center gap-1">
@@ -473,7 +495,8 @@ export function ApplicationForm({
                   id="phone"
                   {...register("personalInfo.phone")}
                   placeholder="+233 XX XXX XXXX"
-                  className="h-11"
+                  className={`h-11 ${initialUser?.phone ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  readOnly={!!initialUser?.phone}
                 />
                 {errors.personalInfo?.phone && (
                   <p className="text-sm text-red-600 flex items-center gap-1">
@@ -492,7 +515,8 @@ export function ApplicationForm({
                   id="dateOfBirth"
                   type="date"
                   {...register("personalInfo.dateOfBirth")}
-                  className="h-11"
+                  className={`h-11 ${initialUser?.dateOfBirth ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  readOnly={!!initialUser?.dateOfBirth}
                 />
                 {errors.personalInfo?.dateOfBirth && (
                   <p className="text-sm text-red-600 flex items-center gap-1">
@@ -513,7 +537,8 @@ export function ApplicationForm({
                 {...register("personalInfo.address")}
                 placeholder="Enter your full address"
                 rows={3}
-                className="resize-none"
+                className={`resize-none ${initialUser?.address ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                readOnly={!!initialUser?.address}
               />
               {errors.personalInfo?.address && (
                 <p className="text-sm text-red-600 flex items-center gap-1">

@@ -16,8 +16,16 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
   const session = await getServerSession(authOptions);
 
   if (!session) {
-    redirect("/auth/login");
+    redirect(`/auth/login?returnUrl=/courses/${id}/apply`);
   }
+
+  // Get user details for prefilling
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    include: {
+      profile: true,
+    },
+  });
 
   // Get course details
   const course = await prisma.course.findUnique({
@@ -42,6 +50,16 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
   if (!course) {
     notFound();
   }
+
+  // Combine user and profile for prefilling
+  const initialUser = user ? {
+    firstName: user.name?.split(' ')[0] || "",
+    lastName: user.name?.split(' ').slice(1).join(' ') || "",
+    email: user.email,
+    phone: user.profile?.phone || user.phone || "",
+    address: user.profile?.address || "",
+    dateOfBirth: user.profile?.dateOfBirth ? new Date(user.profile.dateOfBirth).toISOString().split('T')[0] : "",
+  } : null;
 
   if (course.status !== "APPROVED" && course.status !== "PUBLISHED") {
     return (
@@ -145,6 +163,7 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
           courseId={course.id}
           courseName={course.title}
           applicationFee={course.applicationFee || 0}
+          initialUser={initialUser}
           onSuccessRedirect="/dashboards/student"
         />
 

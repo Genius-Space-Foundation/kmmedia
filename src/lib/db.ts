@@ -1,11 +1,12 @@
 import { PrismaClient } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
 // Database connection configuration
-const databaseConfig = {
+const databaseConfig: Prisma.PrismaClientOptions = {
   datasources: {
     db: {
       url: process.env.DATABASE_URL,
@@ -16,13 +17,10 @@ const databaseConfig = {
       ? ["query", "error", "warn"]
       : ["error"],
   // Connection pooling configuration
-  ...(process.env.NODE_ENV === "production" && {
-    // Production optimizations
-    transactionOptions: {
-      maxWait: 5000, // 5 seconds
-      timeout: 10000, // 10 seconds
-    },
-  }),
+  transactionOptions: {
+    maxWait: 10000, // 10 seconds
+    timeout: 30000, // 30 seconds
+  },
 };
 
 export const prisma =

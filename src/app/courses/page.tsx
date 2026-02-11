@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import EnhancedNavigation from "@/components/navigation/EnhancedNavigation";
 import Footer from "@/components/layout/Footer";
+import { useSession } from "next-auth/react";
 import CourseFilters, {
   CourseFilter,
 } from "@/components/courses/CourseFilters";
@@ -62,7 +63,8 @@ interface User {
 }
 
 export default function CoursesPage() {
-  const [user, setUser] = useState<User | null>(null);
+  const { data: session } = useSession();
+  const user = session?.user;
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<CourseFilter>({
@@ -75,30 +77,12 @@ export default function CoursesPage() {
     rating: 0,
     sortBy: "title",
     sortOrder: "asc",
+    userId: user?.id,
   });
   const [comparisonCourses, setComparisonCourses] = useState<Course[]>([]);
   const [wishlistCourses, setWishlistCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-
-  // Check for authenticated user
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetch("/api/auth/me");
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success) {
-            setUser(data.user);
-          }
-        }
-      } catch (error) {
-        console.error("Error checking auth:", error);
-      }
-    };
-
-    checkAuth();
-  }, []);
 
   useEffect(() => {
     // Check if we're on the client side
@@ -274,85 +258,73 @@ export default function CoursesPage() {
 
       <main className="flex-grow">
         {/* Premium Courses Hero Section */}
-        <section className="relative min-h-[650px] lg:min-h-[750px] flex items-center justify-center overflow-hidden py-20">
-          {/* Enhanced Background Treatment for Better Text Visibility */}
+        <section className="relative min-h-[650px] lg:min-h-[850px] flex items-center justify-center overflow-hidden py-24 bg-neutral-950">
+          {/* Advanced Background Layers */}
           <div className="absolute inset-0 z-0">
-            {/* Darker overlay for better contrast */}
-            <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/95 via-neutral-900/90 to-neutral-950/95 z-10"></div>
             <img
               src="/images/3.jpeg"
               alt="KM Media Training Institute Courses"
-              className="w-full h-full object-cover grayscale opacity-15 scale-110 animate-subtle-zoom"
+              className="w-full h-full object-cover grayscale opacity-20 scale-105"
             />
+            {/* Dark sophisticated mask */}
+            <div className="absolute inset-0 bg-[#020617]/90 backdrop-blur-[1px]"></div>
+            {/* Mesh gradient accents */}
+            <div 
+              className="absolute inset-0 opacity-30 mix-blend-screen"
+              style={{ 
+                backgroundImage: `radial-gradient(circle at 10% 20%, var(--brand-primary) 0%, transparent 40%),
+                                  radial-gradient(circle at 90% 80%, #064E6B 0%, transparent 40%)`
+              }}
+            ></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#020617]"></div>
           </div>
 
-          <div className="relative z-20 text-center text-white px-6 sm:px-8 lg:px-12 max-w-6xl mx-auto">
-            {/* Discovery Badge - Enhanced visibility */}
-            <div className="inline-flex items-center px-4 py-2 bg-white/15 backdrop-blur-md border border-white/30 rounded-2xl text-white text-sm font-semibold mb-10 animate-fade-in tracking-wide shadow-lg">
-              <span className="mr-2">🚀</span>
-              Discover Your Potential
+          <div className="relative z-20 text-center text-white px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+            {/* Discovery Badge - Glassmorphic */}
+            <div className="inline-flex items-center px-5 py-2.5 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl text-white text-[12px] font-black uppercase tracking-[0.2em] mb-12 shadow-2xl">
+              <span className="mr-3 animate-pulse">✨</span>
+              Curated Professional Pathways
             </div>
 
-            {/* Main Heading with Stylized Text - Improved contrast */}
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-8 leading-[1.05] tracking-tight drop-shadow-lg">
-              Master the Art of
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 animate-gradient-x py-2 drop-shadow-none">
+            {/* Main Heading with Master Typography */}
+            <h1 className="text-5xl sm:text-7xl lg:text-9xl font-black text-white mb-10 leading-[0.85] tracking-tight">
+              Master the<br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-primary via-[#57D2FF] to-brand-primary bg-[length:200%_auto] animate-gradient-x py-3">
                 Modern Media
               </span>
             </h1>
 
-            {/* Premium Description - Better visibility */}
-            <p className="text-lg sm:text-2xl text-gray-200 mb-16 max-w-3xl mx-auto leading-relaxed font-light drop-shadow-md">
-              Choose from our world-class courses designed to transform you into a media powerhouse. Professional certification, expert mentorship, and career-ready skills.
+            {/* Professional Subtitle */}
+            <p className="text-lg sm:text-2xl text-neutral-400 mb-20 max-w-4xl mx-auto leading-relaxed font-medium">
+              Elevate your career with industry-leading certifications and expert-led training in film, broadcasting, and technology innovation.
             </p>
 
-            {/* Enhanced Dynamic Stats Cards - Improved contrast */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 max-w-5xl mx-auto">
-              <div className="group bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl hover:bg-white/15 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                <div className="text-4xl font-extrabold text-cyan-400 mb-1 group-hover:animate-pulse drop-shadow-lg">
-                  {courses.length}+
+            {/* High-Fidelity Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 max-w-6xl mx-auto">
+              {[
+                { label: "Expert Courses", value: `${courses.length}+`, color: "from-brand-primary to-cyan-400" },
+                { label: "Specializations", value: `${new Set(courses.map((c) => c.category)).size}`, color: "from-blue-500 to-indigo-400" },
+                { label: "Active Students", value: `${courses.reduce((sum, course) => sum + course._count.enrollments, 0)}`, color: "from-sky-500 to-blue-300" },
+                { label: "Success Rate", value: "95%", color: "from-emerald-500 to-teal-300" }
+              ].map((stat, idx) => (
+                <div key={idx} className="group relative">
+                  <div className={`absolute -inset-0.5 bg-gradient-to-r ${stat.color} rounded-3xl blur opacity-0 group-hover:opacity-20 transition duration-500`}></div>
+                  <div className="relative h-full bg-white/[0.03] backdrop-blur-2xl border border-white/10 p-8 rounded-3xl transition-all duration-300 group-hover:bg-white/[0.07] group-hover:-translate-y-1">
+                    <div className={`text-4xl sm:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-br ${stat.color} mb-2 tracking-tighter`}>
+                      {stat.value}
+                    </div>
+                    <div className="text-neutral-500 text-[10px] font-black uppercase tracking-[0.2em]">
+                      {stat.label}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-gray-200 text-xs font-bold uppercase tracking-widest">
-                  Expert Courses
-                </div>
-              </div>
-
-              <div className="group bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl hover:bg-white/15 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                <div className="text-4xl font-extrabold text-blue-400 mb-1 group-hover:animate-pulse drop-shadow-lg">
-                  {new Set(courses.map((c) => c.category)).size}
-                </div>
-                <div className="text-gray-200 text-xs font-bold uppercase tracking-widest">
-                  Specializations
-                </div>
-              </div>
-
-              <div className="group bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl hover:bg-white/15 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                <div className="text-4xl font-extrabold text-sky-400 mb-1 group-hover:animate-pulse drop-shadow-lg">
-                  {courses.reduce(
-                    (sum, course) => sum + course._count.enrollments,
-                    0
-                  )}
-                </div>
-                <div className="text-gray-200 text-xs font-bold uppercase tracking-widest">
-                  Active Students
-                </div>
-              </div>
-
-              <div className="group bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-3xl hover:bg-white/15 transition-all duration-500 hover:scale-105 hover:shadow-2xl">
-                <div className="text-4xl font-extrabold text-emerald-400 mb-1 group-hover:animate-pulse drop-shadow-lg">
-                  95%
-                </div>
-                <div className="text-gray-200 text-xs font-bold uppercase tracking-widest">
-                  Success Rate
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
-          {/* Modern Scroll Indicator - Enhanced visibility */}
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-60 animate-bounce">
-            <span className="text-[10px] text-gray-200 uppercase tracking-[0.2em] font-medium drop-shadow-md">Explore</span>
-            <div className="w-1 h-8 bg-gradient-to-b from-cyan-400 to-transparent rounded-full shadow-lg"></div>
+          {/* Minimalist Scroll Indicator */}
+          <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-40">
+            <div className="w-[1px] h-12 bg-gradient-to-b from-brand-primary to-transparent"></div>
           </div>
         </section>
 

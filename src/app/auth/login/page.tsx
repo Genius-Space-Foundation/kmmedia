@@ -1,10 +1,15 @@
+"use client";
+
 import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { LoginForm } from "@/components/forms/login-form";
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
-
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get("returnUrl");
+
   return (
     <div className="min-h-screen bg-neutral-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -67,7 +72,7 @@ export default function LoginPage() {
               Don&apos;t have an account?
             </p>
             <a
-              href="/auth/register"
+              href={returnUrl ? `/auth/register?returnUrl=${encodeURIComponent(returnUrl)}` : "/auth/register"}
               className="font-semibold text-brand-primary hover:text-brand-secondary transition-colors"
             >
               Sign up for free

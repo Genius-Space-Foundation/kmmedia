@@ -33,6 +33,11 @@ const config: Config = {
           primary: "#0994C4", // Primary Brand Color
           secondary: "#067A9D", // Darker shade for hover/active
           accent: "#0A94C5", // Lighter shade if needed
+          text: {
+            primary: "#111827", // neutral-900
+            secondary: "#4B5563", // neutral-600
+          },
+          border: "#E5E7EB", // neutral-200
         },
         // Semantic Colors
         success: {
@@ -70,6 +75,7 @@ const config: Config = {
         border: "#E5E7EB",
       },
       boxShadow: {
+        "brand-sm": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
         sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
         DEFAULT: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
         md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
