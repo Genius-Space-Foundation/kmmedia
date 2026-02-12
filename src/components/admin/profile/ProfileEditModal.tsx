@@ -31,7 +31,8 @@ import { safeJsonParse } from "@/lib/api-utils";
 
 interface UserProfile {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   role: string;
   avatar?: string;
@@ -56,7 +57,8 @@ export default function ProfileEditModal({
   onUpdate,
 }: ProfileEditModalProps) {
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     bio: "",
@@ -69,7 +71,8 @@ export default function ProfileEditModal({
   useEffect(() => {
     if (user) {
       setFormData({
-        name: user.name || "",
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
         email: user.email || "",
         phone: user.phone || "",
         bio: user.bio || "",
@@ -82,8 +85,11 @@ export default function ProfileEditModal({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
     }
 
     if (!formData.email.trim()) {
@@ -120,8 +126,11 @@ export default function ProfileEditModal({
       if (response.ok) {
         // The API returns { success: true, user: ... } or { success: true, data: ... }
         // We need to handle both cases to be safe
-        const updatedUser = await safeJsonParse(response, { data: null });
-        onUpdate(updatedUser.user || updatedUser.data);
+        const updatedUserResponse = await safeJsonParse(response, { data: null });
+        const finalUser = updatedUserResponse.user || updatedUserResponse.data;
+        if (finalUser) {
+          onUpdate(finalUser as any);
+        }
         toast.success("Profile updated successfully!");
         onClose();
       } else {
@@ -145,13 +154,10 @@ export default function ProfileEditModal({
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+  const fullName = `${user?.firstName} ${user?.lastName}`.trim() || user?.email || "User";
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return (firstName[0] || "") + (lastName[0] || "");
   };
 
   return (
@@ -171,9 +177,9 @@ export default function ProfileEditModal({
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Avatar className="h-20 w-20">
-                    <AvatarImage src={user?.avatar} alt={user?.name} />
+                    <AvatarImage src={user?.avatar} alt={fullName} />
                     <AvatarFallback className="text-lg">
-                      {getInitials(user?.name || "A")}
+                      {getInitials(user?.firstName || "A", user?.lastName || "")}
                     </AvatarFallback>
                   </Avatar>
                   <Button
@@ -186,7 +192,7 @@ export default function ProfileEditModal({
                   </Button>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold">{user?.name}</h3>
+                  <h3 className="text-xl font-semibold">{fullName}</h3>
                   <p className="text-gray-600">{user?.email}</p>
                   <Badge variant="secondary" className="mt-1">
                     {user?.role}
@@ -199,19 +205,36 @@ export default function ProfileEditModal({
           {/* Form Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name *</Label>
+              <Label htmlFor="firstName">First Name *</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  id="firstName"
+                  value={formData.firstName}
+                  onChange={(e) => handleInputChange("firstName", e.target.value)}
                   className="pl-10"
-                  placeholder="Enter your full name"
+                  placeholder="First name"
                 />
               </div>
-              {errors.name && (
-                <p className="text-sm text-red-600">{errors.name}</p>
+              {errors.firstName && (
+                <p className="text-sm text-red-600">{errors.firstName}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lastName">Last Name *</Label>
+              <div className="relative">
+                <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  id="lastName"
+                  value={formData.lastName}
+                  onChange={(e) => handleInputChange("lastName", e.target.value)}
+                  className="pl-10"
+                  placeholder="Last name"
+                />
+              </div>
+              {errors.lastName && (
+                <p className="text-sm text-red-600">{errors.lastName}</p>
               )}
             </div>
 

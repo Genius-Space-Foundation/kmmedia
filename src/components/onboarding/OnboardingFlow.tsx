@@ -94,31 +94,46 @@ export default function OnboardingFlow({
     careerGoals: "",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [userRole, setUserRole] = useState<string>("student");
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
   const searchParams = useSearchParams();
 
-  // Detect user role from URL params or API
+  // Detect user role and fetch existing profile
   useEffect(() => {
     const roleFromParams = searchParams.get("role");
     if (roleFromParams) {
       setUserRole(roleFromParams.toLowerCase());
-    } else {
-      // Fetch user role from API if not in params
-      fetchUserRole();
     }
+    fetchUserProfile();
   }, [searchParams]);
 
-  const fetchUserRole = async () => {
+  const fetchUserProfile = async () => {
     try {
       const response = await makeAuthenticatedRequest("/api/user/profile");
       const result = await response.json();
       if (result.success && result.user) {
         setUserRole(result.user.role.toLowerCase());
+        
+        // Also fetch learning profile if it exists
+        const lpResponse = await makeAuthenticatedRequest("/api/user/learning-profile");
+        const lpResult = await lpResponse.json();
+        if (lpResult.success && lpResult.profile) {
+          setProfile(prev => ({
+            ...prev,
+            interests: lpResult.profile.interests || [],
+            experience: lpResult.profile.experience || "",
+            skillLevel: lpResult.profile.skillLevel || "beginner",
+            learningStyle: lpResult.profile.learningStyle || "visual",
+            goals: lpResult.profile.goals || [],
+            timeCommitment: lpResult.profile.timeCommitment || 5,
+            careerGoals: lpResult.profile.careerGoals || "",
+          }));
+        }
       }
     } catch (error) {
-      console.error("Failed to fetch user role:", error);
+      console.error("Failed to fetch user data:", error);
     }
   };
 
@@ -251,8 +266,8 @@ export default function OnboardingFlow({
 
   const handleComplete = async () => {
     setLoading(true);
+    setError("");
     try {
-      // Save learning profile to backend
       const response = await makeAuthenticatedRequest(
         "/api/user/learning-profile",
         {
@@ -267,15 +282,13 @@ export default function OnboardingFlow({
       const result = await response.json();
 
       if (response.ok && result.success) {
-        console.log("Learning profile saved successfully");
         onComplete(profile);
       } else {
-        console.error("Failed to save profile:", result.message);
-        onComplete(profile);
+        setError(result.message || "Failed to save your preferences. Please try again.");
       }
     } catch (error) {
+      setError("An unexpected error occurred. Please try again.");
       console.error("Error saving profile:", error);
-      onComplete(profile);
     } finally {
       setLoading(false);
     }
@@ -905,6 +918,14 @@ export default function OnboardingFlow({
               {steps[currentStep].title}
             </DialogTitle>
             <div className="w-full">
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg flex items-center space-x-2">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span>{error}</span>
+                </div>
+              )}
               <Progress value={progress} className="h-2" />
               <p className="text-sm text-gray-600 text-center mt-2">
                 Step {currentStep + 1} of {steps.length}

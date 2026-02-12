@@ -11,8 +11,9 @@ export const fetchCache = 'force-no-store';
 
 const registerSchema = z.object({
   email: z.string().email("Invalid email address"),
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   phone: z.string().optional(),
   role: z.enum(["STUDENT", "INSTRUCTOR"]).default("STUDENT"),
   interests: z.array(z.string()).optional(),
@@ -22,8 +23,23 @@ const registerSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, name, password, phone, role, interests, experience } =
-      registerSchema.parse(body);
+    const result = registerSchema.safeParse(body);
+    
+    if (!result.success) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: "Validation failed", 
+          errors: result.error.errors.map(err => ({
+            path: err.path.join('.'),
+            message: err.message
+          }))
+        },
+        { status: 400 }
+      );
+    }
+
+    const { email, firstName, lastName, password, phone, role, interests, experience } = result.data;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
@@ -32,7 +48,11 @@ export async function POST(request: NextRequest) {
 
     if (existingUser) {
       return NextResponse.json(
-        { success: false, message: "User with this email already exists" },
+        { 
+          success: false, 
+          message: "An account with this email already exists. Please login instead.",
+          code: "EMAIL_EXISTS"
+        },
         { status: 400 }
       );
     }
@@ -40,7 +60,8 @@ export async function POST(request: NextRequest) {
     // Create user
     const user = await createUser({
       email,
-      name,
+      firstName,
+      lastName,
       password,
       role: role as UserRole,
       phone,
@@ -51,7 +72,7 @@ export async function POST(request: NextRequest) {
     // Send welcome email
     try {
       const { sendEmail, emailTemplates } = await import("@/lib/notifications/email");
-      const template = emailTemplates.welcome({ name: user.name });
+      const template = emailTemplates.welcome({ name: `${user.firstName} ${user.lastName}` });
       await sendEmail({
         to: user.email,
         subject: template.subject,
@@ -82,26 +103,20 @@ export async function POST(request: NextRequest) {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        firstName: user.firstName,
+        lastName: user.lastName,
         role: user.role,
         status: user.status,
       },
-      message: "Registration successful. Please log in.",
+      message: "Registration successful. Welcome to KM Media!",
     });
   } catch (error) {
     console.error("Registration error:", error);
 
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { success: false, message: "Invalid input", errors: error.issues },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : "Registration failed",
+        message: error instanceof Error ? error.message : "An unexpected error occurred during registration. Please try again later.",
       },
       { status: 500 }
     );

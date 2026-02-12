@@ -5,6 +5,8 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
+      firstName: string;
+      lastName: string;
       role: UserRole;
       status: UserStatus;
       requiresPasswordChange: boolean;
@@ -14,6 +16,8 @@ declare module "next-auth" {
 
   interface User {
     id: string;
+    firstName: string;
+    lastName: string;
     role: UserRole;
     status: UserStatus;
     requiresPasswordChange: boolean;

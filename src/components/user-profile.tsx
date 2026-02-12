@@ -42,7 +42,8 @@ import { useRouter } from "next/navigation";
 interface UserProfileProps {
   user: {
     id: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     role: string;
     avatar?: string;
@@ -69,7 +70,8 @@ export default function UserProfile({
   const [loading, setLoading] = useState(false);
 
   const [profileData, setProfileData] = useState({
-    name: user.name,
+    firstName: user.firstName,
+    lastName: user.lastName,
     email: user.email,
     phone: user.phone || "",
     bio: user.bio || "",
@@ -188,12 +190,10 @@ export default function UserProfile({
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
+  const fullName = `${user.firstName} ${user.lastName}`.trim();
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return (firstName[0] || "") + (lastName[0] || "");
   };
 
   return (
@@ -204,9 +204,9 @@ export default function UserProfile({
           <div className="flex items-center space-x-4">
             <div className="relative">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage src={user.avatar} alt={fullName} />
                 <AvatarFallback className="text-lg">
-                  {getInitials(user.name)}
+                  {getInitials(user.firstName, user.lastName)}
                 </AvatarFallback>
               </Avatar>
               <div className="absolute -bottom-1 -right-1">
@@ -225,7 +225,7 @@ export default function UserProfile({
               </div>
             </div>
             <div className="flex-1">
-              <CardTitle className="text-2xl">{user.name}</CardTitle>
+              <CardTitle className="text-2xl">{fullName}</CardTitle>
               <CardDescription className="text-lg">
                 {user.email}
               </CardDescription>
@@ -249,34 +249,48 @@ export default function UserProfile({
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="name">Full Name</Label>
+                        <Label htmlFor="firstName">First Name</Label>
                         <Input
-                          id="name"
-                          value={profileData.name}
+                          id="firstName"
+                          value={profileData.firstName}
                           onChange={(e) =>
                             setProfileData((prev) => ({
                               ...prev,
-                              name: e.target.value,
+                              firstName: e.target.value,
                             }))
                           }
                           required
                         />
                       </div>
                       <div>
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="lastName">Last Name</Label>
                         <Input
-                          id="email"
-                          type="email"
-                          value={profileData.email}
+                          id="lastName"
+                          value={profileData.lastName}
                           onChange={(e) =>
                             setProfileData((prev) => ({
                               ...prev,
-                              email: e.target.value,
+                              lastName: e.target.value,
                             }))
                           }
                           required
                         />
                       </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={profileData.email}
+                        onChange={(e) =>
+                          setProfileData((prev) => ({
+                            ...prev,
+                            email: e.target.value,
+                          }))
+                        }
+                        required
+                      />
                     </div>
                     <div>
                       <Label htmlFor="phone">Phone</Label>
@@ -417,8 +431,12 @@ export default function UserProfile({
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm font-medium">Full Name</Label>
-                  <p className="text-sm text-gray-600">{user.name}</p>
+                  <Label className="text-sm font-medium">First Name</Label>
+                  <p className="text-sm text-gray-600">{user.firstName}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Last Name</Label>
+                  <p className="text-sm text-gray-600">{user.lastName}</p>
                 </div>
                 <div>
                   <Label className="text-sm font-medium">Email</Label>

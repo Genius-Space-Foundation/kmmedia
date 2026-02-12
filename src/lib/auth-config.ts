@@ -44,7 +44,8 @@ export const authOptions: NextAuthOptions = {
           select: {
             id: true,
             email: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             password: true,
             role: true,
             status: true,
@@ -90,7 +91,8 @@ export const authOptions: NextAuthOptions = {
         return {
           id: user.id,
           email: user.email,
-          name: user.name,
+          firstName: user.firstName,
+          lastName: user.lastName,
           role: user.role,
           status: user.status,
           requiresPasswordChange: user.requiresPasswordChange,
@@ -109,11 +111,18 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!existingUser) {
+            // Split name for social login
+            const fullSocialName = user.name || "User";
+            const nameParts = fullSocialName.split(" ");
+            const firstName = nameParts[0] || "User";
+            const lastName = nameParts.slice(1).join(" ") || "Guest";
+
             // Create new user with default role
             await prisma.user.create({
               data: {
                 email: user.email!,
-                name: user.name!,
+                firstName,
+                lastName,
                 role: UserRole.STUDENT,
                 status: UserStatus.ACTIVE,
                 image: user.image,

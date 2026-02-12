@@ -26,7 +26,8 @@ import ProfileEditModal from "./admin/profile/ProfileEditModal";
 interface UserDropdownProps {
   user: {
     id: string;
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     role: string;
     avatar?: string;
@@ -53,7 +54,8 @@ export default function UserDropdown({
   // Provide default values if user is undefined
   const safeUser = user || {
     id: "",
-    name: "User",
+    firstName: "User",
+    lastName: "",
     email: "user@example.com",
     role: "USER",
     avatar: "",
@@ -63,12 +65,10 @@ export default function UserDropdown({
     dateOfBirth: "",
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
+  const fullName = `${safeUser.firstName} ${safeUser.lastName}`.trim() || "User";
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return (firstName[0] || "") + (lastName[0] || "");
   };
 
   const getRoleColor = (role: string) => {
@@ -98,9 +98,9 @@ export default function UserDropdown({
             className="relative h-10 w-10 rounded-full hover:bg-gray-100 transition-colors"
           >
             <Avatar className="h-10 w-10">
-              <AvatarImage src={safeUser.avatar} alt={safeUser.name} />
+              <AvatarImage src={safeUser.avatar} alt={fullName} />
               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                {getInitials(safeUser.name)}
+                {getInitials(safeUser.firstName, safeUser.lastName)}
               </AvatarFallback>
             </Avatar>
           </Button>
@@ -109,7 +109,7 @@ export default function UserDropdown({
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
-                {safeUser.name}
+                {fullName}
               </p>
               <p className="text-xs leading-none text-muted-foreground">
                 {safeUser.email}

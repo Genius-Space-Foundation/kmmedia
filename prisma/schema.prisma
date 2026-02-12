@@ -12,7 +12,8 @@ model User {
   id            String     @id @default(cuid())
   email         String     @unique
   password      String? // Make password optional for social auth
-  name          String
+  firstName     String
+  lastName      String
   phone         String?
   role          UserRole   @default(STUDENT)
   status        UserStatus @default(ACTIVE)

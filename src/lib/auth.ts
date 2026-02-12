@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "./db";
-import { UserRole, UserStatus } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 
 // Hash password
 export async function hashPassword(password: string): Promise<string> {
@@ -18,7 +18,8 @@ export async function verifyPassword(
 // Create user (for admin use)
 export async function createUser(userData: {
   email: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   password: string;
   role: UserRole;
   phone?: string;
@@ -30,7 +31,8 @@ export async function createUser(userData: {
   const user = await prisma.user.create({
     data: {
       email: userData.email,
-      name: userData.name,
+      firstName: userData.firstName,
+      lastName: userData.lastName,
       password: hashedPassword,
       role: userData.role,
       phone: userData.phone,
@@ -39,13 +41,18 @@ export async function createUser(userData: {
 
   // Create learning profile if interests or experience provided
   if (userData.interests || userData.experience) {
-    await prisma.learningProfile.create({
-      data: {
+    await prisma.learningProfile.upsert({
+      where: { userId: user.id },
+      create: {
         userId: user.id,
         interests: userData.interests || [],
         experience: userData.experience || "",
         onboardingCompleted: false,
       },
+      update: {
+        interests: userData.interests || [],
+        experience: userData.experience || "",
+      }
     });
   }
 

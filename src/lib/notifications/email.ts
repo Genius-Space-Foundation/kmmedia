@@ -293,7 +293,7 @@ export const emailTemplates = {
     `,
   }),
 
-  welcome: (data: { name: string }) => ({
+  welcome: (data: { fullName: string }) => ({
     subject: "Welcome to KM Media Training Institute! 🚀",
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -302,7 +302,7 @@ export const emailTemplates = {
         </div>
         
         <div style="padding: 30px; background: #f8f9fa;">
-          <h2 style="color: #333;">Welcome, ${data.name}! 👋</h2>
+          <h2 style="color: #333;">Welcome, ${data.fullName}! 👋</h2>
           
           <p style="font-size: 16px; line-height: 1.6; color: #555;">
             Thank you for joining KM Media Training Institute. We're thrilled to have you on board!
