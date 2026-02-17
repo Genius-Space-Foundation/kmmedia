@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     // Send welcome email
     try {
       const { sendEmail, emailTemplates } = await import("@/lib/notifications/email");
-      const template = emailTemplates.welcome({ name: `${user.firstName} ${user.lastName}` });
+      const template = emailTemplates.welcome({ fullName: `${user.firstName} ${user.lastName}` });
       await sendEmail({
         to: user.email,
         subject: template.subject,
@@ -113,10 +113,23 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Registration error:", error);
 
+    // Handle known Prisma errors
+    if (error instanceof Error && 'code' in error && (error as any).code === 'P2002') {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "An account with this email already exists.",
+          code: "EMAIL_EXISTS"
+        },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
-        message: error instanceof Error ? error.message : "An unexpected error occurred during registration. Please try again later.",
+        message: "We encountered a technical issue while creating your account. Please try again or contact support if the problem persists.",
+        code: "INTERNAL_ERROR"
       },
       { status: 500 }
     );

@@ -84,6 +84,7 @@ export async function makeAuthenticatedRequest(
 }
 
 export function clearAuthTokens() {
+  localStorage.removeItem("token");
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
   localStorage.removeItem("user");

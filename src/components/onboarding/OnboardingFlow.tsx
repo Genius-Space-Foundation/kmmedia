@@ -910,88 +910,88 @@ export default function OnboardingFlow({
   };
 
   return (
-    <>
-      <Dialog open={true} onOpenChange={() => {}}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-center">
-              {steps[currentStep].title}
-            </DialogTitle>
-            <div className="w-full">
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg flex items-center space-x-2">
-                  <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                  <span>{error}</span>
+    <div className="w-full">
+      <div className="mb-8 overflow-hidden">
+        <div className="flex justify-between text-xs font-semibold text-neutral-400 mb-2 uppercase tracking-wider">
+          <span>{steps[currentStep].title}</span>
+          <span>{Math.round(progress)}%</span>
+        </div>
+        <Progress value={progress} className="h-1.5 bg-neutral-100" />
+      </div>
+
+      <div className="space-y-6">
+        {error && (
+          <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 animate-in fade-in slide-in-from-top-1">
+            {error}
+          </div>
+        )}
+        
+        <div className="min-h-[400px]">
+          {renderStep()}
+        </div>
+
+        <div className="flex justify-between items-center pt-8 border-t border-neutral-100">
+          <Button
+            variant="ghost"
+            onClick={handlePrevious}
+            disabled={currentStep === 0 || loading}
+            className="text-neutral-500 hover:text-neutral-900 font-medium"
+          >
+            Back
+          </Button>
+          
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={onSkip}
+              disabled={loading}
+              className="text-neutral-500 hover:text-neutral-900 border-neutral-200 rounded-xl px-6"
+            >
+              Skip
+            </Button>
+            <Button
+              onClick={handleNext}
+              disabled={!canProceed() || loading}
+              className="bg-brand-primary hover:bg-brand-secondary text-white px-8 h-12 rounded-xl shadow-lg shadow-brand-primary/20 transition-all active:scale-95 font-semibold flex items-center gap-2"
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>Saving...</span>
                 </div>
+              ) : currentStep === steps.length - 1 ? (
+                <>Finish Setup <CheckCircle2 className="w-4 h-4" /></>
+              ) : (
+                <>Next Step <ChevronRight className="w-4 h-4" /></>
               )}
-              <Progress value={progress} className="h-2" />
-              <p className="text-sm text-gray-600 text-center mt-2">
-                Step {currentStep + 1} of {steps.length}
-              </p>
-            </div>
+            </Button>
+          </div>
+        </div>
+      </div>
+      
+      {/* Tutorial Dialog */}
+      <Dialog open={showTutorial} onOpenChange={setShowTutorial}>
+        <DialogContent className="max-w-md rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              {getTutorialSteps()[tutorialStep]?.title}
+            </DialogTitle>
           </DialogHeader>
-
-          <div className="py-6">{renderStep()}</div>
-
-          <div className="flex justify-between items-center pt-6 border-t">
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={onSkip} disabled={loading}>
-                Skip for now
-              </Button>
-              {currentStep > 0 && (
-                <Button
-                  variant="outline"
-                  onClick={handlePrevious}
-                  disabled={loading}
-                >
-                  Previous
-                </Button>
-              )}
-            </div>
-
-            {steps[currentStep].component === "tutorial" ? (
-              <div className="flex space-x-4">
-                <Button
-                  variant="outline"
-                  onClick={skipTutorial}
-                  disabled={loading}
-                  className="min-w-[120px]"
-                >
-                  Skip Tour
-                </Button>
-                <Button
-                  onClick={startTutorial}
-                  disabled={loading}
-                  className="min-w-[120px]"
-                >
-                  Start Tour
-                </Button>
-              </div>
-            ) : (
-              <Button
-                onClick={handleNext}
-                disabled={!canProceed() || loading}
-                className="min-w-[120px]"
-              >
-                {loading ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Saving...</span>
-                  </div>
-                ) : currentStep === steps.length - 1 ? (
-                  "Complete Setup"
-                ) : (
-                  "Next"
-                )}
-              </Button>
-            )}
+          <div className="py-6">
+            <p className="text-neutral-600 leading-relaxed text-lg">
+              {getTutorialSteps()[tutorialStep]?.description}
+            </p>
+          </div>
+          <div className="flex justify-between items-center pt-4">
+            <Button variant="ghost" onClick={skipTutorial} className="text-neutral-400">
+              Skip tour
+            </Button>
+            <Button onClick={nextTutorialStep} className="bg-brand-primary hover:bg-brand-secondary text-white rounded-xl px-8 py-6 text-lg font-semibold shadow-lg">
+              {tutorialStep < getTutorialSteps().length - 1 ? "Next" : "Got it!"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
-
-      <TutorialOverlay />
-    </>
+    </div>
   );
 }

@@ -35,7 +35,8 @@ async function createSupportTicket(req: AuthenticatedRequest) {
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
@@ -56,6 +57,7 @@ async function createSupportTicket(req: AuthenticatedRequest) {
     // Transform responses to match frontend interface
     const transformedTicket = {
       ...ticket,
+      user: ticket.user ? { ...ticket.user, name: `${ticket.user.firstName} ${ticket.user.lastName}` } : null,
       responses: ticket.responses.map((response) => ({
         id: response.id,
         message: response.message,
@@ -119,7 +121,8 @@ async function getStudentSupportTickets(req: AuthenticatedRequest) {
             include: {
               user: {
                 select: {
-                  name: true,
+                  firstName: true,
+                  lastName: true,
                   role: true,
                 },
               },
@@ -137,6 +140,7 @@ async function getStudentSupportTickets(req: AuthenticatedRequest) {
     // Transform tickets to match frontend interface
     const transformedTickets = tickets.map((ticket) => ({
       ...ticket,
+      user: ticket.user ? { ...ticket.user, name: `${ticket.user.firstName} ${ticket.user.lastName}` } : null,
       createdAt: ticket.createdAt.toISOString(),
       updatedAt: ticket.updatedAt.toISOString(),
       responses: ticket.responses.map((response) => ({

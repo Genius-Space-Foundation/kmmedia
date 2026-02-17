@@ -43,7 +43,12 @@ import {
   ChevronLeft,
   Save,
   CreditCard,
+  BookOpen,
+  Info,
+  ShieldCheck,
+  Lock,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { makeAuthenticatedRequest } from "@/lib/token-utils";
 import UnifiedPaymentFlow from "@/components/student/payments/UnifiedPaymentFlow";
 import {
@@ -61,6 +66,7 @@ const step1Schema = z.object({
     lastName: z.string().min(2, "Last name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
     phone: z.string().min(10, "Phone number must be at least 10 digits"),
+    gender: z.string().min(1, "Gender is required"),
     dateOfBirth: z.string().min(1, "Date of birth is required"),
     address: z.string().min(10, "Address must be at least 10 characters"),
   }),
@@ -108,6 +114,7 @@ interface ApplicationFormProps {
     email?: string;
     phone?: string;
     address?: string;
+    gender?: string;
     dateOfBirth?: string;
   } | null;
   onSubmit?: (data: ApplicationFormData) => void;
@@ -187,6 +194,7 @@ export function ApplicationForm({
         email: initialUser?.email || "",
         phone: initialUser?.phone || "",
         address: initialUser?.address || "",
+        gender: initialUser?.gender || "",
         dateOfBirth: initialUser?.dateOfBirth || "",
       }
     }
@@ -219,7 +227,24 @@ export function ApplicationForm({
         if (draft) {
           // Populate form with draft data
           Object.entries(draft.formData).forEach(([key, value]) => {
-            setValue(key as any, value);
+            if (key === 'personalInfo' && typeof value === 'object' && value !== null) {
+              // Merge personalInfo with initialUser values to ensure prefilled data persists
+              const personalInfoDraft = value as any;
+              const mergedPersonalInfo = {
+                ...personalInfoDraft,
+                // Hard-priority for profile data if it exists
+                firstName: initialUser?.firstName || personalInfoDraft.firstName || "",
+                lastName: initialUser?.lastName || personalInfoDraft.lastName || "",
+                email: initialUser?.email || personalInfoDraft.email || "",
+                phone: initialUser?.phone || personalInfoDraft.phone || "",
+                address: initialUser?.address || personalInfoDraft.address || "",
+                gender: initialUser?.gender || personalInfoDraft.gender || "",
+                dateOfBirth: initialUser?.dateOfBirth || personalInfoDraft.dateOfBirth || "",
+              };
+              setValue("personalInfo", mergedPersonalInfo);
+            } else {
+              setValue(key as any, value);
+            }
           });
           setCurrentStep(draft.currentStep);
           onDraftLoad?.(draft);
@@ -242,7 +267,7 @@ export function ApplicationForm({
     }
 
     loadExistingDraft();
-  }, [loadDraft, setValue, onDraftLoad]);
+  }, [loadDraft, setValue, onDraftLoad, initialUser]);
 
   // Auto-submit after payment success
   useEffect(() => {
@@ -431,8 +456,8 @@ export function ApplicationForm({
                 <Input
                   id="firstName"
                   {...register("personalInfo.firstName")}
-                  placeholder="Enter your first name"
-                  className={`h-11 ${initialUser?.firstName ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  placeholder="e.g. John"
+                  className={`h-12 rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all ${initialUser?.firstName ? 'text-neutral-500 cursor-not-allowed border-dashed' : ''}`}
                   readOnly={!!initialUser?.firstName}
                 />
                 {errors.personalInfo?.firstName && (
@@ -451,8 +476,8 @@ export function ApplicationForm({
                 <Input
                   id="lastName"
                   {...register("personalInfo.lastName")}
-                  placeholder="Enter your last name"
-                  className={`h-11 ${initialUser?.lastName ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  placeholder="e.g. Doe"
+                  className={`h-12 rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all ${initialUser?.lastName ? 'text-neutral-500 cursor-not-allowed border-dashed' : ''}`}
                   readOnly={!!initialUser?.lastName}
                 />
                 {errors.personalInfo?.lastName && (
@@ -473,8 +498,8 @@ export function ApplicationForm({
                 id="email"
                 type="email"
                 {...register("personalInfo.email")}
-                placeholder="your.email@example.com"
-                className={`h-11 ${initialUser?.email ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                placeholder="john.doe@example.com"
+                className={`h-12 rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all ${initialUser?.email ? 'text-neutral-500 cursor-not-allowed border-dashed' : ''}`}
                 readOnly={!!initialUser?.email}
               />
               {errors.personalInfo?.email && (
@@ -495,7 +520,7 @@ export function ApplicationForm({
                   id="phone"
                   {...register("personalInfo.phone")}
                   placeholder="+233 XX XXX XXXX"
-                  className={`h-11 ${initialUser?.phone ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className={`h-12 rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all ${initialUser?.phone ? 'text-neutral-500 cursor-not-allowed border-dashed' : ''}`}
                   readOnly={!!initialUser?.phone}
                 />
                 {errors.personalInfo?.phone && (
@@ -507,6 +532,43 @@ export function ApplicationForm({
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="gender" className="text-sm font-medium flex items-center gap-2">
+                  <User className="h-4 w-4 text-blue-600" />
+                  Gender *
+                </Label>
+                {initialUser?.gender ? (
+                  <Input
+                    value={initialUser.gender.charAt(0).toUpperCase() + initialUser.gender.slice(1).replace('_', ' ')}
+                    readOnly
+                    className="h-12 rounded-xl border-neutral-200 bg-neutral-50/50 text-neutral-500 cursor-not-allowed border-dashed"
+                  />
+                ) : (
+                  <Select
+                    onValueChange={(value) => setValue("personalInfo.gender", value)}
+                    defaultValue={watch("personalInfo.gender")}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all">
+                      <SelectValue placeholder="Select gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="male">Male</SelectItem>
+                      <SelectItem value="female">Female</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+                {errors.personalInfo?.gender && (
+                  <p className="text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.personalInfo.gender.message}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
                 <Label htmlFor="dateOfBirth" className="text-sm font-medium flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-blue-600" />
                   Date of Birth *
@@ -515,7 +577,7 @@ export function ApplicationForm({
                   id="dateOfBirth"
                   type="date"
                   {...register("personalInfo.dateOfBirth")}
-                  className={`h-11 ${initialUser?.dateOfBirth ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                  className={`h-12 rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all ${initialUser?.dateOfBirth ? 'text-neutral-500 cursor-not-allowed border-dashed' : ''}`}
                   readOnly={!!initialUser?.dateOfBirth}
                 />
                 {errors.personalInfo?.dateOfBirth && (
@@ -535,9 +597,9 @@ export function ApplicationForm({
               <Textarea
                 id="address"
                 {...register("personalInfo.address")}
-                placeholder="Enter your full address"
+                placeholder="e.g. 123 Education St, Accra, Ghana"
                 rows={3}
-                className={`resize-none ${initialUser?.address ? 'bg-gray-50 text-gray-500 cursor-not-allowed' : ''}`}
+                className={`resize-none rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all ${initialUser?.address ? 'text-neutral-500 cursor-not-allowed border-dashed' : ''}`}
                 readOnly={!!initialUser?.address}
               />
               {errors.personalInfo?.address && (
@@ -563,7 +625,7 @@ export function ApplicationForm({
                   setValue("education.highestEducation", value)
                 }
               >
-                <SelectTrigger className="h-11">
+                <SelectTrigger className="h-12 rounded-xl border-neutral-200 bg-neutral-50/50">
                   <SelectValue placeholder="Select your education level" />
                 </SelectTrigger>
                 <SelectContent>
@@ -590,8 +652,8 @@ export function ApplicationForm({
                 <Input
                   id="institution"
                   {...register("education.institution")}
-                  placeholder="University or institution name"
-                  className="h-11"
+                  placeholder="e.g. University of Ghana"
+                  className="h-12 rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all"
                 />
                 {errors.education?.institution && (
                   <p className="text-sm text-red-600 flex items-center gap-1">
@@ -608,8 +670,8 @@ export function ApplicationForm({
                 <Input
                   id="graduationYear"
                   {...register("education.graduationYear")}
-                  placeholder="e.g., 2020"
-                  className="h-11"
+                  placeholder="2024"
+                  className="h-12 rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all"
                 />
                 {errors.education?.graduationYear && (
                   <p className="text-sm text-red-600 flex items-center gap-1">
@@ -627,8 +689,8 @@ export function ApplicationForm({
               <Input
                 id="fieldOfStudy"
                 {...register("education.fieldOfStudy")}
-                placeholder="e.g., Computer Science, Business Administration"
-                className="h-11"
+                placeholder="e.g. Digital Marketing"
+                className="h-12 rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all"
               />
               {errors.education?.fieldOfStudy && (
                 <p className="text-sm text-red-600 flex items-center gap-1">
@@ -657,7 +719,7 @@ export function ApplicationForm({
                   setValue("experience.workExperience", value)
                 }
               >
-                <SelectTrigger className="h-11">
+                <SelectTrigger className="h-12 rounded-xl border-neutral-200 bg-neutral-50/50">
                   <SelectValue placeholder="Select your work experience" />
                 </SelectTrigger>
                 <SelectContent>
@@ -688,9 +750,9 @@ export function ApplicationForm({
               <Textarea
                 id="relevantSkills"
                 {...register("experience.relevantSkills")}
-                placeholder="Describe your relevant skills and experience..."
+                placeholder="Tell us about the skills you've acquired..."
                 rows={4}
-                className="resize-none"
+                className="resize-none rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all"
               />
               {errors.experience?.relevantSkills && (
                 <p className="text-sm text-red-600 flex items-center gap-1">
@@ -713,9 +775,9 @@ export function ApplicationForm({
               <Textarea
                 id="motivation"
                 {...register("experience.motivation")}
-                placeholder="Explain your motivation for taking this course..."
+                placeholder="What drives your interest in this specific course?"
                 rows={4}
-                className="resize-none"
+                className="resize-none rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all"
               />
               {errors.experience?.motivation && (
                 <p className="text-sm text-red-600 flex items-center gap-1">
@@ -737,9 +799,9 @@ export function ApplicationForm({
               <Textarea
                 id="goals"
                 {...register("experience.goals")}
-                placeholder="Describe your career goals and how this course will help..."
+                placeholder="Where do you see yourself after completing this course?"
                 rows={4}
-                className="resize-none"
+                className="resize-none rounded-xl border-neutral-200 bg-neutral-50/50 focus:bg-white transition-all"
               />
               {errors.experience?.goals && (
                 <p className="text-sm text-red-600 flex items-center gap-1">
@@ -753,58 +815,74 @@ export function ApplicationForm({
 
       case 4:
         return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
-              <div className="flex items-start gap-3">
-                <CreditCard className="h-5 w-5 text-blue-600 mt-0.5" />
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-neutral-900 rounded-3xl p-8 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-5">
+                 <CreditCard className="h-32 w-32 rotate-12" />
+              </div>
+              <div className="flex items-start gap-4 relative z-10">
+                <div className="bg-brand-primary p-3 rounded-2xl">
+                  <CreditCard className="h-6 w-6 text-white" />
+                </div>
                 <div>
-                  <h3 className="font-semibold text-blue-900 mb-1">
-                    Application Fee Payment
-                  </h3>
-                  <p className="text-sm text-blue-700">
-                    To process your application, a non-refundable application fee is required.
+                  <h3 className="text-xl font-bold mb-2">Final Review & Fee</h3>
+                  <p className="text-neutral-400 text-sm leading-relaxed max-w-md">
+                    Please review your information carefully. A non-refundable application fee is required to initiate the formal review process.
                   </p>
                 </div>
               </div>
             </div>
 
-            <Card className="border shadow-sm">
-                <CardHeader>
-                    <CardTitle className="text-lg">Fee Summary</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">Application Fee</span>
-                        <span className="font-bold text-lg">
-                            {formatCurrency(applicationFee || 0)}
-                        </span>
-                    </div>
-                    {isFeePaid ? (
-                        <div className="bg-green-50 text-green-700 p-3 rounded-md flex items-center gap-2">
-                             <CheckCircle2 className="h-4 w-4" />
-                             Payment Verified - You can now submit your application
-                        </div>
-                    ) : (
-                        <div className="bg-yellow-50 text-yellow-700 p-3 rounded-md flex items-center gap-2">
-                            <AlertCircle className="h-4 w-4" />
-                            Payment Pending - Please pay the application fee to proceed
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="border-2 border-neutral-100 shadow-none rounded-3xl p-6 bg-neutral-50/50">
+                <h4 className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-6">Payment Details</h4>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-neutral-500 font-medium">Application Fee</span>
+                    <span className="font-bold text-neutral-900">{formatCurrency(applicationFee || 0)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-neutral-500 font-medium">Processing Time</span>
+                    <span className="text-neutral-900 font-bold italic">Instant</span>
+                  </div>
+                  <div className="pt-4 border-t border-neutral-200 flex justify-between items-center text-sm">
+                    <span className="text-neutral-900 font-bold">Total to Pay</span>
+                    <span className="text-xl font-black text-brand-primary">{formatCurrency(applicationFee || 0)}</span>
+                  </div>
+                </div>
+              </Card>
 
-            <div className="space-y-4">
-                <p className="text-sm text-gray-500 text-center">
-                    By submitting this application, you confirm that all information provided is accurate.
-                </p>
+              <Card className={`border-2 shadow-none rounded-3xl p-6 flex flex-col justify-center items-center text-center space-y-4 transition-all ${isFeePaid ? 'border-green-100 bg-green-50/30' : 'border-orange-100 bg-orange-50/30'}`}>
+                {isFeePaid ? (
+                  <>
+                    <div className="bg-green-500 p-3 rounded-full text-white shadow-lg shadow-green-200">
+                      <CheckCircle2 className="h-8 w-8" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-green-900">Payment Verified</h4>
+                      <p className="text-xs text-green-700 mt-1">Ready for submission</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="bg-orange-500 p-3 rounded-full text-white shadow-lg shadow-orange-200 animate-pulse">
+                      <AlertCircle className="h-8 w-8" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-orange-900">Payment Required</h4>
+                      <p className="text-xs text-orange-700 mt-1">Please pay to activate submission</p>
+                    </div>
+                  </>
+                )}
+              </Card>
             </div>
-            
-             {error && (
-              <div className="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
-                <AlertCircle className="h-4 w-4 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
+
+            <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100/50 flex gap-4">
+               <Info className="h-5 w-5 text-blue-600 shrink-0" />
+               <p className="text-xs text-blue-700 leading-relaxed italic">
+                 "By proceeding, I confirm that all submitted details are accurate to the best of my knowledge and I agree to the terms of enrollment."
+               </p>
+            </div>
           </div>
         );
 
@@ -814,176 +892,278 @@ export function ApplicationForm({
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <Card className="border-0 shadow-2xl">
-        <CardHeader className="space-y-6 pb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-2xl font-bold text-gray-900">
-                Application for {courseName}
-              </CardTitle>
-              <CardDescription className="text-base mt-2">
-                Complete all steps to submit your application
-              </CardDescription>
-            </div>
-            <AutoSaveIndicator status={saveStatus} />
-          </div>
-
-          {/* Progress Bar */}
-          <div>
-            <div className="flex justify-between text-sm font-medium text-gray-700 mb-3">
-              <span>Progress</span>
-              <span className="text-blue-600">{Math.round(progress)}% Complete</span>
-            </div>
-            <Progress value={progress} className="h-2.5" />
-          </div>
-
-          {/* Step Indicators */}
-          <div className="grid grid-cols-4 gap-2">
-            {STEPS.map((step, index) => {
-              const Icon = step.icon;
-              const isActive = step.id === currentStep;
-              const isCompleted = step.id < currentStep;
-
-              return (
-                <div
-                  key={step.id}
-                  className={`relative flex flex-col items-center p-4 rounded-xl transition-all ${
-                    isActive
-                      ? "bg-blue-50 border-2 border-blue-600"
-                      : isCompleted
-                      ? "bg-green-50 border-2 border-green-600"
-                      : "bg-gray-50 border-2 border-gray-200"
-                  }`}
-                >
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-2 transition-all ${
-                      isActive
-                        ? "bg-blue-600 text-white shadow-lg scale-110"
-                        : isCompleted
-                        ? "bg-green-600 text-white"
-                        : "bg-gray-200 text-gray-500"
-                    }`}
-                  >
-                    {isCompleted ? (
-                      <CheckCircle2 className="h-6 w-6" />
-                    ) : (
-                      <Icon className="h-6 w-6" />
-                    )}
+    <div className="max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Form Content */}
+        <div className="lg:col-span-8 order-2 lg:order-1">
+          <Card className="border-0 shadow-2xl shadow-neutral-200/50 overflow-hidden bg-white rounded-3xl">
+            <CardHeader className="bg-neutral-900 text-white p-8 sm:p-10">
+              <div className="flex items-center justify-between gap-6">
+                <div>
+                  <div className="flex items-center gap-2 text-brand-primary mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-0.5 rounded-full bg-brand-primary/10 border border-brand-primary/20">
+                      Step {currentStep} of {STEPS.length}
+                    </span>
                   </div>
-                  <p
-                    className={`text-xs font-semibold text-center ${
-                      isActive
-                        ? "text-blue-900"
-                        : isCompleted
-                        ? "text-green-900"
-                        : "text-gray-600"
-                    }`}
+                  <CardTitle className="text-3xl font-bold tracking-tight">
+                    {STEPS[currentStep - 1].title}
+                  </CardTitle>
+                  <CardDescription className="text-neutral-400 mt-1.5 text-base">
+                    {STEPS[currentStep - 1].description}
+                  </CardDescription>
+                </div>
+                <div className="hidden sm:block bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-sm">
+                  {(() => {
+                    const Icon = STEPS[currentStep - 1].icon;
+                    return <Icon className="h-8 w-8 text-brand-primary" />;
+                  })()}
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 sm:p-10">
+              {error && (
+                <div className="mb-8 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-4 animate-in fade-in zoom-in duration-300">
+                  <div className="bg-red-100 p-2 rounded-xl h-fit">
+                    <AlertCircle className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-bold text-red-900 text-sm">Submission Error</p>
+                    <p className="text-sm text-red-700 leading-relaxed">{error}</p>
+                  </div>
+                </div>
+              )}
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  <form className="space-y-8">
+                    {renderStep()}
+                  </form>
+                </motion.div>
+              </AnimatePresence>
+
+              <div className="mt-12 pt-10 border-t border-neutral-100 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handlePrevious}
+                  disabled={currentStep === 1 || isLoading}
+                  className="h-14 px-8 rounded-2xl font-bold text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50 transition-all flex-1 sm:flex-none justify-center sm:justify-start"
+                >
+                  <ChevronLeft className="mr-2 h-5 w-5" />
+                  Back
+                </Button>
+
+                <div className="flex flex-col sm:flex-row gap-4 flex-1 sm:flex-none w-full sm:w-auto">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={saveNow}
+                    disabled={isLoading}
+                    className="h-14 px-8 rounded-2xl font-bold border-2 border-neutral-100 hover:border-neutral-200 transition-all flex items-center justify-center"
                   >
-                    {step.title}
-                  </p>
-                  <p className="text-xs text-gray-500 text-center mt-1 hidden sm:block">
-                    {step.description}
+                    <Save className="mr-2 h-5 w-5 text-neutral-400" />
+                    Save Draft
+                  </Button>
+                  
+                  {currentStep < STEPS.length ? (
+                    <Button
+                      type="button"
+                      onClick={handleNext}
+                      disabled={isLoading}
+                      className="h-14 px-10 bg-neutral-900 hover:bg-black text-white rounded-2xl font-bold shadow-2xl shadow-neutral-300 transition-all flex items-center justify-center group"
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center gap-2">
+                           <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                           <span>Verifying...</span>
+                        </div>
+                      ) : (
+                        <>
+                          Continue
+                          <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={
+                        !isFeePaid && applicationFee > 0 ? handlePayFee : handleFinalSubmit
+                      }
+                      disabled={isLoading || isInitializingPayment}
+                  className="h-11 px-8 bg-blue-600 hover:bg-blue-700"
+                    >
+                      {isLoading || isInitializingPayment ? (
+                         <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Processing...</span>
+                         </div>
+                      ) : (
+                        <>
+                          {!isFeePaid && applicationFee > 0 ? (
+                            <>
+                              <CreditCard className="mr-2 h-5 w-5" />
+                              Pay {formatCurrency(applicationFee)} & Submit
+                            </>
+                          ) : (
+                            <>
+                              <CheckCircle2 className="mr-2 h-5 w-5" />
+                              Submit Application
+                            </>
+                          )}
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column: Sidebar */}
+        <div className="lg:col-span-4 space-y-6 order-1 lg:order-2">
+          {/* Course Summary Card */}
+          <Card className="border-0 shadow-lg border-neutral-100 rounded-3xl overflow-hidden bg-white">
+             <div className="bg-brand-primary/5 p-8 border-b border-brand-primary/10">
+                <div className="flex items-center gap-3 text-brand-primary mb-3">
+                   <BookOpen className="h-5 w-5" />
+                   <span className="text-[10px] font-black uppercase tracking-widest">Applying for</span>
+                </div>
+                <h3 className="text-xl font-bold text-neutral-900 leading-tight">
+                  {courseName}
+                </h3>
+             </div>
+             <CardContent className="p-8 space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-neutral-500 font-medium">Application Fee</span>
+                    <span className="font-bold text-neutral-900">{formatCurrency(applicationFee)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-neutral-500 font-medium">Type</span>
+                    <span className="bg-neutral-100 px-2 py-0.5 rounded-lg text-xs font-bold text-neutral-600">Standard Application</span>
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-neutral-100 space-y-4">
+                  <div className="flex items-center justify-between">
+                     <h4 className="text-sm font-black uppercase tracking-widest text-neutral-400">Step Progression</h4>
+                     <span className="text-xs font-bold text-brand-primary bg-brand-primary/10 px-2 py-0.5 rounded-lg">
+                        {Math.round(progress)}%
+                     </span>
+                  </div>
+                  <div className="space-y-4">
+                    {STEPS.map((step) => {
+                      const isCompleted = step.id < currentStep;
+                      const isActive = step.id === currentStep;
+                      const StepIcon = step.icon;
+
+                      return (
+                        <div key={step.id} className="flex items-center gap-4 group">
+                          <div
+                            className={`flex h-10 w-10 items-center justify-center rounded-xl border-2 transition-all duration-300 ${
+                              isCompleted
+                                ? "border-green-500 bg-green-500 text-white"
+                                : isActive
+                                ? "border-brand-primary bg-white text-brand-primary shadow-lg shadow-brand-primary/10"
+                                : "border-neutral-100 bg-neutral-50 text-neutral-300"
+                            }`}
+                          >
+                            {isCompleted ? (
+                              <CheckCircle2 className="h-5 w-5" />
+                            ) : (
+                              <StepIcon className={`h-5 w-5 ${isActive ? "animate-pulse" : ""}`} />
+                            )}
+                          </div>
+                          <div className="flex flex-col">
+                            <span
+                              className={`text-sm font-bold transition-colors ${
+                                isActive ? "text-neutral-900" : isCompleted ? "text-neutral-600" : "text-neutral-400"
+                              }`}
+                            >
+                              {step.title}
+                            </span>
+                            {isActive && (
+                              <motion.span 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-[10px] font-bold text-brand-primary uppercase tracking-tighter"
+                              >
+                                Currently Active
+                              </motion.span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="pt-6 border-t border-neutral-100">
+                    <Progress value={progress} className="h-3 bg-neutral-100 rounded-full" />
+                    <div className="mt-4 flex items-center justify-between">
+                     <AutoSaveIndicator status={saveStatus} />
+                    </div>
+                </div>
+             </CardContent>
+          </Card>
+
+          {/* Secure Trust Badge */}
+          <div className="bg-neutral-900 rounded-3xl p-8 text-white space-y-6 shadow-2xl shadow-neutral-900/20">
+             <div className="flex items-center gap-4">
+                <div className="bg-white/10 p-3 rounded-2xl border border-white/10 h-fit">
+                   <ShieldCheck className="h-6 w-6 text-brand-primary" />
+                </div>
+                <div className="space-y-1">
+                  <h4 className="font-bold text-sm">Secure Enrollment</h4>
+                  <p className="text-xs text-neutral-400 leading-relaxed">
+                    Industry-standard encryption secures your personal and academic data.
                   </p>
                 </div>
-              );
-            })}
+             </div>
+             
+             <div className="flex items-center justify-between pt-6 border-t border-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-neutral-500">
+                <div className="flex items-center gap-1.5">
+                   <Lock className="h-3 w-3" />
+                   SSL SECURE
+                </div>
+                <div className="flex items-center gap-1.5 font-sans lowercase text-xs normal-case tracking-normal">
+                   km-media-security-v2
+                </div>
+             </div>
           </div>
-        </CardHeader>
+        </div>
+      </div>
 
-        <CardContent className="pb-8">
-          {error && (
-            <div className="mb-6 p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          <form className="space-y-8">
-            {renderStep()}
-
-            {/* Navigation Buttons */}
-            <div className="flex justify-between items-center pt-8 border-t-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handlePrevious}
-                disabled={currentStep === 1 || isLoading}
-                className="h-11 px-6"
-              >
-                <ChevronLeft className="h-4 w-4 mr-2" />
-                Previous
-              </Button>
-
-              <div className="flex items-center gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={saveNow}
-                  disabled={isLoading}
-                  className="h-11 px-6"
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Draft
-                </Button>
-                <Button
-                  type="button"
-                  onClick={
-                    currentStep === STEPS.length
-                      ? (!isFeePaid && applicationFee > 0 ? handlePayFee : handleFinalSubmit)
-                      : handleNext
-                  }
-                  disabled={isLoading || isInitializingPayment}
-                  className="h-11 px-8 bg-blue-600 hover:bg-blue-700"
-                >
-                  {isLoading || isInitializingPayment ? (
-                    <div className="flex items-center gap-2">
-                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                       <span>Processing...</span>
-                    </div>
-                  ) : currentStep === STEPS.length ? (
-                    !isFeePaid && applicationFee > 0 ? (
-                        <>
-                            <CreditCard className="h-4 w-4 mr-2" />
-                            Pay Application Fee
-                        </>
-                    ) : (
-                        <>
-                            <CheckCircle2 className="h-4 w-4 mr-2" />
-                            Submit Application
-                        </>
-                    )
-                  ) : (
-                    <>
-                      Next
-                      <ChevronRight className="h-4 w-4 ml-2" />
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Unified Payment Flow Dialog */}
-      {showPaymentFlow && paymentContext && (
-        <Dialog open={showPaymentFlow} onOpenChange={setShowPaymentFlow}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Payment Options</DialogTitle>
-            </DialogHeader>
-            <UnifiedPaymentFlow
-              amount={paymentContext.amount}
-              courseId={paymentContext.courseId}
-              courseName={paymentContext.courseName}
-              type={paymentContext.type}
-              onSuccess={handlePaymentSuccess}
-              onCancel={handlePaymentCancel}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
+      <Dialog open={showPaymentFlow} onOpenChange={setShowPaymentFlow}>
+        <DialogContent className="sm:max-w-md bg-white rounded-[2.5rem] border-0 shadow-2xl p-0 overflow-hidden outline-none">
+          <div className="p-8 sm:p-10 bg-neutral-900 text-white relative">
+             <div className="absolute top-0 right-0 p-10 opacity-10">
+                <CreditCard className="h-32 w-32 rotate-12" />
+             </div>
+             <DialogTitle className="text-2xl font-bold tracking-tight relative z-10">Secure Checkout</DialogTitle>
+             <p className="text-neutral-400 text-base mt-2 relative z-10">Choose your preferred payment method</p>
+          </div>
+          <div className="p-8 sm:p-10">
+            {paymentContext && (
+              <UnifiedPaymentFlow
+                amount={paymentContext.amount}
+                courseId={paymentContext.courseId}
+                courseName={paymentContext.courseName}
+                type={paymentContext.type}
+                onSuccess={handlePaymentSuccess}
+                onCancel={handlePaymentCancel}
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

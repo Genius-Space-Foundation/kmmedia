@@ -29,7 +29,8 @@ async function getAdminApplications(req: NextRequest) {
 
     if (search) {
       where.OR = [
-        { user: { name: { contains: search, mode: "insensitive" } } },
+        { user: { firstName: { contains: search, mode: "insensitive" } } },
+        { user: { lastName: { contains: search, mode: "insensitive" } } },
         { user: { email: { contains: search, mode: "insensitive" } } },
         { course: { title: { contains: search, mode: "insensitive" } } },
       ];
@@ -42,7 +43,8 @@ async function getAdminApplications(req: NextRequest) {
           user: {
             select: {
               id: true,
-              name: true,
+              firstName: true,
+              lastName: true,
               email: true,
               phone: true,
             },
@@ -56,7 +58,8 @@ async function getAdminApplications(req: NextRequest) {
               applicationFee: true,
               instructor: {
                 select: {
-                  name: true,
+                  firstName: true,
+                  lastName: true,
                   email: true,
                 },
               },
@@ -81,10 +84,26 @@ async function getAdminApplications(req: NextRequest) {
       prisma.application.count({ where }),
     ]);
 
+    // Transform data to include virtual 'name' fields for the UI
+    const transformedApplications = applications.map((app: any) => ({
+      ...app,
+      user: {
+        ...app.user,
+        name: `${app.user.firstName || ""} ${app.user.lastName || ""}`.trim() || app.user.email,
+      },
+      course: {
+        ...app.course,
+        instructor: {
+          ...app.course.instructor,
+          name: `${app.course.instructor.firstName || ""} ${app.course.instructor.lastName || ""}`.trim() || app.course.instructor.email,
+        },
+      },
+    }));
+
     return NextResponse.json({
       success: true,
       data: {
-        applications,
+        applications: transformedApplications,
         pagination: {
           page,
           limit,

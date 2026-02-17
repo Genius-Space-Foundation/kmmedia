@@ -70,7 +70,8 @@ async function handler(req: AuthenticatedRequest) {
       include: {
         instructor: {
           select: {
-            name: true,
+            firstName: true,
+            lastName: true,
             bio: true,
             profileImage: true,
             image: true,
@@ -111,7 +112,7 @@ async function handler(req: AuthenticatedRequest) {
   } catch (error: any) {
     console.error("Fetch courses error:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to fetch courses" },
+      { success: false, message: "Failed to fetch courses", error: error.message, stack: error.stack },
       { status: 500 }
     );
   }

@@ -112,15 +112,15 @@ export function ModernHeader({
                               .join("")
                               .toUpperCase()
                               .slice(0, 2)
-                          : "AD"}
+                          : "US"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="hidden lg:block text-left">
                       <p className="text-sm font-bold text-gray-900">
-                        {currentUser?.name || "Admin User"}
+                        {currentUser?.name || "User"}
                       </p>
                       <p className="text-xs text-gray-500 font-medium">
-                        {currentUser?.email || "admin@kmmedia.com"}
+                        {currentUser?.email || ""}
                       </p>
                     </div>
                     <ChevronDown className="h-4 w-4 text-gray-500 hidden lg:block" />

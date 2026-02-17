@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     console.log("========== PROFILE API GET REQUEST ==========");
 
@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
       where: { id: userId },
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         email: true,
         role: true,
         phone: true,
@@ -45,6 +46,7 @@ export async function GET(request: NextRequest) {
             phone: true,
             address: true,
             dateOfBirth: true,
+            gender: true,
           },
         },
       },
@@ -64,7 +66,7 @@ export async function GET(request: NextRequest) {
     // Flatten the user object to include profile fields at the top level
     const flattenedUser = {
       id: user.id,
-      name: user.name,
+      name: `${user.firstName} ${user.lastName}`,
       email: user.email,
       role: user.role,
       phone: user.profile?.phone || user.phone || null,
@@ -75,6 +77,7 @@ export async function GET(request: NextRequest) {
       bio: user.profile?.bio || null,
       address: user.profile?.address || null,
       dateOfBirth: user.profile?.dateOfBirth || null,
+      gender: user.profile?.gender || null,
     };
 
     const response = {
@@ -87,10 +90,10 @@ export async function GET(request: NextRequest) {
     );
 
     return NextResponse.json(response);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Profile fetch error:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to fetch profile" },
+      { success: false, message: "Failed to fetch profile", error: error.message, stack: error.stack },
       { status: 500 }
     );
   }
@@ -148,7 +151,8 @@ export async function PUT(request: NextRequest) {
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: {
-        name,
+        firstName: name.split(' ')[0],
+        lastName: name.split(' ').slice(1).join(' '),
         email,
         phone: phone || null,
         profile: {
@@ -158,21 +162,24 @@ export async function PUT(request: NextRequest) {
               bio: bio || null,
               phone: phone || null,
               address: address || null,
-              dateOfBirth: dateOfBirth || null,
+              dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString() : null,
+              gender: body.gender || null,
             },
             update: {
               avatar: avatar || null,
               bio: bio || null,
               phone: phone || null,
               address: address || null,
-              dateOfBirth: dateOfBirth || null,
+              dateOfBirth: dateOfBirth ? new Date(dateOfBirth).toISOString() : null,
+              gender: body.gender || null,
             },
           },
         },
       },
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         email: true,
         role: true,
         phone: true,
@@ -187,6 +194,7 @@ export async function PUT(request: NextRequest) {
             phone: true,
             address: true,
             dateOfBirth: true,
+            gender: true,
           },
         },
       },
@@ -208,7 +216,7 @@ export async function PUT(request: NextRequest) {
     // Flatten the response
     const flattenedUser = {
       id: updatedUser.id,
-      name: updatedUser.name,
+      name: `${updatedUser.firstName} ${updatedUser.lastName}`,
       email: updatedUser.email,
       role: updatedUser.role,
       phone: updatedUser.profile?.phone || updatedUser.phone || null,

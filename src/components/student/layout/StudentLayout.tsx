@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { makeAuthenticatedRequest } from "@/lib/token-utils";
+import { makeAuthenticatedRequest, clearAuthTokens } from "@/lib/token-utils";
 import { ModernSidebar } from "@/components/dashboard/modern-sidebar";
 import { ModernHeader } from "@/components/dashboard/modern-header";
 import {
@@ -53,6 +53,11 @@ export default function StudentLayout({
             return;
           }
 
+          // Initialize with session data if available
+          if (session?.user) {
+             setUser((prev: any) => ({ ...prev, ...session.user }));
+          }
+
           const response = await makeAuthenticatedRequest("/api/user/profile");
           if (response.ok) {
             const data = await response.json();
@@ -69,11 +74,13 @@ export default function StudentLayout({
 
   const handleLogout = async () => {
     try {
+      clearAuthTokens();
       // Use NextAuth signOut
       const { signOut } = await import("next-auth/react");
       await signOut({ callbackUrl: "/auth/login" });
     } catch (error) {
       console.error("Logout error:", error);
+      clearAuthTokens();
       router.push("/auth/login");
     }
   };

@@ -325,7 +325,8 @@ async function getStudentApplications(req: AuthenticatedRequest) {
               installmentPlan: true,
               instructor: {
                 select: {
-                  name: true,
+                  firstName: true,
+                  lastName: true,
                 },
               },
             },
@@ -374,6 +375,13 @@ async function getStudentApplications(req: AuthenticatedRequest) {
               }
             : undefined,
         },
+        course: app.course ? {
+          ...app.course,
+          instructor: app.course.instructor ? {
+            ...app.course.instructor,
+            name: `${app.course.instructor.firstName} ${app.course.instructor.lastName}`,
+          } : null,
+        } : null,
       };
     });
 

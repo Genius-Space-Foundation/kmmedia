@@ -13,6 +13,7 @@ import {
   Settings,
   BarChart3,
 } from "lucide-react";
+import { clearAuthTokens } from "@/lib/token-utils";
 import { ModernSidebar } from "@/components/dashboard/modern-sidebar";
 import { ModernHeader } from "@/components/dashboard/modern-header";
 import ApplicationManagement from "@/components/admin/applications/ApplicationManagement";
@@ -63,10 +64,7 @@ export default function ProfessionalDashboard() {
 
   const handleLogout = () => {
     // Clear all tokens
-    localStorage.removeItem("token");
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
+    clearAuthTokens();
 
     // Redirect to login
     router.push("/auth/login");

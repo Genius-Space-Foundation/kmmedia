@@ -525,70 +525,68 @@ export default function LearningProfileSetup({
   };
 
   return (
-    <Card className="w-full max-w-4xl mx-auto">
-      <CardHeader className="text-center">
-        <CardTitle className="text-2xl">{steps[currentStep].title}</CardTitle>
-        <CardDescription className="text-base">
-          {steps[currentStep].description}
-        </CardDescription>
-
-        <div className="mt-4">
-          <div className="flex justify-between text-sm text-gray-600 mb-2">
-            <span>
-              Step {currentStep + 1} of {steps.length}
-            </span>
-            <span>{Math.round(progress)}% Complete</span>
+    <div className="w-full">
+      <div className="mb-10 text-center">
+        <h2 className="text-3xl font-bold text-neutral-900">{steps[currentStep].title}</h2>
+        <p className="text-neutral-500 mt-2">{steps[currentStep].description}</p>
+        
+        <div className="mt-8 max-w-md mx-auto">
+          <div className="flex justify-between text-xs font-semibold text-neutral-400 mb-2 uppercase tracking-wider">
+            <span>Progress</span>
+            <span>{Math.round(progress)}%</span>
           </div>
-          <Progress value={progress} className="h-2" />
+          <Progress value={progress} className="h-1.5 bg-neutral-100" />
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="space-y-6">
-        <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="space-y-8">
+        <div className="min-h-[400px]">
           {renderStep()}
+        </div>
 
-          <div className="flex justify-between items-center pt-6 border-t">
-            <div className="flex space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onSkip}
-                disabled={isLoading}
-              >
-                Skip for now
-              </Button>
-              {currentStep > 0 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handlePrevious}
-                  disabled={isLoading}
-                >
-                  Previous
-                </Button>
-              )}
-            </div>
-
+        <div className="flex justify-between items-center pt-8 border-t border-neutral-100">
+          <div className="flex gap-2">
             <Button
               type="button"
-              onClick={handleNext}
+              variant="ghost"
+              onClick={onSkip}
               disabled={isLoading}
-              className="min-w-[120px]"
+              className="text-neutral-500 hover:text-neutral-900"
             >
-              {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Saving...</span>
-                </div>
-              ) : currentStep === steps.length - 1 ? (
-                "Complete Profile"
-              ) : (
-                "Next"
-              )}
+              Skip
             </Button>
+            {currentStep > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handlePrevious}
+                disabled={isLoading}
+                className="text-neutral-500 hover:text-neutral-900"
+              >
+                Back
+              </Button>
+            )}
           </div>
-        </form>
-      </CardContent>
-    </Card>
+
+          <Button
+            type="button"
+            onClick={handleNext}
+            disabled={isLoading}
+            className="bg-brand-primary hover:bg-brand-secondary text-white px-8 h-12 rounded-xl shadow-lg shadow-brand-primary/20 transition-all active:scale-95 flex items-center gap-2 font-semibold"
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span>Saving...</span>
+              </div>
+            ) : currentStep === steps.length - 1 ? (
+              <>Complete Setup <CheckCircle2 className="w-4 h-4" /></>
+            ) : (
+              <>Next Step <ChevronRight className="w-4 h-4" /></>
+            )}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }

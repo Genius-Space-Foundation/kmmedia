@@ -59,6 +59,7 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
     email: user.email,
     phone: user.profile?.phone || user.phone || "",
     address: user.profile?.address || "",
+    gender: user.profile?.gender || "",
     dateOfBirth: user.profile?.dateOfBirth ? new Date(user.profile.dateOfBirth).toISOString().split('T')[0] : "",
   } : null;
 
@@ -132,30 +133,33 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Course Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Apply for {course.title}
-              </h1>
-              <p className="text-gray-600 mb-4">{course.description}</p>
-              <div className="flex items-center space-x-4 text-sm text-gray-500">
-                <span>Category: {course.category}</span>
-                <span>•</span>
+    <div className="min-h-screen bg-[#FDFDFF] py-12 sm:py-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Course Header - Professional Minimalist */}
+        <div className="mb-12 sm:mb-16 text-center max-w-3xl mx-auto space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-brand-primary/10 border border-brand-primary/20 rounded-full">
+            <div className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
+            <span className="text-[10px] font-bold text-brand-primary uppercase tracking-widest">Enrollment Open</span>
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-black text-neutral-900 tracking-tight leading-tight">
+            Start Your Journey in <span className="text-brand-primary">{course.title}</span>
+          </h1>
+          <p className="text-lg text-neutral-500 leading-relaxed max-w-2xl mx-auto">
+            {course.description}
+          </p>
+          
+          <div className="flex flex-wrap items-center justify-center gap-6 pt-4 text-sm font-semibold text-neutral-400 uppercase tracking-tighter">
+             <div className="flex items-center gap-2">
+                <div className="w-8 h-px bg-neutral-200" />
                 <span>Instructor: {course.instructor.firstName} {course.instructor.lastName}</span>
-                <span>•</span>
-                <span>Course Fee: {formatCurrency(course.price)}</span>
-                {course.applicationFee > 0 && (
-                  <>
-                    <span>•</span>
-                    <span>Application Fee: {formatCurrency(course.applicationFee)}</span>
-                  </>
-                )}
-              </div>
-            </div>
+             </div>
+             <div className="flex items-center gap-2 border-x border-neutral-200 px-6">
+                <span>Tuition: {formatCurrency(course.price)}</span>
+             </div>
+             <div className="flex items-center gap-2">
+                <span>Category: {course.category}</span>
+                <div className="w-8 h-px bg-neutral-200" />
+             </div>
           </div>
         </div>
 
@@ -168,21 +172,26 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
           onSuccessRedirect="/dashboards/student"
         />
 
-        {/* Help Section */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="font-medium text-blue-900 mb-2">Need Help?</h3>
-          <p className="text-sm text-blue-700 mb-3">
-            Your application is automatically saved as you fill it out. You can
-            leave and return to complete it later.
-          </p>
-          <div className="space-y-1 text-sm text-blue-600">
-            <p>• All fields marked with * are required</p>
-            <p>• Your progress is saved automatically every few seconds</p>
-            <p>
-              • You can use the "Save Now" button to manually save your progress
-            </p>
-            <p>• Contact support if you encounter any issues</p>
-          </div>
+        {/* Professional Help/Trust Footer */}
+        <div className="mt-16 sm:mt-24 pt-12 border-t border-neutral-100 grid grid-cols-1 md:grid-cols-3 gap-8 text-center sm:text-left">
+           <div className="space-y-3">
+              <h4 className="font-bold text-neutral-900 text-sm italic">Auto-Optimization</h4>
+              <p className="text-sm text-neutral-500 leading-relaxed">
+                Your application progress is securely saved every 2 seconds. Feel free to resume whenever you're ready.
+              </p>
+           </div>
+           <div className="space-y-3">
+              <h4 className="font-bold text-neutral-900 text-sm italic">Secure Payment</h4>
+              <p className="text-sm text-neutral-500 leading-relaxed">
+                Application fees are processed via 256-bit encrypted global payment gateways for maximum security.
+              </p>
+           </div>
+           <div className="space-y-3">
+              <h4 className="font-bold text-neutral-900 text-sm italic">Dedicated Support</h4>
+              <p className="text-sm text-neutral-500 leading-relaxed">
+                Encountering technical difficulties? Contact our admissions support team at <span className="font-bold text-neutral-900">support@kmmedia.edu</span>
+              </p>
+           </div>
         </div>
       </div>
     </div>

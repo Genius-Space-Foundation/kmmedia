@@ -36,7 +36,8 @@ async function getStudentEnrollments(req: AuthenticatedRequest) {
               instructor: {
                 select: {
                   id: true,
-                  name: true,
+                  firstName: true,
+                  lastName: true,
                 },
               },
               lessons: {
@@ -130,6 +131,10 @@ async function getStudentEnrollments(req: AuthenticatedRequest) {
         id: enrollment.id,
         course: {
           ...enrollment.course,
+          instructor: enrollment.course.instructor ? {
+            ...enrollment.course.instructor,
+            name: `${enrollment.course.instructor.firstName} ${enrollment.course.instructor.lastName}`,
+          } : null,
           syllabus: lessonsWithCompletion,
         },
         status: enrollment.status,

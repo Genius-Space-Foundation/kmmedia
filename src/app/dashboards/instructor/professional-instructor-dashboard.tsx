@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
+import { clearAuthTokens } from "@/lib/token-utils";
 import {
   LayoutDashboard,
   BookOpen,
@@ -128,6 +129,7 @@ export default function ProfessionalInstructorDashboard() {
   };
 
   const handleLogout = async () => {
+    clearAuthTokens();
     await signOut({ callbackUrl: "/auth/login" });
   };
 

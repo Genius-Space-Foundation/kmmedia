@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Bell, Settings, Menu, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { safeJsonParse } from "@/lib/api-utils";
+import { clearAuthTokens } from "@/lib/token-utils";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -82,16 +83,16 @@ export default function AdminLayout({
       });
 
       // Clear local storage
+      clearAuthTokens();
       localStorage.removeItem("token");
-      localStorage.removeItem("user");
 
       // Redirect to login
       router.push("/auth/login");
     } catch (error) {
       console.error("Logout error:", error);
       // Still redirect even if API call fails
+      clearAuthTokens();
       localStorage.removeItem("token");
-      localStorage.removeItem("user");
       router.push("/auth/login");
     }
   };

@@ -29,7 +29,8 @@ export const GET = withStudentAuth(async (request: AuthenticatedRequest) => {
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
@@ -136,10 +137,21 @@ export const GET = withStudentAuth(async (request: AuthenticatedRequest) => {
         };
       });
 
+    // Format transactions to include user name
+    const formattedTransactions = transactions.map((t) => ({
+      ...t,
+      user: t.user
+        ? {
+            ...t.user,
+            name: `${t.user.firstName} ${t.user.lastName}`,
+          }
+        : null,
+    }));
+
     return NextResponse.json({
       success: true,
       data: {
-        transactions,
+        transactions: formattedTransactions,
         summary,
         installmentStatus
       },

@@ -13,8 +13,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -23,13 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Checkbox, CheckboxGroup } from "@/components/ui/checkbox";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   CheckCircle,
   XCircle,
   Eye,
-  Edit,
-  Filter,
   Search,
   Download,
   Mail,
@@ -38,10 +34,7 @@ import {
   BookOpen,
   DollarSign,
   Calendar,
-  MessageSquare,
   AlertCircle,
-  CheckSquare,
-  X,
   FileText,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -55,10 +48,9 @@ interface Application {
     id: string;
     name: string;
     email: string;
-    name: string;
-    email: string;
     image?: string;
     profileImage?: string;
+    phone?: string;
     phones?: string;
   };
   course: {
@@ -114,14 +106,16 @@ export default function ApplicationManagement({
     try {
       setLoading(true);
       const response = await fetch("/api/admin/applications");
-      const data = await safeJsonParse(response, {
+      const data = await safeJsonParse<any>(response, {
         success: false,
         data: [],
+        message: "Failed to parse response",
       });
 
       if (data.success) {
         // Handle both pagination format and direct array format
-        const rawApps = data.data?.applications || (Array.isArray(data.data) ? data.data : []);
+        const responseData = data.data as any;
+        const rawApps = responseData?.applications || (Array.isArray(responseData) ? responseData : []);
         
         // Map API response to UI model
         const apps = rawApps.map((app: any) => {
@@ -141,8 +135,8 @@ export default function ApplicationManagement({
         
         setApplications(apps);
       } else {
-        console.error("API returned error:", data.message);
-        toast.error(data.message || "Failed to fetch applications");
+        console.error("API returned error:", (data as any).message);
+        toast.error((data as any).message || "Failed to fetch applications");
         setApplications([]);
       }
     } catch (error) {

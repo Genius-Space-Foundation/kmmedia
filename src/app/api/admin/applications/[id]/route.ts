@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withAdminAuth, AuthenticatedRequest } from "@/lib/middleware/auth";
 import { prisma } from "@/lib/db";
 import {
@@ -64,7 +64,8 @@ async function updateApplication(
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             image: true,
             profileImage: true,
@@ -79,7 +80,8 @@ async function updateApplication(
             applicationFee: true,
             instructor: {
               select: {
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
               },
             },
@@ -115,9 +117,25 @@ async function updateApplication(
       );
     }
 
+    // Transform data to include virtual 'name' fields for the UI
+    const transformedApplication = {
+      ...updatedApplication,
+      user: {
+        ...updatedApplication.user,
+        name: `${updatedApplication.user.firstName || ""} ${updatedApplication.user.lastName || ""}`.trim() || updatedApplication.user.email,
+      },
+      course: {
+        ...updatedApplication.course,
+        instructor: {
+          ...updatedApplication.course.instructor,
+          name: `${updatedApplication.course.instructor.firstName || ""} ${updatedApplication.course.instructor.lastName || ""}`.trim() || updatedApplication.course.instructor.email,
+        },
+      },
+    };
+
     return NextResponse.json({
       success: true,
-      data: updatedApplication,
+      data: transformedApplication,
       message: `Application ${status.toLowerCase()}d successfully`,
     });
   } catch (error) {
@@ -130,7 +148,7 @@ async function updateApplication(
 }
 
 async function getApplication(
-  req: AuthenticatedRequest,
+  _req: AuthenticatedRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   // Skip during build
@@ -147,13 +165,19 @@ async function getApplication(
         user: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             image: true,
             profileImage: true,
             phone: true,
             bio: true,
-            dateOfBirth: true,
+            // Accessing profile for dateOfBirth if needed, but not direct User field
+            profile: {
+              select: {
+                dateOfBirth: true,
+              }
+            }
           },
         },
         course: {
@@ -168,7 +192,8 @@ async function getApplication(
             instructor: {
               select: {
                 id: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
                 image: true,
                 profileImage: true,
@@ -176,7 +201,6 @@ async function getApplication(
             },
           },
         },
-        documents: true,
         payments: true,
       },
     });
@@ -188,9 +212,26 @@ async function getApplication(
       );
     }
 
+    // Transform data for UI
+    const transformedApplication = {
+      ...application,
+      user: {
+        ...application.user,
+        name: `${application.user.firstName || ""} ${application.user.lastName || ""}`.trim() || application.user.email,
+        dateOfBirth: application.user.profile?.dateOfBirth || null,
+      },
+      course: {
+        ...application.course,
+        instructor: {
+          ...application.course.instructor,
+          name: `${application.course.instructor.firstName || ""} ${application.course.instructor.lastName || ""}`.trim() || application.course.instructor.email,
+        },
+      },
+    };
+
     return NextResponse.json({
       success: true,
-      data: application,
+      data: transformedApplication,
     });
   } catch (error) {
     console.error("Error fetching application:", error);

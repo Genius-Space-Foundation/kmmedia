@@ -59,7 +59,8 @@ export default function StudentProfile({ userId, user }: StudentProfileProps) {
     phone: user?.phone || "",
     address: user?.address || "",
     bio: user?.bio || "",
-    dateOfBirth: user?.dateOfBirth || "",
+    gender: (user as any)?.gender || "",
+    dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : "",
   });
   const [avatar, setAvatar] = useState(user?.avatar || "");
 
@@ -78,7 +79,8 @@ export default function StudentProfile({ userId, user }: StudentProfileProps) {
             phone: userData.phone || "",
             address: userData.address || "",
             bio: userData.bio || "",
-            dateOfBirth: userData.dateOfBirth || "",
+            gender: userData.gender || "",
+            dateOfBirth: userData.dateOfBirth ? new Date(userData.dateOfBirth).toISOString().split('T')[0] : "",
           });
           setAvatar(userData.avatar || "");
         }
@@ -239,7 +241,8 @@ export default function StudentProfile({ userId, user }: StudentProfileProps) {
       phone: user?.phone || "",
       address: user?.address || "",
       bio: user?.bio || "",
-      dateOfBirth: user?.dateOfBirth || "",
+      gender: (user as any)?.gender || "",
+      dateOfBirth: user?.dateOfBirth ? new Date(user.dateOfBirth).toISOString().split('T')[0] : "",
     });
     setIsEditing(false);
   };
@@ -557,6 +560,25 @@ export default function StudentProfile({ userId, user }: StudentProfileProps) {
                   {errors.phone && (
                     <p className="text-red-500 text-sm">{errors.phone}</p>
                   )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="gender">Gender</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {["male", "female", "other", "prefer_not_to_say"].map((option) => (
+                      <button
+                        key={option}
+                        disabled={!isEditing}
+                        onClick={() => setProfileData(prev => ({ ...prev, gender: option }))}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                          profileData.gender === option
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        } ${!isEditing ? "opacity-70 cursor-not-allowed" : ""}`}
+                      >
+                        {option.charAt(0).toUpperCase() + option.slice(1).replace('_', ' ')}
+                      </button>
+                    ))}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="dateOfBirth">Date of Birth</Label>
