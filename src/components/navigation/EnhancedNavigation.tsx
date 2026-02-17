@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
 import { NotificationBell } from "@/components/ui/notification-bell";
@@ -19,10 +19,12 @@ interface CourseCategory {
 
 interface User {
   id: string;
-  name: string;
-  email: string;
+  name?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
   role: string;
-  profileImage?: string;
+  profileImage?: string | null;
 }
 
 interface EnhancedNavigationProps {
@@ -34,21 +36,14 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
 
   const [categories, setCategories] = useState<CourseCategory[]>([]);
-  const [isScrolled, setIsScrolled] = useState(false);
 
-  const router = useRouter();
+
+
   const pathname = usePathname();
 
   const megaMenuRef = useRef<HTMLDivElement>(null);
 
-  // Handle scroll for glassmorphism effect
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+
 
   // Fetch course categories for mega menu
   useEffect(() => {
@@ -95,6 +90,17 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
     }
     return pathname?.startsWith(path);
   };
+
+  // Safe display name resolution
+  const getDisplayName = () => {
+    if (!user) return "";
+    if (user.firstName && user.lastName) return `${user.firstName} ${user.lastName}`;
+    if (user.name) return user.name;
+    return user.email || "User";
+  };
+
+  const displayName = getDisplayName();
+  const initials = displayName ? displayName.charAt(0).toUpperCase() : "U";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-brand-border shadow-brand-sm text-brand-text-primary">
@@ -326,17 +332,17 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
                 <div className="relative group">
                   <button
                     className="w-8 h-8 bg-brand-primary rounded-full flex items-center justify-center hover:ring-2 hover:ring-brand-primary/20 transition-all focus:outline-none focus:ring-2 focus:ring-brand-primary/50"
-                    aria-label={`User menu for ${user.name}`}
+                    aria-label={`User menu for ${displayName}`}
                   >
                     {user.profileImage ? (
                       <img
                         src={user.profileImage}
-                        alt={user.name}
+                        alt={displayName}
                         className="w-full h-full rounded-full object-cover"
                       />
                     ) : (
                       <span className="text-white text-sm font-medium">
-                        {user.name.charAt(0).toUpperCase()}
+                        {initials}
                       </span>
                     )}
                   </button>
@@ -490,18 +496,18 @@ export default function EnhancedNavigation({ user }: EnhancedNavigationProps) {
                       {user.profileImage ? (
                         <img
                           src={user.profileImage}
-                          alt={user.name}
+                          alt={displayName}
                           className="w-full h-full rounded-full object-cover"
                         />
                       ) : (
                         <span className="text-white text-sm font-medium">
-                          {user.name.charAt(0).toUpperCase()}
+                          {initials}
                         </span>
                       )}
                     </div>
                     <div className="text-center">
                       <p className="text-sm font-medium text-brand-text-primary">
-                        {user.name}
+                        {displayName}
                       </p>
                       <p className="text-xs text-brand-text-secondary capitalize">
                         {user.role.toLowerCase()}

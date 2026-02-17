@@ -63,7 +63,8 @@ export const PUT = withAdminAuth(async function PUT(
             instructor: {
               select: {
                 id: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
                 image: true,
               },
@@ -90,7 +91,8 @@ export const PUT = withAdminAuth(async function PUT(
             instructor: {
               select: {
                 id: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
                 image: true,
               },
@@ -117,7 +119,8 @@ export const PUT = withAdminAuth(async function PUT(
             instructor: {
               select: {
                 id: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
                 image: true,
               },
@@ -146,7 +149,8 @@ export const PUT = withAdminAuth(async function PUT(
             instructor: {
               select: {
                 id: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
                 image: true,
               },
@@ -182,7 +186,8 @@ export const PUT = withAdminAuth(async function PUT(
             instructor: {
               select: {
                 id: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
                 image: true,
                 bio: true,
@@ -220,7 +225,8 @@ export const PUT = withAdminAuth(async function PUT(
             instructor: {
               select: {
                 id: true,
-                name: true,
+                firstName: true,
+                lastName: true,
                 email: true,
                 image: true,
               },
@@ -285,9 +291,11 @@ export const PUT = withAdminAuth(async function PUT(
       });
     }
 
-    // Map image to avatar for frontend compatibility
-    if (updatedCourse && updatedCourse.instructor && (updatedCourse.instructor as any).image) {
-      (updatedCourse.instructor as any).avatar = (updatedCourse.instructor as any).image;
+    if (updatedCourse && updatedCourse.instructor) {
+      updatedCourse.instructor.name = `${updatedCourse.instructor.firstName} ${updatedCourse.instructor.lastName}`.trim();
+      if ((updatedCourse.instructor as any).image) {
+        (updatedCourse.instructor as any).avatar = (updatedCourse.instructor as any).image;
+      }
     }
 
     return NextResponse.json({
@@ -331,7 +339,8 @@ export const GET = withAdminAuth(async (
         instructor: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             image: true,
             bio: true,
@@ -366,9 +375,12 @@ export const GET = withAdminAuth(async (
       );
     }
 
-    // Map image to avatar for frontend compatibility
-    if (course && course.instructor && (course.instructor as any).image) {
-      (course.instructor as any).avatar = (course.instructor as any).image;
+    // Map image to avatar and map instructor name
+    if (course && course.instructor) {
+      (course.instructor as any).name = `${(course.instructor as any).firstName} ${(course.instructor as any).lastName}`.trim();
+      if ((course.instructor as any).image) {
+        (course.instructor as any).avatar = (course.instructor as any).image;
+      }
     }
 
     return NextResponse.json({

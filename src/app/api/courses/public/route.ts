@@ -29,7 +29,8 @@ export async function GET(request: NextRequest) {
         instructor: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
@@ -45,10 +46,19 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Map instructor name
+    const coursesWithInstructorName = courses.map((course) => ({
+      ...course,
+      instructor: {
+        ...course.instructor,
+        name: `${course.instructor.firstName} ${course.instructor.lastName}`.trim(),
+      },
+    }));
+
     return NextResponse.json({
       success: true,
       data: {
-        courses,
+        courses: coursesWithInstructorName,
         total: courses.length,
       },
     });
@@ -64,4 +74,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

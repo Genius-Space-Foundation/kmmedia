@@ -91,6 +91,7 @@ export const authOptions: NextAuthOptions = {
         return {
           id: user.id,
           email: user.email,
+          name: `${user.firstName} ${user.lastName}`,
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
@@ -158,6 +159,9 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role;
         token.status = user.status;
         token.requiresPasswordChange = user.requiresPasswordChange;
+        token.firstName = user.firstName;
+        token.lastName = user.lastName;
+        token.name = user.name;
       }
       return token;
     },
@@ -167,6 +171,11 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as any;
         session.user.status = token.status as any;
         session.user.requiresPasswordChange = token.requiresPasswordChange as boolean;
+        session.user.firstName = token.firstName as string;
+        session.user.lastName = token.lastName as string;
+        if (token.name) {
+          session.user.name = token.name as string;
+        }
       }
       return session;
     },

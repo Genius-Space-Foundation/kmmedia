@@ -50,7 +50,8 @@ async function createCourse(req: AuthenticatedRequest) {
         instructor: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
@@ -64,9 +65,18 @@ async function createCourse(req: AuthenticatedRequest) {
       },
     });
 
+    // Map instructor name
+    const courseWithInstructorName = {
+      ...course,
+      instructor: {
+        ...course.instructor,
+        name: `${course.instructor.firstName} ${course.instructor.lastName}`.trim(),
+      },
+    };
+
     return NextResponse.json({
       success: true,
-      data: course,
+      data: courseWithInstructorName,
       message: "Course created successfully",
     });
   } catch (error) {
@@ -158,4 +168,3 @@ async function getInstructorCourses(req: AuthenticatedRequest) {
 
 export const POST = withInstructorAuth(createCourse);
 export const GET = withInstructorAuth(getInstructorCourses);
-

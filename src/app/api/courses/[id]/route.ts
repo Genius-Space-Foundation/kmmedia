@@ -26,7 +26,8 @@ async function getCourse(
         instructor: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
             profile: {
               select: {
@@ -55,9 +56,18 @@ async function getCourse(
       );
     }
 
+    // Map instructor name
+    const courseWithInstructorName = {
+      ...course,
+      instructor: {
+        ...course.instructor,
+        name: `${course.instructor.firstName} ${course.instructor.lastName}`.trim(),
+      },
+    };
+
     return NextResponse.json({
       success: true,
-      data: course,
+      data: courseWithInstructorName,
     });
   } catch (error) {
     console.error("Get course error:", error);
@@ -123,12 +133,22 @@ async function updateCourse(
         instructor: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
       },
     });
+
+    // Map instructor name
+    const courseWithInstructorName = {
+      ...course,
+      instructor: {
+        ...course.instructor,
+        name: `${course.instructor.firstName} ${course.instructor.lastName}`.trim(),
+      },
+    };
 
     // Log course update
     await logStateChange({
@@ -143,7 +163,7 @@ async function updateCourse(
 
     return NextResponse.json({
       success: true,
-      data: course,
+      data: courseWithInstructorName,
       message: "Course updated successfully",
     });
   } catch (error) {

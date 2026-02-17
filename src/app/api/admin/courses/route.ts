@@ -41,7 +41,8 @@ async function getAdminCourses(req: NextRequest) {
       where.OR = [
         { title: { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
-        { instructor: { name: { contains: search, mode: "insensitive" } } },
+        { instructor: { firstName: { contains: search, mode: "insensitive" } } },
+        { instructor: { lastName: { contains: search, mode: "insensitive" } } },
       ];
     }
 
@@ -52,7 +53,8 @@ async function getAdminCourses(req: NextRequest) {
           instructor: {
             select: {
               id: true,
-              name: true,
+              firstName: true,
+              lastName: true,
               email: true,
             },
           },
@@ -71,10 +73,19 @@ async function getAdminCourses(req: NextRequest) {
       prisma.course.count({ where }),
     ]);
 
+    // Map instructor names
+    const coursesWithInstructorNames = courses.map((course) => ({
+      ...course,
+      instructor: {
+        ...course.instructor,
+        name: `${course.instructor.firstName} ${course.instructor.lastName}`.trim(),
+      },
+    }));
+
     return NextResponse.json({
       success: true,
       data: {
-        courses,
+        courses: coursesWithInstructorNames,
         pagination: {
           page,
           limit,

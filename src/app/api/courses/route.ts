@@ -71,12 +71,22 @@ async function createCourse(req: AuthenticatedRequest) {
         instructor: {
           select: {
             id: true,
-            name: true,
+            firstName: true,
+            lastName: true,
             email: true,
           },
         },
       },
     });
+
+    // Map instructor name
+    const courseWithInstructorName = {
+      ...course,
+      instructor: {
+        ...course.instructor,
+        name: `${course.instructor.firstName} ${course.instructor.lastName}`.trim(),
+      },
+    };
 
 
 
@@ -97,7 +107,7 @@ async function createCourse(req: AuthenticatedRequest) {
 
     return NextResponse.json({
       success: true,
-      data: course,
+      data: courseWithInstructorName,
       message: "Course created successfully",
     });
   } catch (error) {
@@ -177,7 +187,8 @@ async function getCourses(req: NextRequest) {
           instructor: {
             select: {
               id: true,
-              name: true,
+              firstName: true,
+              lastName: true,
               email: true,
               profileImage: true,
             },
@@ -199,9 +210,13 @@ async function getCourses(req: NextRequest) {
 
     console.log("API: Found courses:", courses.length, "Total:", total);
 
-    // Add rating calculation for featured courses
+    // Add rating calculation and map instructor name
     const coursesWithRating = courses.map((course) => ({
       ...course,
+      instructor: {
+        ...course.instructor,
+        name: `${course.instructor.firstName} ${course.instructor.lastName}`.trim(),
+      },
       rating: 4.8, // Default rating - could be calculated from reviews
     }));
 

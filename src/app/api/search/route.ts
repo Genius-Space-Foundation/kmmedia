@@ -48,7 +48,8 @@ export async function GET(request: NextRequest) {
       include: {
         instructor: {
           select: {
-            name: true,
+            firstName: true,
+            lastName: true,
           },
         },
       },
@@ -62,7 +63,13 @@ export async function GET(request: NextRequest) {
         status: "ACTIVE",
         OR: [
           {
-            name: {
+            firstName: {
+              contains: searchTerm,
+              mode: "insensitive",
+            },
+          },
+          {
+            lastName: {
               contains: searchTerm,
               mode: "insensitive",
             },
@@ -76,7 +83,8 @@ export async function GET(request: NextRequest) {
       },
       select: {
         id: true,
-        name: true,
+        firstName: true,
+        lastName: true,
         specialization: true,
       },
       take: Math.min(limit, 3),
@@ -106,14 +114,14 @@ export async function GET(request: NextRequest) {
         title: course.title,
         type: "course" as const,
         category: course.category,
-        instructor: course.instructor.name,
+        instructor: `${course.instructor.firstName} ${course.instructor.lastName}`.trim(),
         url: `/courses/${course.id}`,
       })),
 
       // Instructor results
       ...instructors.map((instructor) => ({
         id: instructor.id,
-        title: instructor.name,
+        title: `${instructor.firstName} ${instructor.lastName}`.trim(),
         type: "instructor" as const,
         category: instructor.specialization?.join(", ") || "Instructor",
         url: `/instructors/${instructor.id}`,

@@ -126,7 +126,10 @@ export default function ProfileEditModal({
       if (response.ok) {
         // The API returns { success: true, user: ... } or { success: true, data: ... }
         // We need to handle both cases to be safe
-        const updatedUserResponse = await safeJsonParse(response, { data: null });
+        const updatedUserResponse = await safeJsonParse<{
+          user?: UserProfile;
+          data?: UserProfile;
+        }>(response, { user: undefined, data: undefined });
         const finalUser = updatedUserResponse.user || updatedUserResponse.data;
         if (finalUser) {
           onUpdate(finalUser as any);

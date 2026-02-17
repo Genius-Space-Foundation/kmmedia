@@ -40,7 +40,8 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
       status: true,
       instructor: {
         select: {
-          name: true,
+          firstName: true,
+          lastName: true,
           email: true,
         },
       },
@@ -53,8 +54,8 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
 
   // Combine user and profile for prefilling
   const initialUser = user ? {
-    firstName: user.name?.split(' ')[0] || "",
-    lastName: user.name?.split(' ').slice(1).join(' ') || "",
+    firstName: user.firstName || "",
+    lastName: user.lastName || "",
     email: user.email,
     phone: user.profile?.phone || user.phone || "",
     address: user.profile?.address || "",
@@ -144,7 +145,7 @@ export default async function ApplyPage({ params }: ApplyPageProps) {
               <div className="flex items-center space-x-4 text-sm text-gray-500">
                 <span>Category: {course.category}</span>
                 <span>•</span>
-                <span>Instructor: {course.instructor.name}</span>
+                <span>Instructor: {course.instructor.firstName} {course.instructor.lastName}</span>
                 <span>•</span>
                 <span>Course Fee: {formatCurrency(course.price)}</span>
                 {course.applicationFee > 0 && (
