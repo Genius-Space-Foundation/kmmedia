@@ -66,7 +66,7 @@ export async function GET(_request: NextRequest) {
     // Flatten the user object to include profile fields at the top level
     const flattenedUser = {
       id: user.id,
-      name: `${user.firstName} ${user.lastName}`,
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email,
       email: user.email,
       role: user.role,
       phone: user.profile?.phone || user.phone || null,
@@ -216,7 +216,7 @@ export async function PUT(request: NextRequest) {
     // Flatten the response
     const flattenedUser = {
       id: updatedUser.id,
-      name: `${updatedUser.firstName} ${updatedUser.lastName}`,
+      name: `${updatedUser.firstName || ""} ${updatedUser.lastName || ""}`.trim() || updatedUser.email,
       email: updatedUser.email,
       role: updatedUser.role,
       phone: updatedUser.profile?.phone || updatedUser.phone || null,
