@@ -28,6 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CheckCircle2, ChevronRight } from "lucide-react";
 import { makeAuthenticatedRequest } from "@/lib/token-utils";
 
 interface OnboardingStep {
